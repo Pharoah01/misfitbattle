@@ -1,7 +1,8 @@
 .*
 !.gitignore
 
-*.md
+FRONTEND_SPEC.md
+BACKEND_COMPLETE.md
 
 .kiro/
 
