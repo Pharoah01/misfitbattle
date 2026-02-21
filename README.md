@@ -2,7 +2,7 @@
 
 > Testing Platform built by **Binary Misfits**
 
-Misfits-Battle is a full-stack web application designed to host **CSSBattle-style coding competitions** for college events and hackathons, supporting **1000+ concurrent participants** with secure submissions and real-time leaderboard.
+Misfits-Battle is a web application designed to host **CSSBattle-style coding competitions** for college events and hackathons, supporting **1000+ concurrent participants** with secure submissions and real-time leaderboard.
 
 ---
 
