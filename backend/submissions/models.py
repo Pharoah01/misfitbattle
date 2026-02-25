@@ -27,6 +27,8 @@ class Submission(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True, db_index=True)
     
     class Meta:
+        verbose_name = 'Submission'
+        verbose_name_plural = 'Submissions'
         db_table = 'submissions'
         indexes = [
             models.Index(fields=['user', 'challenge']),

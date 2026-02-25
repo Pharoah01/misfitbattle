@@ -78,6 +78,8 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['name']
     
     class Meta:
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
         db_table = 'users'
         indexes = [
             models.Index(fields=['register_number']),

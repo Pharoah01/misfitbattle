@@ -127,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -169,13 +169,13 @@ REST_FRAMEWORK = {
         'anon': '100/hour',  # Anonymous users: 100 requests per hour
         'user': '1000/hour',  # Authenticated users: 1000 requests per hour
         'submissions': '80/hour',  # Submissions: 30 per hour per user
-        'auth': '10/hour',  # Auth endpoints: 10 per hour per IP
+        'auth': '20/hour',  # Auth endpoints: 10 per hour per IP
     }
 }
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
-    os.getenv('FRONTEND_URL', 'http://localhost:3000'),
+    os.getenv('FRONTEND_URL', 'http://localhost:5173'),
 ]
 
 if DEBUG:

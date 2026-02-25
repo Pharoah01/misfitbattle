@@ -20,6 +20,8 @@ class Challenge(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
+        verbose_name = 'Challenge'
+        verbose_name_plural = 'Challenges'
         db_table = 'challenges'
         ordering = ['created_at']
     
