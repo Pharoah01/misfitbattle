@@ -16,8 +16,8 @@ Authorization: Bearer <access_token>
 Request:
 ```json
 {
-  "register_number": "CS2021001",
-  "name": "John Doe",
+  "register_number": "xxxxxxxx",
+  "name": "XYZ",
   "password": "SecurePass123!"
 }
 ```
@@ -29,7 +29,7 @@ Response (201):
   "register_number": "CS2021001",
   "name": "John Doe",
   "is_admin": false,
-  "created_at": "2024-01-15T10:30:00Z"
+  "created_at": "2025-01-15T10:30:00Z"
 }
 ```
 
