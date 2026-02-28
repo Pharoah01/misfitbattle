@@ -1,33 +1,39 @@
-// Core data models for the CSSBattle application
-
 /**
- * User model representing an authenticated user
+ * Type definitions for API models
+ * These match the backend Django models
  */
+
+// User Model
 export interface User {
   id: number;
   register_number: string;
   name: string;
-  email?: string;
   is_admin: boolean;
   created_at: string;
 }
 
-/**
- * Challenge model representing a CSS/HTML coding challenge
- */
+// Challenge Model
 export interface Challenge {
   id: number;
   title: string;
   description: string;
   html_boilerplate: string;
   css_boilerplate: string;
+  palette: string[]; // Array of hex colors (read-only)
+  preview_image: string | null; // Image URL
   points: number;
   created_at: string;
 }
 
-/**
- * Submission model representing a user's solution to a challenge
- */
+// Challenge Query Parameters
+export interface ChallengeQueryParams {
+  search?: string;
+  ordering?: 'points' | '-points' | 'created_at' | '-created_at';
+  points__gte?: number;
+  points__lte?: number;
+}
+
+// Submission Model
 export interface Submission {
   id: number;
   user: number;
@@ -41,152 +47,42 @@ export interface Submission {
   submitted_at: string;
 }
 
-/**
- * Leaderboard entry representing a user's ranking and statistics
- */
-export interface LeaderboardEntry {
-  rank: number;
-  register_number: string;
-  name: string;
-  total_points: number;
-  solved_count: number;
-}
-
-/**
- * Authentication request data for user sign up
- */
-export interface SignUpData {
-  register_number: string;
-  name: string;
-  email?: string;
-  password: string;
-}
-
-/**
- * Authentication request data for user sign in
- */
-export interface SignInData {
-  register_number: string;
-  password: string;
-}
-
-/**
- * Authentication response containing tokens and user data
- */
-export interface AuthResponse {
+// Auth Response Models
+export interface LoginResponse {
   access: string;
   refresh: string;
   user: User;
 }
 
-/**
- * Token refresh request data
- */
-export interface TokenRefreshData {
-  refresh: string;
+export interface RegisterResponse {
+  id: number;
+  register_number: string;
+  name: string;
+  is_admin: boolean;
+  created_at: string;
 }
 
-/**
- * Token refresh response containing new access token
- */
-export interface TokenRefreshResponse {
-  access: string;
+// API Error Response
+export interface APIError {
+  detail?: string;
+  [key: string]: string | string[] | undefined;
 }
 
-/**
- * Challenge creation request data (admin only)
- */
-export interface CreateChallengeData {
-  title: string;
-  description: string;
-  html_boilerplate: string;
-  css_boilerplate: string;
-  points: number;
+// Form Data Types
+export interface LoginFormData {
+  register_number: string;
+  password: string;
 }
 
-/**
- * Challenge update request data (admin only)
- */
-export interface UpdateChallengeData {
-  title?: string;
-  description?: string;
-  html_boilerplate?: string;
-  css_boilerplate?: string;
-  points?: number;
+export interface RegisterFormData {
+  register_number: string;
+  name: string;
+  password: string;
+  confirmPassword?: string;
 }
 
-/**
- * Solution submission request data
- */
-export interface SubmitSolutionData {
+export interface SubmissionFormData {
   challenge: number;
   html_code: string;
   css_code: string;
-}
-
-/**
- * Query parameters for fetching challenges
- */
-export interface ChallengeQueryParams {
-  search?: string;
-  points__gte?: number;
-  ordering?: 'created_at' | '-created_at' | 'points' | '-points';
-}
-
-/**
- * Query parameters for fetching submissions
- */
-export interface SubmissionQueryParams {
-  challenge?: number;
-  ordering?: 'submitted_at' | '-submitted_at' | 'code_length' | '-code_length';
-}
-
-/**
- * API error response structure
- */
-export interface ApiError {
-  message: string;
-  status: number;
-  data?: any;
-}
-
-/**
- * Form state for sign up page
- */
-export interface SignUpFormState {
-  register_number: string;
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-/**
- * Form state for sign in page
- */
-export interface SignInFormState {
-  register_number: string;
-  password: string;
-  rememberMe: boolean;
-}
-
-/**
- * Form state for challenge creation/editing (admin)
- */
-export interface ChallengeFormState {
-  title: string;
-  description: string;
-  html_boilerplate: string;
-  css_boilerplate: string;
-  points: number;
-}
-
-/**
- * State for code editor component
- */
-export interface CodeEditorState {
-  htmlCode: string;
-  cssCode: string;
-  codeLength: number;
-  hasUnsavedChanges: boolean;
 }

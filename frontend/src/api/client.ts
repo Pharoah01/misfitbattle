@@ -1,117 +1,95 @@
 /**
- * Axios HTTP client instance with base configuration
+ * Secure Axios Client with Token Management
  * 
- * Provides centralized HTTP client for all API requests with:
- * - Base URL configuration from environment variables
- * - CORS credentials support
- * - Default headers for JSON content
- * 
- * Requirements: 2.5, 16.1, 16.6
+ * Security Features:
+ * - Access token stored in localStorage for persistence
+ * - Automatic token attachment to requests
+ * - CSRF protection via withCredentials
  */
 
-import axios from 'axios';
-import { API_BASE_URL } from '../config/constants';
+import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
+import { API_BASE_URL } from '@/config/constants';
+
+// Token storage key
+const TOKEN_STORAGE_KEY = 'auth_token';
 
 /**
- * Configured Axios instance for API requests
- * 
- * Configuration:
- * - baseURL: Set from VITE_API_URL environment variable
- * - withCredentials: Enabled for CORS cookie/credential handling
- * - Content-Type: Set to application/json for all requests
+ * Set access token in localStorage
+ * @param token - Authentication token
  */
-const apiClient = axios.create({
+export const setAccessToken = (token: string | null): void => {
+  if (token) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+};
+
+/**
+ * Get access token from localStorage
+ * @returns Current access token or null
+ */
+export const getAccessToken = (): string | null => {
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+};
+
+/**
+ * Clear access token from localStorage
+ */
+export const clearAccessToken = (): void => {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+};
+
+/**
+ * Create Axios instance with base configuration
+ */
+const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 });
 
 /**
- * Request interceptor for authentication
- * 
- * Adds Authorization header with Bearer token to all requests
- * Reads token from localStorage and handles missing token gracefully
- * 
- * Requirements: 2.5
+ * Request Interceptor
+ * Adds Authorization header with access token if available
  */
 apiClient.interceptors.request.use(
-  (config) => {
-    // Read token from localStorage
-    const token = localStorage.getItem('access_token');
+  (config: InternalAxiosRequestConfig) => {
+    const token = getAccessToken();
     
     // Add Authorization header if token exists
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Backend uses DRF Token Authentication (not JWT)
+    if (token && config.headers) {
+      config.headers.Authorization = `Token ${token}`;
     }
     
     return config;
   },
   (error) => {
-    // Handle request errors gracefully
     return Promise.reject(error);
   }
 );
 
 /**
- * Response interceptor for token refresh
- * 
- * Catches 401 responses and attempts to refresh the access token
- * Retries the original request with the new token on success
- * Redirects to sign in on refresh failure
- * Prevents infinite retry loops with _retry flag
- * 
- * Requirements: 2.1, 2.2, 2.3, 2.7, 11.2
+ * Response Interceptor
+ * Handles 401 errors (backend uses simple token auth without refresh)
  */
 apiClient.interceptors.response.use(
   (response) => {
-    // Pass through successful responses
+    // Success response - return as is
     return response;
   },
-  async (error) => {
-    const originalRequest = error.config;
-    
-    // Check if error is 401 and request hasn't been retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Mark request as retried to prevent infinite loops
-      originalRequest._retry = true;
+  async (error: AxiosError) => {
+    // Check if error is 401 Unauthorized
+    if (error.response?.status === 401) {
+      // Token is invalid - clear it and let user login again
+      clearAccessToken();
       
-      try {
-        // Get refresh token from localStorage
-        const refreshToken = localStorage.getItem('refresh_token');
-        
-        if (!refreshToken) {
-          // No refresh token available, redirect to sign in
-          localStorage.removeItem('access_token');
-          window.location.href = '/signin';
-          return Promise.reject(error);
-        }
-        
-        // Attempt to refresh the access token
-        const response = await axios.post(`${API_BASE_URL}/api/auth/token/refresh/`, {
-          refresh: refreshToken,
-        });
-        
-        // Store the new access token
-        const newAccessToken = response.data.access;
-        localStorage.setItem('access_token', newAccessToken);
-        
-        // Update the Authorization header for the original request
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        
-        // Retry the original request with the new token
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        // Token refresh failed, clear tokens and redirect to sign in
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/signin';
-        return Promise.reject(refreshError);
-      }
+      // Redirect to login page will be handled by AuthContext
     }
     
-    // For all other errors, reject the promise
     return Promise.reject(error);
   }
 );

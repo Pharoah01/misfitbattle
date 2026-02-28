@@ -7,4 +7,5 @@ bleach==6.1.0
 gunicorn==21.2.0
 hypothesis==6.92.1
 django-jazzmin==2.6.0
+Pillow==10.1.0
 # psycopg2-binary==2.9.9  # Uncomment for PostgreSQL support (Python 3.14 compatibility issue)

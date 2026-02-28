@@ -13,8 +13,7 @@ class Submission(models.Model):
         related_name='submissions',
         db_index=True
     )
-    challenge = models.ForeignKey(
-        'challenges.Challenge',
+    challenge = models.ForeignKey('challenges.Challenge',
         on_delete=models.CASCADE,
         related_name='submissions',
         db_index=True

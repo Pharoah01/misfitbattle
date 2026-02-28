@@ -10,8 +10,8 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Challenge CRUD operations.
     
-    List: GET /api/challenges/
-    Retrieve: GET /api/challenges/{id}/
+    List: GET /api/challenges/ (public read access)
+    Retrieve: GET /api/challenges/{id}/ (public read access)
     Create: POST /api/challenges/ (admin only)
     Update: PUT/PATCH /api/challenges/{id}/ (admin only)
     Delete: DELETE /api/challenges/{id}/ (admin only)
@@ -31,7 +31,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     """
     queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]  # Removed IsAuthenticated - allow public read
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = {
         'points': ['exact', 'gte', 'lte'],

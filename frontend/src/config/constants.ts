@@ -1,70 +1,72 @@
 /**
- * Application-wide constants and configuration
+ * Application Constants
+ * Centralized configuration for the application
  */
 
 // API Configuration
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_ENDPOINTS = {
+  AUTH: {
+    REGISTER: '/api/auth/register/',
+    LOGIN: '/api/auth/login/',
+    LOGOUT: '/api/auth/logout/',
+    ME: '/api/auth/me/',
+    REFRESH: '/api/auth/token/refresh/',
+  },
+  CHALLENGES: {
+    LIST: '/api/challenges/',
+    DETAIL: (id: number) => `/api/challenges/${id}/`,
+  },
+  SUBMISSIONS: {
+    CREATE: '/api/submissions/',
+    LIST: '/api/submissions/',
+    DETAIL: (id: number) => `/api/submissions/${id}/`,
+  },
+} as const;
 
-// Authentication
-export const TOKEN_STORAGE_KEY = 'access_token';
-export const REFRESH_TOKEN_STORAGE_KEY = 'refresh_token';
+// Token Configuration
+export const TOKEN_CONFIG = {
+  ACCESS_TOKEN_LIFETIME: 15 * 60 * 1000, // 15 minutes in milliseconds
+  REFRESH_TOKEN_LIFETIME: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+  REFRESH_THRESHOLD: 5 * 60 * 1000, // Refresh 5 minutes before expiry
+} as const;
 
-// Code Editor
-export const MAX_CODE_LENGTH = 10000;
-export const CODE_LENGTH_WARNING_THRESHOLD = 9000;
-
-// Debounce Delays (in milliseconds)
-export const LIVE_PREVIEW_DEBOUNCE_DELAY = 300;
-export const SEARCH_INPUT_DEBOUNCE_DELAY = 500;
-export const AUTO_SAVE_DEBOUNCE_DELAY = 1000;
-
-// Toast Notifications
-export const TOAST_DEFAULT_DURATION = 3000;
-
-// React Query Cache Times (in milliseconds)
+// Cache Configuration (React Query)
 export const CACHE_TIME = {
   CHALLENGES: 5 * 60 * 1000, // 5 minutes
   CHALLENGE_DETAIL: 10 * 60 * 1000, // 10 minutes
   SUBMISSIONS: 2 * 60 * 1000, // 2 minutes
-  LEADERBOARD: 30 * 1000, // 30 seconds
-};
+  USER: 10 * 60 * 1000, // 10 minutes
+} as const;
 
-// Leaderboard
-export const LEADERBOARD_REFETCH_INTERVAL = 30000; // 30 seconds
-export const VIRTUAL_SCROLL_THRESHOLD = 100; // Enable virtual scrolling for 100+ entries
+// React Query Keys
+export const QUERY_KEYS = {
+  CHALLENGES: 'challenges',
+  SUBMISSIONS: 'submissions',
+  USER: 'user',
+} as const;
 
-// Responsive Breakpoints (matches Tailwind defaults)
-export const BREAKPOINTS = {
-  MOBILE: 640,
-  TABLET: 1024,
-};
+// Validation Constants
+export const VALIDATION = {
+  MAX_CODE_LENGTH: 10000,
+  REGISTER_NUMBER_PATTERN: /^[a-zA-Z0-9]{3,20}$/,
+  PASSWORD_MIN_LENGTH: 8,
+} as const;
 
-// Validation Patterns
-export const VALIDATION_PATTERNS = {
-  REGISTER_NUMBER: /^[a-zA-Z0-9]{3,20}$/,
-  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  PASSWORD: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
-};
+// UI Constants
+export const UI = {
+  TOAST_DURATION: 5000, // 5 seconds
+  DEBOUNCE_DELAY: {
+    SEARCH: 500,
+    AUTO_SAVE: 1000,
+    LIVE_PREVIEW: 300,
+  },
+} as const;
 
-// Error Messages
-export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Network error. Please check your connection.',
-  UNAUTHORIZED: 'You are not authorized to perform this action.',
-  FORBIDDEN: 'You don\'t have permission to perform this action.',
-  NOT_FOUND: 'The requested resource was not found.',
-  SERVER_ERROR: 'Server error. Please try again later.',
-  RATE_LIMIT: 'Too many requests. Please wait and try again.',
-  VALIDATION_ERROR: 'Please check your input and try again.',
-};
-
-// Success Messages
-export const SUCCESS_MESSAGES = {
-  SIGN_UP: 'Account created successfully!',
-  SIGN_IN: 'Signed in successfully!',
-  SIGN_OUT: 'Signed out successfully!',
-  SUBMISSION: 'Solution submitted successfully!',
-  CHALLENGE_CREATED: 'Challenge created successfully!',
-  CHALLENGE_UPDATED: 'Challenge updated successfully!',
-  CHALLENGE_DELETED: 'Challenge deleted successfully!',
-  SUBMISSION_DELETED: 'Submission deleted successfully!',
-};
+// Security Constants
+export const SECURITY = {
+  // Iframe sandbox policy - CSS-only rendering, no scripts
+  IFRAME_SANDBOX: 'allow-same-origin',
+  // CSRF protection
+  CSRF_HEADER: 'X-CSRFToken',
+} as const;

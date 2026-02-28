@@ -1,2 +1,5 @@
-// Barrel export file for contexts
-// Export contexts here as they are created
+/**
+ * Central export for all contexts
+ */
+
+export { AuthProvider, useAuth } from './AuthContext';
