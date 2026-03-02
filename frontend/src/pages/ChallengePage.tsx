@@ -19,6 +19,7 @@ export const ChallengePage: React.FC = () => {
 
   const [htmlCode, setHtmlCode] = useState('');
   const [cssCode, setCssCode] = useState('');
+  const [activeTab, setActiveTab] = useState<'html' | 'css'>('html');
 
   // Auto-save key for localStorage
   const autoSaveKey = useMemo(() => `challenge_${challengeId}_autosave`, [challengeId]);
@@ -139,9 +140,9 @@ export const ChallengePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg flex flex-col">
+    <div className="h-screen bg-dark-bg flex flex-col">
       {/* Header */}
-      <header className="bg-dark-surface border-b border-dark-border px-4 py-3">
+      <header className="bg-dark-surface border-b border-dark-border px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -183,7 +184,7 @@ export const ChallengePage: React.FC = () => {
       </header>
 
       {/* Main Content - 3 Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Left Panel - Challenge Info */}
         <div className="w-80 bg-dark-surface border-r border-dark-border overflow-y-auto p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-4">Challenge</h2>
@@ -224,30 +225,58 @@ export const ChallengePage: React.FC = () => {
           )}
         </div>
 
-        {/* Middle Panel - Code Editors */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <CodeEditor
-              language="html"
-              value={htmlCode}
-              onChange={setHtmlCode}
-              height="calc(50vh - 100px)"
-            />
-            <CodeEditor
-              language="css"
-              value={cssCode}
-              onChange={setCssCode}
-              height="calc(50vh - 100px)"
-            />
+        {/* Middle Panel - Code Editors with Tabs */}
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          {/* Tab Header */}
+          <div className="bg-dark-surface border-b border-dark-border flex flex-shrink-0">
+            <button
+              onClick={() => setActiveTab('html')}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'html'
+                  ? 'bg-dark-bg text-text-primary border-b-2 border-primary'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              HTML
+            </button>
+            <button
+              onClick={() => setActiveTab('css')}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'css'
+                  ? 'bg-dark-bg text-text-primary border-b-2 border-primary'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              CSS
+            </button>
+          </div>
+          
+          {/* Editor Content */}
+          <div className="flex-1 overflow-hidden p-4 min-h-0">
+            {activeTab === 'html' ? (
+              <CodeEditor
+                language="html"
+                value={htmlCode}
+                onChange={setHtmlCode}
+                height="100%"
+              />
+            ) : (
+              <CodeEditor
+                language="css"
+                value={cssCode}
+                onChange={setCssCode}
+                height="100%"
+              />
+            )}
           </div>
         </div>
 
         {/* Right Panel - Live Preview */}
-        <div className="w-96 bg-dark-surface border-l border-dark-border flex flex-col">
-          <div className="px-4 py-3 border-b border-dark-border">
+        <div className="w-96 bg-dark-surface border-l border-dark-border flex flex-col min-h-0">
+          <div className="px-4 py-3 border-b border-dark-border flex-shrink-0">
             <h3 className="text-sm font-medium text-text-primary">Live Preview</h3>
           </div>
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-4 min-h-0">
             <LivePreview htmlCode={htmlCode} cssCode={cssCode} />
           </div>
         </div>

@@ -59,12 +59,13 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ htmlCode, cssCode, cla
   }, [htmlCode, cssCode]);
 
   return (
-    <div className={`relative w-full h-full bg-white ${className}`}>
+    <div className={`relative w-full h-full rounded-lg overflow-hidden border border-dark-border ${className}`}>
       <iframe
         ref={iframeRef}
         title="Live Preview"
         sandbox="allow-same-origin"
-        className="w-full h-full border-0"
+        className="w-full h-full border-0 bg-white"
+        style={{ backgroundColor: '#FFFFFF' }}
       />
     </div>
   );

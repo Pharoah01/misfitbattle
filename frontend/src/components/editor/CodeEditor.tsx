@@ -26,9 +26,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   return (
-    <div className="border border-slate-700 rounded-lg overflow-hidden">
-      <div className="bg-slate-800 px-4 py-2 border-b border-slate-700">
-        <span className="text-sm font-medium text-slate-300 uppercase">
+    <div className="border border-dark-border rounded-lg overflow-hidden h-full">
+      <div className="bg-dark-surface px-4 py-2 border-b border-dark-border">
+        <span className="text-sm font-medium text-text-secondary uppercase">
           {language}
         </span>
       </div>
