@@ -24,6 +24,7 @@ interface AuthContextValue {
   login: (data: LoginFormData) => Promise<void>;
   register: (data: RegisterFormData) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -156,6 +157,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   }, []);
 
+  /**
+   * Refresh user data
+   * Fetches current user data from backend
+   */
+  const refreshUser = useCallback(async (): Promise<void> => {
+    try {
+      const userData = await authAPI.getCurrentUser();
+      setUser(userData);
+    } catch (err) {
+      console.error('Failed to refresh user data:', err);
+      throw err;
+    }
+  }, []);
+
   const value: AuthContextValue = {
     user,
     isAuthenticated: !!user,
@@ -165,6 +180,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    refreshUser,
     clearError,
   };
 

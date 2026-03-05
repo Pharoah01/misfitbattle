@@ -3,9 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import IntegrityError
 from .models import Submission
 from .serializers import SubmissionSerializer, SubmissionCreateSerializer
 from .permissions import IsOwnerOrAdmin
+from .tasks import process_submission_task
 
 
 class SubmissionViewSet(viewsets.ModelViewSet):
@@ -57,6 +59,40 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return SubmissionCreateSerializer
         return SubmissionSerializer
+    
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new submission with duplicate check and async processing.
+        
+        Returns 409 if user has already submitted for this challenge.
+        Queues background task for rendering and similarity scoring.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            # Save submission with status='pending'
+            submission = serializer.save(user=request.user, status='pending')
+            
+            # Queue background processing task
+            process_submission_task.delay(submission.id)
+            
+            # Return immediate response
+            response_serializer = SubmissionSerializer(submission)
+            return Response({
+                'id': submission.id,
+                'status': 'pending',
+                'message': 'Submission received and queued for processing',
+                'submitted_at': submission.submitted_at,
+                'challenge': submission.challenge.id,
+                'code_length': submission.code_length
+            }, status=status.HTTP_201_CREATED)
+        
+        except IntegrityError:
+            # Duplicate submission (unique constraint violation)
+            return Response({
+                'error': 'You have already submitted for this challenge'
+            }, status=status.HTTP_409_CONFLICT)
     
     def perform_destroy(self, instance):
         """Allow users to delete their own submissions, admins can delete any."""

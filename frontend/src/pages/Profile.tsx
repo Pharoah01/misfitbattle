@@ -44,24 +44,51 @@ export const Profile: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           {/* Profile Card */}
           <div className="bg-dark-surface rounded border border-dark-border p-8 mb-6">
-            <h2 className="text-2xl font-bold text-text-primary mb-6">Profile</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-text-primary">Profile</h2>
+              <button
+                onClick={() => navigate('/edit-profile')}
+                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded transition-colors"
+              >
+                Edit Profile
+              </button>
+            </div>
             
-            <div className="grid md:grid-cols-3 gap-6">
-              <div>
-                <label className="text-sm text-text-secondary">Register Number</label>
-                <p className="text-lg text-text-primary font-medium">{user?.register_number}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm text-text-secondary">Name</label>
-                <p className="text-lg text-text-primary font-medium">{user?.name}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm text-text-secondary">Role</label>
-                <p className="text-lg text-text-primary font-medium">
-                  {user?.is_admin ? 'Administrator' : 'Participant'}
-                </p>
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm text-text-secondary block mb-1">Register Number</label>
+                  <p className="text-lg text-text-primary font-medium">{user?.register_number}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-text-secondary block mb-1">Name</label>
+                  <p className="text-lg text-text-primary font-medium">{user?.name}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-text-secondary block mb-1">Email</label>
+                  <p className="text-lg text-text-primary font-medium">{user?.email || 'Not set'}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-text-secondary block mb-1">College/Institution</label>
+                  <p className="text-lg text-text-primary font-medium">{user?.college_name || 'Not set'}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-text-secondary block mb-1">Role</label>
+                  <p className="text-lg text-text-primary font-medium">
+                    {user?.is_admin ? 'Administrator' : 'Participant'}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-text-secondary block mb-1">Member Since</label>
+                  <p className="text-lg text-text-primary font-medium">
+                    {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

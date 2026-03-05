@@ -8,6 +8,9 @@ export interface User {
   id: number;
   register_number: string;
   name: string;
+  email?: string;
+  college_name?: string;
+  profile_completed: boolean;
   is_admin: boolean;
   created_at: string;
 }
@@ -44,6 +47,10 @@ export interface Submission {
   html_code: string;
   css_code: string;
   code_length: number;
+  rendered_image?: string | null;
+  similarity_score?: number | null;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  error_message?: string | null;
   submitted_at: string;
 }
 
@@ -77,6 +84,7 @@ export interface LoginFormData {
 export interface RegisterFormData {
   register_number: string;
   name: string;
+  email: string;
   password: string;
   confirmPassword?: string;
 }

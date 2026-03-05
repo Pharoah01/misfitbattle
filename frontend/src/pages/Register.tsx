@@ -17,6 +17,7 @@ export const Register: React.FC = () => {
   const [formData, setFormData] = useState<RegisterFormData>({
     register_number: '',
     name: '',
+    email: '',
     password: '',
     confirmPassword: '',
   });
@@ -48,6 +49,13 @@ export const Register: React.FC = () => {
       newErrors.name = 'Name is required';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
     }
 
     // Password validation
@@ -172,6 +180,33 @@ export const Register: React.FC = () => {
               {errors.name && (
                 <p className="mt-1 text-sm text-primary">
                   {errors.name}
+                </p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label 
+                htmlFor="email" 
+                className="block text-sm font-medium text-text-secondary mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 bg-dark-surface border ${
+                  errors.email ? 'border-primary' : 'border-dark-border'
+                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`}
+                placeholder="your.email@example.com"
+                disabled={loading}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-primary">
+                  {errors.email}
                 </p>
               )}
             </div>

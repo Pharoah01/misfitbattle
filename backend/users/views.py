@@ -34,6 +34,8 @@ class SignUpView(generics.CreateAPIView):
                 'register_number': user.register_number,
                 'name': user.name,
                 'email': user.email,
+                'college_name': user.college_name,
+                'profile_completed': user.profile_completed,
                 'is_admin': user.is_admin,
                 'created_at': user.created_at
             }
@@ -77,6 +79,8 @@ class SignInView(generics.GenericAPIView):
                 'register_number': user.register_number,
                 'name': user.name,
                 'email': user.email,
+                'college_name': user.college_name,
+                'profile_completed': user.profile_completed,
                 'is_admin': user.is_admin
             }
         })
@@ -107,6 +111,93 @@ class CurrentUserView(generics.RetrieveAPIView):
     
     def get_object(self):
         return self.request.user
+
+
+class CompleteProfileView(generics.GenericAPIView):
+    """
+    Profile completion endpoint.
+    Updates user profile with name, register_number, and college_name.
+    Sets profile_completed to True upon successful update.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        user = request.user
+        
+        # Get profile data from request
+        name = request.data.get('name', '').strip()
+        register_number = request.data.get('register_number', '').strip()
+        college_name = request.data.get('college_name', '').strip()
+        
+        # Validate all fields are provided
+        if not name or not register_number or not college_name:
+            return Response({
+                'error': 'All fields are required: name, register_number, college_name'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update user profile
+        user.name = name
+        user.register_number = register_number
+        user.college_name = college_name
+        user.profile_completed = True
+        user.save()
+        
+        return Response({
+            'message': 'Profile completed successfully',
+            'user': {
+                'id': user.id,
+                'register_number': user.register_number,
+                'name': user.name,
+                'college_name': user.college_name,
+                'email': user.email,
+                'profile_completed': user.profile_completed,
+                'is_admin': user.is_admin
+            }
+        }, status=status.HTTP_200_OK)
+
+
+class UpdateProfileView(generics.GenericAPIView):
+    """
+    Profile update endpoint.
+    Allows users to update their profile information.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request):
+        user = request.user
+        
+        # Get profile data from request (all optional)
+        name = request.data.get('name', '').strip()
+        college_name = request.data.get('college_name', '').strip()
+        email = request.data.get('email', '').strip()
+        
+        # Update fields if provided
+        if name:
+            user.name = name
+        if college_name:
+            user.college_name = college_name
+        if email:
+            # Check if email is already taken by another user
+            if User.objects.filter(email=email).exclude(id=user.id).exists():
+                return Response({
+                    'error': 'This email is already in use'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            user.email = email
+        
+        user.save()
+        
+        return Response({
+            'message': 'Profile updated successfully',
+            'user': {
+                'id': user.id,
+                'register_number': user.register_number,
+                'name': user.name,
+                'college_name': user.college_name,
+                'email': user.email,
+                'profile_completed': user.profile_completed,
+                'is_admin': user.is_admin
+            }
+        }, status=status.HTTP_200_OK)
 
 
 # Backward compatibility aliases

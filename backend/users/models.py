@@ -66,6 +66,15 @@ class User(AbstractUser):
         help_text="User's email address (optional for superusers)"
     )
     name = models.CharField(max_length=255)
+    college_name = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="User's college or institution"
+    )
+    profile_completed = models.BooleanField(
+        default=False,
+        help_text="Whether user has completed profile information"
+    )
     is_admin = models.BooleanField(
         default=False,
         help_text="Designates whether the user can manage challenges via API (not Django admin)"

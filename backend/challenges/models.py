@@ -42,6 +42,12 @@ class Challenge(models.Model):
         null=True,
         help_text="Preview image for the challenge"
     )
+    ground_truth_image = models.ImageField(
+        upload_to='challenge_ground_truths/',
+        blank=True,
+        null=True,
+        help_text="Reference image for heatmap comparison"
+    )
     points = models.IntegerField(
         default=100,
         help_text = "Points Awarded!!"

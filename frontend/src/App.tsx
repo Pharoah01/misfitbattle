@@ -8,7 +8,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts';
 import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
-import { Home, Login, Register, Dashboard, Profile, ChallengePage } from '@/pages';
+import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile } from '@/pages';
 import './App.css';
 
 function App() {
@@ -21,6 +21,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
 
             {/* Protected Routes */}
             <Route 
@@ -46,6 +47,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/edit-profile" 
+              element={
+                <ProtectedRoute>
+                  <EditProfile />
                 </ProtectedRoute>
               } 
             />
