@@ -22,10 +22,10 @@ export const fetchChallenges = async (params?: ChallengeQueryParams): Promise<Ch
 };
 
 /**
- * Fetch a single challenge by ID
+ * Fetch a single challenge by ID or slug
  */
-export const fetchChallenge = async (id: number): Promise<Challenge> => {
-  const response = await apiClient.get<Challenge>(`/api/challenges/${id}/`);
+export const fetchChallenge = async (idOrSlug: string | number): Promise<Challenge> => {
+  const response = await apiClient.get<Challenge>(`/api/challenges/${idOrSlug}/`);
   return response.data;
 };
 

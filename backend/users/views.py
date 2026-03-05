@@ -2,9 +2,11 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from .serializers import UserRegistrationSerializer, UserSerializer
 from utils.throttling import AuthRateThrottle
+
+User = get_user_model()
 
 
 class SignUpView(generics.CreateAPIView):
@@ -166,16 +168,27 @@ class UpdateProfileView(generics.GenericAPIView):
     def put(self, request):
         user = request.user
         
-        # Get profile data from request (all optional)
+        # Get profile data from request
         name = request.data.get('name', '').strip()
         college_name = request.data.get('college_name', '').strip()
         email = request.data.get('email', '').strip()
         
-        # Update fields if provided
-        if name:
-            user.name = name
-        if college_name:
-            user.college_name = college_name
+        # Validate required fields
+        if not name:
+            return Response({
+                'error': 'Name is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not college_name:
+            return Response({
+                'error': 'College name is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update name and college (always required)
+        user.name = name
+        user.college_name = college_name
+        
+        # Update email if provided and valid
         if email:
             # Check if email is already taken by another user
             if User.objects.filter(email=email).exclude(id=user.id).exists():

@@ -19,6 +19,7 @@ export interface User {
 export interface Challenge {
   id: number;
   title: string;
+  slug: string | null; // URL-friendly identifier
   description: string;
   html_boilerplate: string;
   css_boilerplate: string;

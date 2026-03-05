@@ -24,8 +24,10 @@ export const Dashboard: React.FC = () => {
   /**
    * Handle challenge selection
    */
-  const handleChallengeClick = (challengeId: number) => {
-    navigate(`/challenge/${challengeId}`);
+  const handleChallengeClick = (challenge: Challenge) => {
+    // Use slug if available, fallback to ID
+    const route = challenge.slug ? `/play/${challenge.slug}` : `/challenge/${challenge.id}`;
+    navigate(route);
   };
 
   return (
@@ -152,7 +154,7 @@ export const Dashboard: React.FC = () => {
                       )}
 
                       <button 
-                        onClick={() => handleChallengeClick(challenge.id)}
+                        onClick={() => handleChallengeClick(challenge)}
                         className="w-full py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded transition-colors"
                       >
                         Play

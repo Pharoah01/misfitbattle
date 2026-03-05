@@ -1,117 +1,170 @@
 /**
- * Challenge Page
- * Main coding interface with editor and live preview
+ * Challenge Page - Production Grade
+ * Full viewport coding interface optimized for competitions
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChallenge, useSubmitSolution } from '@/hooks';
-import { CodeEditor, LivePreview } from '@/components';
+import { CodeEditor } from '@/components';
 import { VALIDATION } from '@/config/constants';
+import { toast } from '@/utils';
+import DOMPurify from 'dompurify';
 
 export const ChallengePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const challengeId = parseInt(id || '0', 10);
 
-  const { data: challenge, isLoading, error } = useChallenge(challengeId);
+  const { data: challenge, isLoading, error } = useChallenge(slug || '');
   const submitMutation = useSubmitSolution();
 
-  const [htmlCode, setHtmlCode] = useState('');
-  const [cssCode, setCssCode] = useState('');
-  const [activeTab, setActiveTab] = useState<'html' | 'css'>('html');
+  const [code, setCode] = useState('');
+  const [sanitizedCode, setSanitizedCode] = useState('');
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout>();
 
-  // Auto-save key for localStorage
-  const autoSaveKey = useMemo(() => `challenge_${challengeId}_autosave`, [challengeId]);
+  const autoSaveKey = useMemo(() => `challenge_${slug}_autosave`, [slug]);
 
   // Load challenge boilerplate or auto-saved code
   useEffect(() => {
     if (challenge) {
-      // Try to load auto-saved code
       const saved = localStorage.getItem(autoSaveKey);
       if (saved) {
         try {
-          const { htmlCode: savedHtml, cssCode: savedCss } = JSON.parse(saved);
-          setHtmlCode(savedHtml);
-          setCssCode(savedCss);
+          const { code: savedCode } = JSON.parse(saved);
+          setCode(savedCode);
           return;
         } catch (e) {
           console.error('Failed to load auto-saved code:', e);
         }
       }
       
-      // Load boilerplate if no auto-save
-      setHtmlCode(challenge.html_boilerplate || '');
-      setCssCode(challenge.css_boilerplate || '');
+      const boilerplate = `${challenge.html_boilerplate || ''}\n<style>\n${challenge.css_boilerplate || ''}\n</style>`;
+      setCode(boilerplate);
     }
   }, [challenge, autoSaveKey]);
 
   // Auto-save to localStorage
   useEffect(() => {
-    if (!htmlCode && !cssCode) return;
+    if (!code) return;
 
     const timeoutId = setTimeout(() => {
       try {
         localStorage.setItem(autoSaveKey, JSON.stringify({
-          htmlCode,
-          cssCode,
+          code,
           timestamp: Date.now(),
         }));
       } catch (e) {
         console.error('Failed to auto-save:', e);
       }
-    }, 1000); // 1 second debounce
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [htmlCode, cssCode, autoSaveKey]);
+  }, [code, autoSaveKey]);
 
-  // Calculate code length
-  const codeLength = useMemo(() => {
-    return htmlCode.length + cssCode.length;
-  }, [htmlCode, cssCode]);
+  // Sanitize and debounce preview updates (300ms)
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
 
-  // Check if code exceeds limit
+    debounceTimerRef.current = setTimeout(() => {
+      const sanitized = DOMPurify.sanitize(code, {
+        ALLOWED_TAGS: ['div', 'span', 'p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'style', 'section', 'article', 'header', 'footer', 'nav', 'main', 'aside'],
+        ALLOWED_ATTR: ['class', 'id', 'style', 'href', 'src', 'alt', 'title'],
+        FORBID_TAGS: ['script'],
+        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+      });
+      
+      setSanitizedCode(sanitized);
+      
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        const doc = iframeRef.current.contentWindow.document;
+        doc.open();
+        doc.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { width: 500px; height: 400px; }
+              </style>
+            </head>
+            <body>
+              ${sanitized}
+            </body>
+          </html>
+        `);
+        doc.close();
+      }
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [code]);
+
+  const codeLength = useMemo(() => code.length, [code]);
   const exceedsLimit = codeLength > VALIDATION.MAX_CODE_LENGTH;
 
-  /**
-   * Handle solution submission
-   */
-  const handleSubmit = async () => {
+  // Handle CTRL+ENTER shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [code, challenge]);
+
+  const handleSubmit = useCallback(async () => {
     if (exceedsLimit) {
+      toast.error('Code exceeds maximum length');
       return;
     }
 
-    if (!htmlCode.trim() && !cssCode.trim()) {
+    if (!code.trim()) {
+      toast.error('Please write some code first');
       return;
     }
 
-    await submitMutation.mutateAsync({
-      challenge: challengeId,
-      html_code: htmlCode,
-      css_code: cssCode,
-    });
+    if (!challenge) return;
 
-    // Clear auto-save after successful submission
-    localStorage.removeItem(autoSaveKey);
-  };
+    try {
+      const styleMatch = code.match(/<style>([\s\S]*?)<\/style>/i);
+      const cssCode = styleMatch ? styleMatch[1].trim() : '';
+      const htmlCode = code.replace(/<style>[\s\S]*?<\/style>/gi, '').trim();
 
-  /**
-   * Reset to boilerplate
-   */
-  const handleReset = () => {
+      await submitMutation.mutateAsync({
+        challenge: challenge.id,
+        html_code: htmlCode,
+        css_code: cssCode,
+      });
+
+      toast.success('Solution submitted successfully!');
+      localStorage.removeItem(autoSaveKey);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Submission failed');
+    }
+  }, [code, challenge, exceedsLimit, submitMutation, autoSaveKey]);
+
+  const handleReset = useCallback(() => {
     if (challenge && window.confirm('Reset to boilerplate? This will discard your current code.')) {
-      setHtmlCode(challenge.html_boilerplate || '');
-      setCssCode(challenge.css_boilerplate || '');
+      const boilerplate = `${challenge.html_boilerplate || ''}\n<style>\n${challenge.css_boilerplate || ''}\n</style>`;
+      setCode(boilerplate);
       localStorage.removeItem(autoSaveKey);
     }
-  };
+  }, [challenge, autoSaveKey]);
 
-  /**
-   * Render loading state
-   */
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-dark-bg flex items-center justify-center">
+      <div className="w-screen h-screen bg-dark-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-text-secondary">Loading challenge...</p>
@@ -120,17 +173,14 @@ export const ChallengePage: React.FC = () => {
     );
   }
 
-  /**
-   * Render error state
-   */
   if (error || !challenge) {
     return (
-      <div className="min-h-screen bg-dark-bg flex items-center justify-center">
+      <div className="w-screen h-screen bg-dark-bg flex items-center justify-center">
         <div className="text-center">
           <p className="text-primary mb-4">Challenge not found</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded"
+            className="px-4 py-2 bg-primary hover:bg-red-600 text-white rounded"
           >
             Back to Dashboard
           </button>
@@ -140,42 +190,45 @@ export const ChallengePage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-dark-bg flex flex-col">
-      {/* Header */}
-      <header className="bg-dark-surface border-b border-dark-border px-4 py-3 flex-shrink-0">
+    <div className="w-screen h-screen bg-dark-bg flex flex-col overflow-hidden">
+      {/* Header Bar */}
+      <header className="bg-dark-surface border-b border-dark-border px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-text-secondary hover:text-text-primary transition-colors"
+              className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-2"
             >
-              ← Back
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
             </button>
+            <div className="h-6 w-px bg-dark-border"></div>
             <div>
-              <h1 className="text-xl font-bold text-text-primary">{challenge.title}</h1>
-              <p className="text-sm text-text-secondary">{challenge.points} points</p>
+              <h1 className="text-lg font-bold text-text-primary">{challenge.title}</h1>
+            </div>
+            <div className="px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full">
+              <span className="text-orange-500 text-sm font-semibold">{challenge.points} pts</span>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            {/* Code Length Counter */}
-            <div className={`text-sm ${exceedsLimit ? 'text-primary' : 'text-text-secondary'}`}>
-              {codeLength} / {VALIDATION.MAX_CODE_LENGTH} chars
+            <div className={`text-sm font-mono px-3 py-1 rounded ${exceedsLimit ? 'bg-red-500/10 text-red-500' : 'bg-dark-bg text-text-secondary'}`}>
+              {codeLength} / {VALIDATION.MAX_CODE_LENGTH}
             </div>
             
-            {/* Reset Button */}
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-dark-bg hover:bg-dark-border text-text-primary border border-dark-border rounded transition-colors"
+              className="px-4 py-2 bg-dark-bg hover:bg-dark-border text-text-primary border border-dark-border rounded transition-colors text-sm font-medium"
             >
               Reset
             </button>
             
-            {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={submitMutation.isPending || exceedsLimit || (!htmlCode.trim() && !cssCode.trim())}
-              className="px-6 py-2 bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded transition-colors"
+              disabled={submitMutation.isPending || exceedsLimit || !code.trim()}
+              className="px-6 py-2 bg-[#ef4444] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded transition-colors text-sm shadow-lg shadow-red-500/20"
             >
               {submitMutation.isPending ? 'Submitting...' : 'Submit'}
             </button>
@@ -183,101 +236,116 @@ export const ChallengePage: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content - 3 Column Layout */}
+      {/* Three-Column Layout - Full Width */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left Panel - Challenge Info */}
-        <div className="w-80 bg-dark-surface border-r border-dark-border overflow-y-auto p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Challenge</h2>
-          
-          {/* Preview Image */}
-          {challenge.preview_image && (
-            <div className="mb-4 rounded overflow-hidden bg-dark-bg border border-dark-border">
-              <img
-                src={challenge.preview_image}
-                alt={challenge.title}
-                className="w-full"
+        {/* Column 1: Code Editor (40%) */}
+        <div className="flex flex-col border-r border-dark-border" style={{ width: '40%' }}>
+          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
+            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Code Editor</h3>
+          </div>
+          <div className="flex-1 overflow-hidden bg-[#1e1e1e]">
+            <CodeEditor
+              language="html"
+              value={code}
+              onChange={setCode}
+              height="100%"
+            />
+          </div>
+        </div>
+
+        {/* Column 2: Output Preview (35%) */}
+        <div className="flex flex-col border-r border-dark-border" style={{ width: '35%' }}>
+          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
+            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Your Output</h3>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
+            <div 
+              className="flex items-center justify-center"
+              style={{
+                background: '#f5f5f5',
+                padding: '24px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <iframe
+                ref={iframeRef}
+                sandbox="allow-same-origin"
+                className="bg-white"
+                style={{
+                  width: '500px',
+                  height: '400px',
+                  border: 'none',
+                  display: 'block'
+                }}
+                title="Code Preview"
               />
             </div>
-          )}
-          
-          {/* Description */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-text-secondary mb-2">Description</h3>
-            <p className="text-text-primary text-sm whitespace-pre-wrap">{challenge.description}</p>
           </div>
-          
-          {/* Color Palette */}
-          {challenge.palette && challenge.palette.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-text-secondary mb-2">Color Palette</h3>
-              <div className="space-y-2">
-                {challenge.palette.map((color, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 rounded border border-dark-border"
-                      style={{ backgroundColor: color }}
+        </div>
+
+        {/* Column 3: Target (25%) */}
+        <div className="flex flex-col" style={{ width: '25%' }}>
+          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
+            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Target</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            {challenge.preview_image && (
+              <div className="mb-6">
+                <div 
+                  className="flex items-center justify-center"
+                  style={{
+                    background: '#f5f5f5',
+                    padding: '24px',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <div 
+                    className="bg-white flex items-center justify-center"
+                    style={{
+                      width: '500px',
+                      height: '400px'
+                    }}
+                  >
+                    <img
+                      src={challenge.preview_image}
+                      alt={challenge.title}
+                      className="max-w-full max-h-full object-contain"
                     />
-                    <span className="text-text-primary font-mono text-sm">{color}</span>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Middle Panel - Code Editors with Tabs */}
-        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-          {/* Tab Header */}
-          <div className="bg-dark-surface border-b border-dark-border flex flex-shrink-0">
-            <button
-              onClick={() => setActiveTab('html')}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'html'
-                  ? 'bg-dark-bg text-text-primary border-b-2 border-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              HTML
-            </button>
-            <button
-              onClick={() => setActiveTab('css')}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'css'
-                  ? 'bg-dark-bg text-text-primary border-b-2 border-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              CSS
-            </button>
-          </div>
-          
-          {/* Editor Content */}
-          <div className="flex-1 overflow-hidden p-4 min-h-0">
-            {activeTab === 'html' ? (
-              <CodeEditor
-                language="html"
-                value={htmlCode}
-                onChange={setHtmlCode}
-                height="100%"
-              />
-            ) : (
-              <CodeEditor
-                language="css"
-                value={cssCode}
-                onChange={setCssCode}
-                height="100%"
-              />
             )}
-          </div>
-        </div>
+            
+            {challenge.palette && challenge.palette.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider">Colors</h4>
+                <div className="space-y-2">
+                  {challenge.palette.map((color, index) => (
+                    <div key={index} className="flex items-center gap-3 group cursor-pointer" onClick={() => {
+                      navigator.clipboard.writeText(color);
+                      toast.success(`Copied ${color}`);
+                    }}>
+                      <div
+                        className="w-10 h-10 rounded border-2 border-dark-border flex-shrink-0 group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-text-primary font-mono text-sm group-hover:text-orange-500 transition-colors">{color}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Right Panel - Live Preview */}
-        <div className="w-96 bg-dark-surface border-l border-dark-border flex flex-col min-h-0">
-          <div className="px-4 py-3 border-b border-dark-border flex-shrink-0">
-            <h3 className="text-sm font-medium text-text-primary">Live Preview</h3>
-          </div>
-          <div className="flex-1 p-4 min-h-0">
-            <LivePreview htmlCode={htmlCode} cssCode={cssCode} />
+            {challenge.description && (
+              <div>
+                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider">Description</h4>
+                <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap">{challenge.description}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

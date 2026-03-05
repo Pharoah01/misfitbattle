@@ -24,6 +24,7 @@ export const register = async (data: RegisterFormData): Promise<RegisterResponse
     {
       register_number: data.register_number,
       name: data.name,
+      email: data.email,
       password: data.password,
     }
   );

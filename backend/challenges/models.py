@@ -23,6 +23,13 @@ def validate_palette(value):
 
 class Challenge(models.Model):
     title = models.CharField(max_length=255)
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text="URL-friendly identifier (e.g., 'center-square')"
+    )
     description = models.TextField()
     html_boilerplate = models.TextField(
         help_text = "type your HTML code here."

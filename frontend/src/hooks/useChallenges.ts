@@ -20,14 +20,14 @@ export const useChallenges = (params?: ChallengeQueryParams) => {
 };
 
 /**
- * Hook to fetch a single challenge by ID
+ * Hook to fetch a single challenge by ID or slug
  */
-export const useChallenge = (id: number) => {
+export const useChallenge = (idOrSlug: string | number) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.CHALLENGES, id],
-    queryFn: () => fetchChallenge(id),
+    queryKey: [QUERY_KEYS.CHALLENGES, idOrSlug],
+    queryFn: () => fetchChallenge(idOrSlug),
     staleTime: CACHE_TIME.CHALLENGE_DETAIL,
-    enabled: !!id,
+    enabled: !!idOrSlug,
   });
 };
 

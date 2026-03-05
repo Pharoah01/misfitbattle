@@ -75,20 +75,6 @@ export const Profile: React.FC = () => {
                   <label className="text-sm text-text-secondary block mb-1">College/Institution</label>
                   <p className="text-lg text-text-primary font-medium">{user?.college_name || 'Not set'}</p>
                 </div>
-                
-                <div>
-                  <label className="text-sm text-text-secondary block mb-1">Role</label>
-                  <p className="text-lg text-text-primary font-medium">
-                    {user?.is_admin ? 'Administrator' : 'Participant'}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="text-sm text-text-secondary block mb-1">Member Since</label>
-                  <p className="text-lg text-text-primary font-medium">
-                    {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
               </div>
             </div>
           </div>

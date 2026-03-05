@@ -34,12 +34,18 @@ function App() {
             />
             
             <Route 
-              path="/challenge/:id" 
+              path="/play/:slug" 
               element={
                 <ProtectedRoute>
                   <ChallengePage />
                 </ProtectedRoute>
               } 
+            />
+            
+            {/* Legacy route redirect */}
+            <Route 
+              path="/challenge/:id" 
+              element={<Navigate to="/dashboard" replace />} 
             />
             
             <Route 

@@ -179,7 +179,7 @@ export const Home: React.FC = () => {
       <footer className="border-t border-dark-border mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-text-secondary text-sm">
-            <p>© 2026 Binary Misfits. Built for college events and hackathons.</p>
+            <p>© 2026 Binary Misfits.</p>
           </div>
         </div>
       </footer>
