@@ -5,6 +5,7 @@
 
 import React from 'react';
 import Editor from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 
 interface CodeEditorProps {
   language: 'html' | 'css';
@@ -12,6 +13,7 @@ interface CodeEditorProps {
   onChange: (value: string) => void;
   height?: string;
   readOnly?: boolean;
+  options?: editor.IStandaloneEditorConstructionOptions;
 }
 
 export const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -20,36 +22,31 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onChange,
   height = '300px',
   readOnly = false,
+  options = {},
 }) => {
   const handleEditorChange = (value: string | undefined) => {
     onChange(value || '');
   };
 
   return (
-    <div className="border border-dark-border rounded-lg overflow-hidden h-full">
-      <div className="bg-dark-surface px-4 py-2 border-b border-dark-border">
-        <span className="text-sm font-medium text-text-secondary uppercase">
-          {language}
-        </span>
-      </div>
-      <Editor
-        height={height}
-        language={language}
-        value={value}
-        onChange={handleEditorChange}
-        theme="vs-dark"
-        options={{
-          minimap: { enabled: false },
-          fontSize: 14,
-          lineNumbers: 'on',
-          scrollBeyondLastLine: false,
-          automaticLayout: true,
-          tabSize: 2,
-          wordWrap: 'on',
-          readOnly,
-          padding: { top: 10, bottom: 10 },
-        }}
-      />
-    </div>
+    <Editor
+      height={height}
+      language={language}
+      value={value}
+      onChange={handleEditorChange}
+      theme="vs-dark"
+      options={{
+        minimap: { enabled: false },
+        fontSize: 14,
+        lineNumbers: 'on',
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+        tabSize: 2,
+        wordWrap: 'on',
+        readOnly,
+        padding: { top: 10, bottom: 10 },
+        ...options,
+      }}
+    />
   );
 };

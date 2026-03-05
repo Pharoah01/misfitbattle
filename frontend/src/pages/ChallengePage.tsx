@@ -20,10 +20,38 @@ export const ChallengePage: React.FC = () => {
 
   const [code, setCode] = useState('');
   const [sanitizedCode, setSanitizedCode] = useState('');
+  const [scaleToFit, setScaleToFit] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout>();
+  const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const autoSaveKey = useMemo(() => `challenge_${slug}_autosave`, [slug]);
+
+  // Calculate scaled canvas size
+  const canvasSize = useMemo(() => {
+    if (!scaleToFit || !previewContainerRef.current) {
+      return { width: 400, height: 300 };
+    }
+
+    const container = previewContainerRef.current;
+    const containerWidth = container.clientWidth - 88; // Subtract padding and frame
+    const containerHeight = container.clientHeight - 88;
+    
+    // Maintain 4:3 aspect ratio
+    const aspectRatio = 4 / 3;
+    let width = containerWidth;
+    let height = width / aspectRatio;
+    
+    if (height > containerHeight) {
+      height = containerHeight;
+      width = height * aspectRatio;
+    }
+    
+    return {
+      width: Math.floor(width),
+      height: Math.floor(height)
+    };
+  }, [scaleToFit, previewContainerRef.current?.clientWidth, previewContainerRef.current?.clientHeight]);
 
   // Load challenge boilerplate or auto-saved code
   useEffect(() => {
@@ -88,7 +116,7 @@ export const ChallengePage: React.FC = () => {
               <meta charset="UTF-8">
               <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { width: 500px; height: 400px; }
+                body { width: ${canvasSize.width}px; height: ${canvasSize.height}px; }
               </style>
             </head>
             <body>
@@ -105,7 +133,7 @@ export const ChallengePage: React.FC = () => {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [code]);
+  }, [code, canvasSize]);
 
   const codeLength = useMemo(() => code.length, [code]);
   const exceedsLimit = codeLength > VALIDATION.MAX_CODE_LENGTH;
@@ -164,7 +192,7 @@ export const ChallengePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-screen h-screen bg-dark-bg flex items-center justify-center">
+      <div style={{ width: '100%', height: '100vh' }} className="bg-dark-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-text-secondary">Loading challenge...</p>
@@ -175,7 +203,7 @@ export const ChallengePage: React.FC = () => {
 
   if (error || !challenge) {
     return (
-      <div className="w-screen h-screen bg-dark-bg flex items-center justify-center">
+      <div style={{ width: '100%', height: '100vh' }} className="bg-dark-bg flex items-center justify-center">
         <div className="text-center">
           <p className="text-primary mb-4">Challenge not found</p>
           <button
@@ -190,7 +218,7 @@ export const ChallengePage: React.FC = () => {
   }
 
   return (
-    <div className="w-screen h-screen bg-dark-bg flex flex-col overflow-hidden">
+    <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }} className="bg-dark-bg flex flex-col">
       {/* Header Bar */}
       <header className="bg-dark-surface border-b border-dark-border px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -236,10 +264,18 @@ export const ChallengePage: React.FC = () => {
         </div>
       </header>
 
-      {/* Three-Column Layout - Full Width */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Column 1: Code Editor (40%) */}
-        <div className="flex flex-col border-r border-dark-border" style={{ width: '40%' }}>
+      {/* Grid Layout - Full Width */}
+      <div 
+        style={{ 
+          width: '100%', 
+          height: 'calc(100vh - 60px)',
+          display: 'grid',
+          gridTemplateColumns: '40% 35% 25%',
+          overflow: 'hidden'
+        }}
+      >
+        {/* Column 1: Code Editor */}
+        <div className="flex flex-col border-r border-dark-border overflow-hidden">
           <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
             <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Code Editor</h3>
           </div>
@@ -249,16 +285,26 @@ export const ChallengePage: React.FC = () => {
               value={code}
               onChange={setCode}
               height="100%"
+              options={{ automaticLayout: true }}
             />
           </div>
         </div>
 
-        {/* Column 2: Output Preview (35%) */}
-        <div className="flex flex-col border-r border-dark-border" style={{ width: '35%' }}>
-          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
+        {/* Column 2: Output Preview */}
+        <div className="flex flex-col border-r border-dark-border overflow-hidden">
+          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0 flex items-center justify-between">
             <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Your Output</h3>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={scaleToFit}
+                onChange={(e) => setScaleToFit(e.target.checked)}
+                className="w-4 h-4 rounded border-dark-border bg-dark-bg text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+              />
+              <span className="text-xs text-text-secondary">Scale to Fit</span>
+            </label>
           </div>
-          <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
+          <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-8 overflow-hidden">
             <div 
               className="flex items-center justify-center"
               style={{
@@ -274,8 +320,8 @@ export const ChallengePage: React.FC = () => {
                 sandbox="allow-same-origin"
                 className="bg-white"
                 style={{
-                  width: '500px',
-                  height: '400px',
+                  width: `${canvasSize.width}px`,
+                  height: `${canvasSize.height}px`,
                   border: 'none',
                   display: 'block'
                 }}
@@ -285,8 +331,8 @@ export const ChallengePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Column 3: Target (25%) */}
-        <div className="flex flex-col" style={{ width: '25%' }}>
+        {/* Column 3: Target */}
+        <div className="flex flex-col overflow-hidden">
           <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
             <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Target</h3>
           </div>
@@ -304,16 +350,20 @@ export const ChallengePage: React.FC = () => {
                   }}
                 >
                   <div 
-                    className="bg-white flex items-center justify-center"
+                    className="bg-white flex items-center justify-center overflow-hidden"
                     style={{
-                      width: '500px',
-                      height: '400px'
+                      width: `${canvasSize.width}px`,
+                      height: `${canvasSize.height}px`
                     }}
                   >
                     <img
                       src={challenge.preview_image}
                       alt={challenge.title}
-                      className="max-w-full max-h-full object-contain"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain'
+                      }}
                     />
                   </div>
                 </div>
