@@ -33,17 +33,19 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-dark-bg">
       {/* Header / Top Bar */}
-      <header className="bg-dark-surface border-b border-dark-border">
+      <header className="bg-dark-surface/50 backdrop-blur-sm border-b border-purple-primary/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-text-primary">Misfits-Battle</h1>
+            <h1 className="text-2xl font-bold text-text-primary font-orbitron tracking-wider">
+              <span className="text-purple-primary">MISFITS</span>-BATTLE
+            </h1>
             <div className="flex items-center gap-4">
-              <span className="text-text-secondary hidden sm:inline">
+              <span className="text-text-secondary hidden sm:inline font-rajdhani">
                 {user?.name}
               </span>
               <button
                 onClick={() => navigate('/profile')}
-                className="px-4 py-2 bg-dark-bg hover:bg-dark-border text-text-primary border border-dark-border rounded transition-colors"
+                className="px-4 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white border border-purple-primary/30 rounded transition-all font-rajdhani font-semibold shadow-lg shadow-purple-primary/20"
               >
                 Profile
               </button>
@@ -55,9 +57,13 @@ export const Dashboard: React.FC = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Section Title */}
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold text-text-primary mb-2">Challenges</h2>
-          <p className="text-text-secondary">Choose a challenge and start coding</p>
+        <div className="mb-8">
+          <h2 className="text-4xl font-bold text-text-primary mb-2 font-orbitron">
+            <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
+              Challenges
+            </span>
+          </h2>
+          <p className="text-text-secondary font-rajdhani text-lg">Choose a challenge and start coding</p>
         </div>
 
         {/* Filters */}
@@ -69,7 +75,7 @@ export const Dashboard: React.FC = () => {
               placeholder="Search challenges..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
             />
           </div>
 
@@ -77,7 +83,7 @@ export const Dashboard: React.FC = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'points' | '-points')}
-            className="px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
           >
             <option value="points">Points: Low to High</option>
             <option value="-points">Points: High to Low</option>
@@ -107,10 +113,10 @@ export const Dashboard: React.FC = () => {
                 {challenges.map((challenge: Challenge) => (
                   <div
                     key={challenge.id}
-                    className="bg-dark-surface rounded border border-dark-border hover:border-primary cursor-pointer transition-all group"
+                    className="bg-dark-surface rounded-lg border border-purple-primary/20 hover:border-purple-primary cursor-pointer transition-all group hover:shadow-xl hover:shadow-purple-primary/20"
                   >
                     {/* Challenge Preview Image */}
-                    <div className="relative overflow-hidden bg-dark-bg">
+                    <div className="relative overflow-hidden bg-dark-bg rounded-t-lg">
                       {challenge.preview_image ? (
                         <img
                           src={challenge.preview_image}
@@ -119,23 +125,23 @@ export const Dashboard: React.FC = () => {
                         />
                       ) : (
                         <div className="w-full h-48 flex items-center justify-center">
-                          <span className="text-text-secondary text-sm">No preview</span>
+                          <span className="text-text-secondary text-sm font-rajdhani">No preview</span>
                         </div>
                       )}
                     </div>
 
                     {/* Challenge Info */}
-                    <div className="p-4">
+                    <div className="p-5">
                       <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-text-primary flex-1 group-hover:text-primary transition-colors">
+                        <h3 className="text-lg font-semibold text-text-primary flex-1 group-hover:text-purple-primary transition-colors font-rajdhani">
                           {challenge.title}
                         </h3>
-                        <span className="ml-2 px-2 py-1 bg-primary text-white text-xs font-medium rounded">
+                        <span className="ml-2 px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded-full font-rajdhani shadow-lg shadow-orange-500/20">
                           {challenge.points} pts
                         </span>
                       </div>
 
-                      <p className="text-text-secondary text-sm line-clamp-2 mb-4">
+                      <p className="text-text-secondary text-sm line-clamp-2 mb-4 font-rajdhani">
                         {challenge.description}
                       </p>
 
@@ -145,7 +151,7 @@ export const Dashboard: React.FC = () => {
                           {challenge.palette.slice(0, 5).map((color, index) => (
                             <div
                               key={index}
-                              className="w-6 h-6 rounded border border-dark-border"
+                              className="w-7 h-7 rounded border-2 border-purple-primary/30 hover:scale-110 transition-transform"
                               style={{ backgroundColor: color }}
                               title={color}
                             />
@@ -155,7 +161,7 @@ export const Dashboard: React.FC = () => {
 
                       <button 
                         onClick={() => handleChallengeClick(challenge)}
-                        className="w-full py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded transition-colors"
+                        className="w-full py-2.5 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white font-bold rounded-lg transition-all font-rajdhani shadow-lg shadow-purple-primary/30 hover:shadow-purple-primary/50"
                       >
                         Play
                       </button>
@@ -191,7 +197,7 @@ export const Dashboard: React.FC = () => {
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="px-6 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded transition-colors"
+                    className="px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white font-bold rounded-lg transition-all font-rajdhani shadow-lg shadow-purple-primary/30"
                   >
                     Clear Search
                   </button>

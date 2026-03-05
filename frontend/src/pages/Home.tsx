@@ -22,22 +22,22 @@ export const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-dark-bg">
       {/* Header */}
-      <header className="border-b border-dark-border">
+      <header className="border-b border-purple-primary/20 bg-dark-surface/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-text-primary">
-              Misfits-Battle
+            <h1 className="text-2xl font-bold text-text-primary font-orbitron tracking-wider">
+              <span className="text-purple-primary">MISFITS</span>-BATTLE
             </h1>
             <div className="flex gap-3">
               <Link
                 to="/login"
-                className="px-4 py-2 text-text-primary hover:text-primary transition-colors"
+                className="px-4 py-2 text-text-primary hover:text-purple-primary transition-colors font-rajdhani font-semibold"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded transition-colors"
+                className="px-6 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white rounded font-rajdhani font-bold transition-all shadow-lg shadow-purple-primary/20"
               >
                 Get Started
               </Link>
@@ -47,57 +47,67 @@ export const Home: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-4">
-          CSSBattle-Style Coding Competition
-        </h2>
-        <p className="text-xl text-text-secondary mb-8 max-w-2xl mx-auto">
-          Test your HTML/CSS skills. Solve challenges. Compete with others.
-        </p>
-        <Link
-          to="/register"
-          className="inline-block px-8 py-3 bg-primary hover:bg-primary-dark text-white font-medium rounded text-lg transition-colors"
-        >
-          Start Competing
-        </Link>
+      <section className="relative overflow-hidden">
+        {/* Purple gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-primary/10 via-purple-secondary/5 to-transparent"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(107,45,255,0.15),transparent_50%)]"></div>
+        
+        <div className="container mx-auto px-4 py-24 text-center relative z-10">
+          <h2 className="text-5xl md:text-6xl font-bold text-text-primary mb-6 font-orbitron tracking-tight">
+            <span className="bg-gradient-to-r from-purple-primary via-purple-secondary to-purple-tertiary bg-clip-text text-transparent">
+              CSSBattle-Style
+            </span>
+            <br />
+            Coding Competition
+          </h2>
+          <p className="text-xl text-text-secondary mb-10 max-w-2xl mx-auto font-rajdhani">
+            Test your HTML/CSS skills. Solve challenges. Compete with others.
+          </p>
+          <Link
+            to="/register"
+            className="inline-block px-10 py-4 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white font-bold rounded-lg text-lg transition-all shadow-2xl shadow-purple-primary/30 hover:shadow-purple-primary/50 font-rajdhani tracking-wide animate-glow"
+          >
+            Start Competing
+          </Link>
+        </div>
       </section>
 
       {/* How It Works */}
-      <section className="container mx-auto px-4 py-12">
-        <h3 className="text-2xl font-bold text-text-primary mb-8 text-center">
+      <section className="container mx-auto px-4 py-16">
+        <h3 className="text-3xl font-bold text-text-primary mb-12 text-center font-orbitron">
           How It Works
         </h3>
         <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-dark-surface border border-dark-border rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-primary">1</span>
+          <div className="text-center group">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-primary to-purple-secondary border-2 border-purple-primary/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg shadow-purple-primary/20">
+              <span className="text-3xl font-bold text-white font-orbitron">1</span>
             </div>
-            <h4 className="text-lg font-semibold text-text-primary mb-2">
+            <h4 className="text-lg font-semibold text-text-primary mb-2 font-rajdhani">
               Choose a Challenge
             </h4>
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm font-rajdhani">
               Browse challenges and pick one that interests you
             </p>
           </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-dark-surface border border-dark-border rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-primary">2</span>
+          <div className="text-center group">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-secondary to-purple-tertiary border-2 border-purple-secondary/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg shadow-purple-secondary/20">
+              <span className="text-3xl font-bold text-white font-orbitron">2</span>
             </div>
-            <h4 className="text-lg font-semibold text-text-primary mb-2">
+            <h4 className="text-lg font-semibold text-text-primary mb-2 font-rajdhani">
               Write Your Code
             </h4>
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm font-rajdhani">
               Use HTML and CSS to recreate the target design
             </p>
           </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-dark-surface border border-dark-border rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-primary">3</span>
+          <div className="text-center group">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-tertiary to-purple-light border-2 border-purple-tertiary/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg shadow-purple-tertiary/20">
+              <span className="text-3xl font-bold text-white font-orbitron">3</span>
             </div>
-            <h4 className="text-lg font-semibold text-text-primary mb-2">
+            <h4 className="text-lg font-semibold text-text-primary mb-2 font-rajdhani">
               Submit & Compete
             </h4>
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm font-rajdhani">
               Submit your solution and earn points
             </p>
           </div>
@@ -105,14 +115,14 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Challenge Preview */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-bold text-text-primary">
+      <section className="container mx-auto px-4 py-16">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-3xl font-bold text-text-primary font-orbitron">
             Available Challenges
           </h3>
           <Link
             to="/login"
-            className="text-primary hover:text-primary-light transition-colors"
+            className="text-purple-primary hover:text-purple-secondary transition-colors font-rajdhani font-semibold"
           >
             Sign in to play →
           </Link>
@@ -135,7 +145,7 @@ export const Home: React.FC = () => {
             {challenges.slice(0, 6).map((challenge) => (
               <div
                 key={challenge.id}
-                className="bg-dark-surface border border-dark-border rounded-lg p-4 hover:border-primary transition-colors"
+                className="bg-dark-surface border border-purple-primary/20 rounded-lg p-4 hover:border-purple-primary hover:shadow-lg hover:shadow-purple-primary/20 transition-all group"
               >
                 {challenge.preview_image && (
                   <div className="mb-4 rounded overflow-hidden bg-dark-border">
@@ -146,19 +156,19 @@ export const Home: React.FC = () => {
                     />
                   </div>
                 )}
-                <h4 className="text-lg font-semibold text-text-primary mb-2">
+                <h4 className="text-lg font-semibold text-text-primary mb-2 font-rajdhani group-hover:text-purple-primary transition-colors">
                   {challenge.title}
                 </h4>
-                <p className="text-text-secondary text-sm mb-3 line-clamp-2">
+                <p className="text-text-secondary text-sm mb-3 line-clamp-2 font-rajdhani">
                   {challenge.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-primary font-medium">
+                  <span className="text-orange-500 font-semibold font-rajdhani">
                     {challenge.points} points
                   </span>
                   <Link
                     to="/login"
-                    className="text-sm text-text-secondary hover:text-primary transition-colors"
+                    className="text-sm text-text-secondary hover:text-purple-primary transition-colors font-rajdhani"
                   >
                     Sign in to play
                   </Link>
@@ -176,9 +186,9 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-dark-border mt-16">
+      <footer className="border-t border-purple-primary/20 mt-16 bg-dark-surface/50">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-text-secondary text-sm">
+          <div className="text-center text-text-secondary text-sm font-rajdhani">
             <p>© 2026 Binary Misfits.</p>
           </div>
         </div>

@@ -194,8 +194,8 @@ export const ChallengePage: React.FC = () => {
     return (
       <div style={{ width: '100%', height: '100vh' }} className="bg-dark-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">Loading challenge...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-primary mx-auto mb-4"></div>
+          <p className="text-text-secondary font-rajdhani">Loading challenge...</p>
         </div>
       </div>
     );
@@ -205,10 +205,10 @@ export const ChallengePage: React.FC = () => {
     return (
       <div style={{ width: '100%', height: '100vh' }} className="bg-dark-bg flex items-center justify-center">
         <div className="text-center">
-          <p className="text-primary mb-4">Challenge not found</p>
+          <p className="text-purple-primary mb-4 font-rajdhani font-semibold">Challenge not found</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-primary hover:bg-red-600 text-white rounded"
+            className="px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white rounded-lg font-rajdhani font-bold shadow-lg shadow-purple-primary/30"
           >
             Back to Dashboard
           </button>
@@ -218,37 +218,37 @@ export const ChallengePage: React.FC = () => {
   }
 
   return (
-    <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }} className="bg-dark-bg flex flex-col">
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }} className="bg-dark-bg flex flex-col">
       {/* Header Bar */}
-      <header className="bg-dark-surface border-b border-dark-border px-6 py-3 flex-shrink-0">
+      <header className="bg-dark-surface/50 backdrop-blur-sm border-b border-purple-primary/20 px-6 py-3 flex-shrink-0" style={{ height: '60px' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-2"
+              className="text-text-secondary hover:text-purple-primary transition-colors flex items-center gap-2 font-rajdhani font-semibold"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back
             </button>
-            <div className="h-6 w-px bg-dark-border"></div>
+            <div className="h-6 w-px bg-purple-primary/30"></div>
             <div>
-              <h1 className="text-lg font-bold text-text-primary">{challenge.title}</h1>
+              <h1 className="text-lg font-bold text-text-primary font-rajdhani">{challenge.title}</h1>
             </div>
-            <div className="px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full">
-              <span className="text-orange-500 text-sm font-semibold">{challenge.points} pts</span>
+            <div className="px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full">
+              <span className="text-orange-500 text-sm font-bold font-rajdhani">{challenge.points} pts</span>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <div className={`text-sm font-mono px-3 py-1 rounded ${exceedsLimit ? 'bg-red-500/10 text-red-500' : 'bg-dark-bg text-text-secondary'}`}>
+            <div className={`text-sm font-mono px-3 py-1 rounded ${exceedsLimit ? 'bg-red-500/10 text-red-500' : 'bg-dark-bg text-text-secondary border border-purple-primary/20'}`}>
               {codeLength} / {VALIDATION.MAX_CODE_LENGTH}
             </div>
             
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-dark-bg hover:bg-dark-border text-text-primary border border-dark-border rounded transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all text-sm font-semibold font-rajdhani"
             >
               Reset
             </button>
@@ -256,7 +256,7 @@ export const ChallengePage: React.FC = () => {
             <button
               onClick={handleSubmit}
               disabled={submitMutation.isPending || exceedsLimit || !code.trim()}
-              className="px-6 py-2 bg-[#ef4444] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded transition-colors text-sm shadow-lg shadow-red-500/20"
+              className="px-6 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all text-sm shadow-lg shadow-purple-primary/30 font-rajdhani"
             >
               {submitMutation.isPending ? 'Submitting...' : 'Submit'}
             </button>
@@ -264,20 +264,20 @@ export const ChallengePage: React.FC = () => {
         </div>
       </header>
 
-      {/* Grid Layout - Full Width */}
+      {/* Grid Layout - Full Viewport Width */}
       <div 
         style={{ 
-          width: '100%', 
+          width: '100vw', 
           height: 'calc(100vh - 60px)',
           display: 'grid',
-          gridTemplateColumns: '40% 35% 25%',
+          gridTemplateColumns: '1.3fr 1fr 0.8fr',
           overflow: 'hidden'
         }}
       >
         {/* Column 1: Code Editor */}
-        <div className="flex flex-col border-r border-dark-border overflow-hidden">
-          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
-            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Code Editor</h3>
+        <div className="flex flex-col border-r border-purple-primary/20 overflow-hidden">
+          <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0">
+            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Code Editor</h3>
           </div>
           <div className="flex-1 overflow-hidden bg-[#1e1e1e]">
             <CodeEditor
@@ -291,17 +291,17 @@ export const ChallengePage: React.FC = () => {
         </div>
 
         {/* Column 2: Output Preview */}
-        <div className="flex flex-col border-r border-dark-border overflow-hidden">
-          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0 flex items-center justify-between">
-            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Your Output</h3>
+        <div className="flex flex-col border-r border-purple-primary/20 overflow-hidden">
+          <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 flex items-center justify-between">
+            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Your Output</h3>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={scaleToFit}
                 onChange={(e) => setScaleToFit(e.target.checked)}
-                className="w-4 h-4 rounded border-dark-border bg-dark-bg text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+                className="w-4 h-4 rounded border-purple-primary/30 bg-dark-bg text-purple-primary focus:ring-purple-primary focus:ring-offset-0"
               />
-              <span className="text-xs text-text-secondary">Scale to Fit</span>
+              <span className="text-xs text-text-secondary font-rajdhani">Scale to Fit</span>
             </label>
           </div>
           <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-8 overflow-hidden">
@@ -333,8 +333,8 @@ export const ChallengePage: React.FC = () => {
 
         {/* Column 3: Target */}
         <div className="flex flex-col overflow-hidden">
-          <div className="px-6 py-3 bg-dark-surface/50 border-b border-dark-border flex-shrink-0">
-            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">Target</h3>
+          <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0">
+            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Target</h3>
           </div>
           <div className="flex-1 overflow-y-auto p-6">
             {challenge.preview_image && (
@@ -372,7 +372,7 @@ export const ChallengePage: React.FC = () => {
             
             {challenge.palette && challenge.palette.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider">Colors</h4>
+                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider font-rajdhani">Colors</h4>
                 <div className="space-y-2">
                   {challenge.palette.map((color, index) => (
                     <div key={index} className="flex items-center gap-3 group cursor-pointer" onClick={() => {
@@ -380,10 +380,10 @@ export const ChallengePage: React.FC = () => {
                       toast.success(`Copied ${color}`);
                     }}>
                       <div
-                        className="w-10 h-10 rounded border-2 border-dark-border flex-shrink-0 group-hover:scale-110 transition-transform"
+                        className="w-10 h-10 rounded border-2 border-purple-primary/30 flex-shrink-0 group-hover:scale-110 transition-transform"
                         style={{ backgroundColor: color }}
                       />
-                      <span className="text-text-primary font-mono text-sm group-hover:text-orange-500 transition-colors">{color}</span>
+                      <span className="text-text-primary font-mono text-sm group-hover:text-purple-primary transition-colors">{color}</span>
                     </div>
                   ))}
                 </div>
@@ -392,8 +392,8 @@ export const ChallengePage: React.FC = () => {
 
             {challenge.description && (
               <div>
-                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider">Description</h4>
-                <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap">{challenge.description}</p>
+                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider font-rajdhani">Description</h4>
+                <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap font-rajdhani">{challenge.description}</p>
               </div>
             )}
           </div>

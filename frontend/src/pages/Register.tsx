@@ -115,17 +115,19 @@ export const Register: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-text-primary mb-2">
-            Misfits-Battle
+          <h1 className="text-4xl font-bold text-text-primary mb-2 font-orbitron tracking-wider">
+            <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
+              MISFITS-BATTLE
+            </span>
           </h1>
-          <p className="text-text-secondary">
+          <p className="text-text-secondary font-rajdhani text-lg">
             Create your account to start competing
           </p>
         </div>
 
         {/* Register Form */}
-        <div className="bg-dark-surface rounded-lg border border-dark-border p-8">
-          <h2 className="text-2xl font-bold text-text-primary mb-6">
+        <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-8 shadow-xl shadow-purple-primary/10">
+          <h2 className="text-2xl font-bold text-text-primary mb-6 font-rajdhani">
             Sign Up
           </h2>
 
@@ -134,7 +136,7 @@ export const Register: React.FC = () => {
             <div>
               <label 
                 htmlFor="register_number" 
-                className="block text-sm font-medium text-text-secondary mb-2"
+                className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
               >
                 Register Number
               </label>
@@ -144,14 +146,14 @@ export const Register: React.FC = () => {
                 name="register_number"
                 value={formData.register_number}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-dark-surface border ${
-                  errors.register_number ? 'border-primary' : 'border-dark-border'
-                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`}
+                className={`w-full px-4 py-3 bg-dark-bg border ${
+                  errors.register_number ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
                 placeholder="e.g., CS2021001"
                 disabled={loading}
               />
               {errors.register_number && (
-                <p className="mt-1 text-sm text-primary">
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.register_number}
                 </p>
               )}
@@ -161,7 +163,7 @@ export const Register: React.FC = () => {
             <div>
               <label 
                 htmlFor="name" 
-                className="block text-sm font-medium text-text-secondary mb-2"
+                className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
               >
                 Full Name
               </label>
@@ -171,14 +173,14 @@ export const Register: React.FC = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-dark-surface border ${
-                  errors.name ? 'border-primary' : 'border-dark-border'
-                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`}
+                className={`w-full px-4 py-3 bg-dark-bg border ${
+                  errors.name ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
                 placeholder="Enter your full name"
                 disabled={loading}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-primary">
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.name}
                 </p>
               )}
@@ -188,7 +190,7 @@ export const Register: React.FC = () => {
             <div>
               <label 
                 htmlFor="email" 
-                className="block text-sm font-medium text-text-secondary mb-2"
+                className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
               >
                 Email Address
               </label>
@@ -198,14 +200,14 @@ export const Register: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-dark-surface border ${
-                  errors.email ? 'border-primary' : 'border-dark-border'
-                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`}
+                className={`w-full px-4 py-3 bg-dark-bg border ${
+                  errors.email ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
                 placeholder="your.email@example.com"
                 disabled={loading}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-primary">
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.email}
                 </p>
               )}
@@ -215,7 +217,7 @@ export const Register: React.FC = () => {
             <div>
               <label 
                 htmlFor="password" 
-                className="block text-sm font-medium text-text-secondary mb-2"
+                className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
               >
                 Password
               </label>
@@ -225,14 +227,14 @@ export const Register: React.FC = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-dark-surface border ${
-                  errors.password ? 'border-primary' : 'border-dark-border'
-                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`}
+                className={`w-full px-4 py-3 bg-dark-bg border ${
+                  errors.password ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
                 placeholder="At least 8 characters"
                 disabled={loading}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-primary">
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.password}
                 </p>
               )}
@@ -242,7 +244,7 @@ export const Register: React.FC = () => {
             <div>
               <label 
                 htmlFor="confirmPassword" 
-                className="block text-sm font-medium text-text-secondary mb-2"
+                className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
               >
                 Confirm Password
               </label>
@@ -252,14 +254,14 @@ export const Register: React.FC = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-dark-surface border ${
-                  errors.confirmPassword ? 'border-primary' : 'border-dark-border'
-                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`}
+                className={`w-full px-4 py-3 bg-dark-bg border ${
+                  errors.confirmPassword ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
                 placeholder="Re-enter your password"
                 disabled={loading}
               />
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-primary">
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.confirmPassword}
                 </p>
               )}
@@ -269,7 +271,7 @@ export const Register: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded transition-colors duration-200 flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg shadow-purple-primary/30 font-rajdhani"
             >
               {loading ? (
                 <>
@@ -287,11 +289,11 @@ export const Register: React.FC = () => {
 
           {/* Login Link */}
           <div className="mt-6 text-center">
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm font-rajdhani">
               Already have an account?{' '}
               <Link 
                 to="/login" 
-                className="text-primary hover:text-primary-light font-medium"
+                className="text-purple-primary hover:text-purple-secondary font-semibold"
               >
                 Sign in
               </Link>
@@ -300,7 +302,7 @@ export const Register: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-text-secondary text-sm">
+        <div className="mt-8 text-center text-text-secondary text-sm font-rajdhani">
           <p>© 2026 Binary Misfits. All rights reserved.</p>
         </div>
       </div>

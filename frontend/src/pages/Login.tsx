@@ -76,17 +76,19 @@ export const Login: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-text-primary mb-2">
-            Misfits-Battle
+          <h1 className="text-4xl font-bold text-text-primary mb-2 font-orbitron tracking-wider">
+            <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
+              MISFITS-BATTLE
+            </span>
           </h1>
-          <p className="text-text-secondary">
+          <p className="text-text-secondary font-rajdhani text-lg">
             Sign in to start competing
           </p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-dark-surface border border-dark-border rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-text-primary mb-6">
+        <div className="bg-dark-surface border border-purple-primary/20 rounded-lg p-8 shadow-xl shadow-purple-primary/10">
+          <h2 className="text-2xl font-bold text-text-primary mb-6 font-rajdhani">
             Sign In
           </h2>
 
@@ -95,7 +97,7 @@ export const Login: React.FC = () => {
             <div>
               <label 
                 htmlFor="register_number" 
-                className="block text-sm font-medium text-text-primary mb-2"
+                className="block text-sm font-medium text-text-primary mb-2 font-rajdhani"
               >
                 Register Number
               </label>
@@ -105,14 +107,14 @@ export const Login: React.FC = () => {
                 name="register_number"
                 value={formData.register_number}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-dark-surface border ${
-                  errors.register_number ? 'border-primary' : 'border-dark-border'
-                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary`}
+                className={`w-full px-4 py-3 bg-dark-bg border ${
+                  errors.register_number ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/20 transition-all font-rajdhani`}
                 placeholder="Enter your register number"
                 disabled={loading}
               />
               {errors.register_number && (
-                <p className="mt-1 text-sm text-primary">
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.register_number}
                 </p>
               )}
@@ -122,7 +124,7 @@ export const Login: React.FC = () => {
             <div>
               <label 
                 htmlFor="password" 
-                className="block text-sm font-medium text-text-primary mb-2"
+                className="block text-sm font-medium text-text-primary mb-2 font-rajdhani"
               >
                 Password
               </label>
@@ -132,14 +134,14 @@ export const Login: React.FC = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-dark-surface border ${
-                  errors.password ? 'border-primary' : 'border-dark-border'
-                } rounded text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary`}
+                className={`w-full px-4 py-3 bg-dark-bg border ${
+                  errors.password ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/20 transition-all font-rajdhani`}
                 placeholder="Enter your password"
                 disabled={loading}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-primary">
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.password}
                 </p>
               )}
@@ -149,7 +151,7 @@ export const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded transition-colors duration-200"
+              className="w-full bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg shadow-purple-primary/30 font-rajdhani"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
@@ -157,11 +159,11 @@ export const Login: React.FC = () => {
 
           {/* Register Link */}
           <div className="mt-6 text-center">
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm font-rajdhani">
               Don't have an account?{' '}
               <Link 
                 to="/register" 
-                className="text-primary hover:text-primary-light font-medium"
+                className="text-purple-primary hover:text-purple-secondary font-semibold"
               >
                 Sign up
               </Link>
@@ -173,7 +175,7 @@ export const Login: React.FC = () => {
         <div className="mt-6 text-center">
           <Link 
             to="/" 
-            className="text-text-secondary hover:text-text-primary text-sm"
+            className="text-text-secondary hover:text-purple-primary text-sm font-rajdhani transition-colors"
           >
             ← Back to home
           </Link>
