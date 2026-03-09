@@ -30,15 +30,15 @@ export const ChallengePage: React.FC = () => {
   // Calculate scaled canvas size
   const canvasSize = useMemo(() => {
     if (!scaleToFit || !previewContainerRef.current) {
-      return { width: 400, height: 300 };
+      return { width: 400, height: 225 }; // 16:9 aspect ratio (400 / 16 * 9 = 225)
     }
 
     const container = previewContainerRef.current;
     const containerWidth = container.clientWidth - 88; // Subtract padding and frame
     const containerHeight = container.clientHeight - 88;
     
-    // Maintain 4:3 aspect ratio
-    const aspectRatio = 4 / 3;
+    // Maintain 16:9 aspect ratio
+    const aspectRatio = 16 / 9;
     let width = containerWidth;
     let height = width / aspectRatio;
     
