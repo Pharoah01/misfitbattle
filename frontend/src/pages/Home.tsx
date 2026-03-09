@@ -55,10 +55,10 @@ export const Home: React.FC = () => {
         <div className="container mx-auto px-4 py-24 text-center relative z-10">
           <h2 className="text-5xl md:text-6xl font-bold text-text-primary mb-6 font-orbitron tracking-tight">
             <span className="bg-gradient-to-r from-purple-primary via-purple-secondary to-purple-tertiary bg-clip-text text-transparent">
-              CSSBattle-Style
+              Misfits-Battle
             </span>
             <br />
-            Coding Competition
+            CSS Styling Competition
           </h2>
           <p className="text-xl text-text-secondary mb-10 max-w-2xl mx-auto font-rajdhani">
             Test your HTML/CSS skills. Solve challenges. Compete with others.
