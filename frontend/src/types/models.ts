@@ -100,4 +100,5 @@ export interface SubmissionFormData {
   challenge: number;
   html_code: string;
   css_code: string;
+  is_auto_save?: boolean;
 }
