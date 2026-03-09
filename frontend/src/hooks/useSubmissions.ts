@@ -40,7 +40,7 @@ export const useSubmitSolution = () => {
     mutationFn: (data: SubmissionFormData) => submitSolution(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBMISSIONS] });
-      toast.success('Solution submitted successfully!');
+      // Toast is handled by the component for better context-specific messages
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.detail || 

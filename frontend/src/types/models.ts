@@ -43,6 +43,7 @@ export interface Submission {
   user: number;
   user_name: string;
   user_register_number: string;
+  user_email?: string;
   challenge: number;
   challenge_title: string;
   html_code: string;
@@ -52,6 +53,8 @@ export interface Submission {
   similarity_score?: number | null;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   error_message?: string | null;
+  is_auto_save?: boolean;
+  submission_count?: number;
   submitted_at: string;
 }
 

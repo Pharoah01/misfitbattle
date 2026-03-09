@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useChallenge, useSubmitSolution } from '@/hooks';
+import { useChallenge, useSubmitSolution, useSubmissions } from '@/hooks';
 import { CodeEditor } from '@/components';
 import { VALIDATION } from '@/config/constants';
 import { toast } from '@/utils';
@@ -19,15 +19,29 @@ export const ChallengePage: React.FC = () => {
 
   const { data: challenge, isLoading, error } = useChallenge(slug || '');
   const submitMutation = useSubmitSolution();
+  
+  // Fetch existing submissions for this challenge to get submission count
+  const { data: existingSubmissions } = useSubmissions(challenge?.id);
 
   const [code, setCode] = useState('');
   const [scaleToFit, setScaleToFit] = useState(false);
-  const [submissionCount, setSubmissionCount] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const autoSaveKey = useMemo(() => `challenge_${slug}_autosave`, [slug]);
+  
+  // Calculate submission count from existing submissions (exclude auto-saves)
+  const submissionCount = useMemo(() => {
+    if (!existingSubmissions || !Array.isArray(existingSubmissions)) return 0;
+    
+    // Filter to only count manual submissions (is_auto_save = false)
+    const manualSubmissions = existingSubmissions.filter(
+      (sub: any) => sub.is_auto_save === false
+    );
+    
+    return manualSubmissions.length;
+  }, [existingSubmissions]);
 
   // Calculate scaled canvas size
   const canvasSize = useMemo(() => {
@@ -202,17 +216,12 @@ export const ChallengePage: React.FC = () => {
       const cssCode = styleMatch ? styleMatch[1].trim() : '';
       const htmlCode = code.replace(/<style>[\s\S]*?<\/style>/gi, '').trim();
 
-      const response = await submitMutation.mutateAsync({
+      await submitMutation.mutateAsync({
         challenge: challenge.id,
         html_code: htmlCode,
         css_code: cssCode,
         is_auto_save: false,
       });
-
-      // Update submission count from response
-      if (response && 'submission_count' in response) {
-        setSubmissionCount((response as any).submission_count);
-      }
 
       localStorage.removeItem(autoSaveKey);
       

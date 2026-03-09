@@ -16,11 +16,12 @@ class SubmissionSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_name', 'user_register_number', 'user_email',
             'challenge', 'challenge_title', 'html_code', 'css_code',
             'code_length', 'rendered_image', 'similarity_score', 
-            'status', 'error_message', 'submitted_at'
+            'status', 'error_message', 'is_auto_save', 'submission_count', 'submitted_at'
         ]
         read_only_fields = [
             'id', 'user', 'code_length', 'rendered_image', 
-            'similarity_score', 'status', 'error_message', 'submitted_at'
+            'similarity_score', 'status', 'error_message', 'is_auto_save', 
+            'submission_count', 'submitted_at'
         ]
 
 
