@@ -50,6 +50,7 @@ export const login = async (data: LoginFormData): Promise<LoginResponse> => {
   
   return {
     access: response.data.token,
+    refresh: '', // Backend uses DRF Token Auth (no refresh token)
     user: response.data.user,
   };
 };

@@ -19,10 +19,9 @@ export const ChallengePage: React.FC = () => {
   const submitMutation = useSubmitSolution();
 
   const [code, setCode] = useState('');
-  const [sanitizedCode, setSanitizedCode] = useState('');
   const [scaleToFit, setScaleToFit] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const autoSaveKey = useMemo(() => `challenge_${slug}_autosave`, [slug]);
@@ -103,8 +102,6 @@ export const ChallengePage: React.FC = () => {
         FORBID_TAGS: ['script'],
         FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
       });
-      
-      setSanitizedCode(sanitized);
       
       if (iframeRef.current && iframeRef.current.contentWindow) {
         const doc = iframeRef.current.contentWindow.document;

@@ -4,27 +4,29 @@ import '@testing-library/jest-dom/vitest';
 
 // Mock localStorage for tests
 beforeAll(() => {
-  const localStorageMock: Record<string, string> & {
-    getItem: (key: string) => string | null;
-    setItem: (key: string, value: string) => void;
-    removeItem: (key: string) => void;
-    clear: () => void;
-  } = {
+  const storage: Record<string, string> = {};
+  
+  const localStorageMock = {
     getItem: (key: string): string | null => {
-      return localStorageMock[key] || null;
+      return storage[key] || null;
     },
     setItem: (key: string, value: string) => {
-      localStorageMock[key] = value;
+      storage[key] = value;
     },
     removeItem: (key: string) => {
-      delete localStorageMock[key];
+      delete storage[key];
     },
     clear: () => {
-      Object.keys(localStorageMock).forEach((key) => {
-        if (key !== 'getItem' && key !== 'setItem' && key !== 'removeItem' && key !== 'clear') {
-          delete localStorageMock[key];
-        }
+      Object.keys(storage).forEach((key) => {
+        delete storage[key];
       });
+    },
+    get length() {
+      return Object.keys(storage).length;
+    },
+    key: (index: number): string | null => {
+      const keys = Object.keys(storage);
+      return keys[index] || null;
     },
   };
 

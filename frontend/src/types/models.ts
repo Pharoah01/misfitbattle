@@ -62,6 +62,12 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface AuthResponse {
+  access: string;
+  refresh: string;
+  user: User;
+}
+
 export interface RegisterResponse {
   id: number;
   register_number: string;

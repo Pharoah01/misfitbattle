@@ -5,8 +5,10 @@
 export type {
   User,
   Challenge,
+  ChallengeQueryParams,
   Submission,
   LoginResponse,
+  AuthResponse,
   RegisterResponse,
   APIError,
   LoginFormData,

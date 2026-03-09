@@ -42,7 +42,7 @@ export const queryClient = new QueryClient({
       staleTime: 30 * 1000, // 30 seconds
       
       // Cache time - data kept in cache for this duration
-      cacheTime: CACHE_TIME.CHALLENGES,
+      gcTime: CACHE_TIME.CHALLENGES,
       
       // Refetch on window focus
       refetchOnWindowFocus: false,

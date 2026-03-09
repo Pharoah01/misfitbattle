@@ -12,7 +12,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as authAPI from '@/api/auth';
-import { setAccessToken, clearAccessToken } from '@/api/client';
+import { clearAccessToken } from '@/api/client';
 import type { User, LoginFormData, RegisterFormData } from '@/types';
 
 interface AuthContextValue {

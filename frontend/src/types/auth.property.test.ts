@@ -51,6 +51,10 @@ describe('Property Test: Authentication State Consistency', () => {
 
     email: fc.option(fc.emailAddress(), { nil: undefined }),
 
+    college_name: fc.option(fc.string({ minLength: 2, maxLength: 100 }), { nil: undefined }),
+
+    profile_completed: fc.boolean(),
+
     is_admin: fc.boolean(),
 
     created_at: fc
@@ -183,6 +187,8 @@ describe('Property Test: Authentication State Consistency', () => {
         expect(storedUser.register_number).toBe(authResponse.user.register_number);
         expect(storedUser.name).toBe(authResponse.user.name);
         expect(storedUser.email).toBe(authResponse.user.email);
+        expect(storedUser.college_name).toBe(authResponse.user.college_name);
+        expect(storedUser.profile_completed).toBe(authResponse.user.profile_completed);
         expect(storedUser.is_admin).toBe(authResponse.user.is_admin);
         expect(storedUser.created_at).toBe(authResponse.user.created_at);
       })
@@ -218,6 +224,9 @@ describe('Property Test: Authentication State Consistency', () => {
 
         // Property: is_admin should be boolean
         expect(typeof user.is_admin).toBe('boolean');
+
+        // Property: profile_completed should be boolean
+        expect(typeof user.profile_completed).toBe('boolean');
 
         // Property: created_at should be valid ISO date string
         expect(() => new Date(user.created_at)).not.toThrow();

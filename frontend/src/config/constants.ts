@@ -31,6 +31,10 @@ export const TOKEN_CONFIG = {
   REFRESH_THRESHOLD: 5 * 60 * 1000, // Refresh 5 minutes before expiry
 } as const;
 
+// Token Storage Keys
+export const TOKEN_STORAGE_KEY = 'access_token';
+export const REFRESH_TOKEN_STORAGE_KEY = 'refresh_token';
+
 // Cache Configuration (React Query)
 export const CACHE_TIME = {
   CHALLENGES: 5 * 60 * 1000, // 5 minutes
@@ -51,6 +55,31 @@ export const VALIDATION = {
   MAX_CODE_LENGTH: 10000,
   REGISTER_NUMBER_PATTERN: /^[a-zA-Z0-9]{3,20}$/,
   PASSWORD_MIN_LENGTH: 8,
+} as const;
+
+// Legacy exports for backward compatibility
+export const MAX_CODE_LENGTH = VALIDATION.MAX_CODE_LENGTH;
+
+export const VALIDATION_PATTERNS = {
+  REGISTER_NUMBER: VALIDATION.REGISTER_NUMBER_PATTERN,
+  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  PASSWORD: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
+} as const;
+
+export const ERROR_MESSAGES = {
+  NETWORK_ERROR: 'Network error. Please check your connection.',
+  UNAUTHORIZED: 'You are not authorized to perform this action.',
+  FORBIDDEN: 'Access forbidden.',
+  NOT_FOUND: 'Resource not found.',
+  SERVER_ERROR: 'Server error. Please try again later.',
+  RATE_LIMIT: 'Too many requests. Please try again later.',
+} as const;
+
+export const SUCCESS_MESSAGES = {
+  SIGN_UP: 'Account created successfully!',
+  SIGN_IN: 'Signed in successfully!',
+  SUBMISSION: 'Submission created successfully!',
+  CHALLENGE_CREATED: 'Challenge created successfully!',
 } as const;
 
 // UI Constants
