@@ -12,6 +12,14 @@ class SubmissionRateThrottle(UserRateThrottle):
 class AuthRateThrottle(AnonRateThrottle):
     """
     Throttle for authentication endpoints.
-    Limits to 10 attempts per hour per IP to prevent brute force attacks.
+    Limits to 3-4 attempts per minute per IP to prevent brute force attacks.
     """
     scope = 'auth'
+
+
+class LoginRateThrottle(AnonRateThrottle):
+    """
+    Strict throttle for login endpoint.
+    Limits to 4 login attempts per minute per IP.
+    """
+    scope = 'login'

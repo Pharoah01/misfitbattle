@@ -52,18 +52,20 @@ class Submission(models.Model):
         null=True,
         help_text="Error details if processing failed"
     )
+    is_auto_save = models.BooleanField(
+        default=False,
+        help_text="True if auto-saved on session timeout, False if manually submitted"
+    )
+    submission_count = models.IntegerField(
+        default=1,
+        help_text="Number of times user has submitted (max 2 manual submissions)"
+    )
     submitted_at = models.DateTimeField(auto_now_add=True, db_index=True)
     
     class Meta:
         verbose_name = 'Submission'
         verbose_name_plural = 'Submissions'
         db_table = 'submissions'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'challenge'],
-                name='unique_user_challenge_submission'
-            )
-        ]
         indexes = [
             models.Index(fields=['user', 'challenge']),
             models.Index(fields=['challenge']),

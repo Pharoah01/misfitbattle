@@ -9,17 +9,20 @@ import { useChallenge, useSubmitSolution } from '@/hooks';
 import { CodeEditor } from '@/components';
 import { VALIDATION } from '@/config/constants';
 import { toast } from '@/utils';
+import { useAuth } from '@/contexts/AuthContext';
 import DOMPurify from 'dompurify';
 
 export const ChallengePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { registerAutoSubmit } = useAuth();
 
   const { data: challenge, isLoading, error } = useChallenge(slug || '');
   const submitMutation = useSubmitSolution();
 
   const [code, setCode] = useState('');
   const [scaleToFit, setScaleToFit] = useState(false);
+  const [submissionCount, setSubmissionCount] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -113,7 +116,6 @@ export const ChallengePage: React.FC = () => {
               <meta charset="UTF-8">
               <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { width: ${canvasSize.width}px; height: ${canvasSize.height}px; }
               </style>
             </head>
             <body>
@@ -134,6 +136,34 @@ export const ChallengePage: React.FC = () => {
 
   const codeLength = useMemo(() => code.length, [code]);
   const exceedsLimit = codeLength > VALIDATION.MAX_CODE_LENGTH;
+
+  // Auto-submit function for session timeout
+  const handleAutoSubmit = useCallback(async () => {
+    if (!code.trim() || !challenge || exceedsLimit) return;
+
+    try {
+      const styleMatch = code.match(/<style>([\s\S]*?)<\/style>/i);
+      const cssCode = styleMatch ? styleMatch[1].trim() : '';
+      const htmlCode = code.replace(/<style>[\s\S]*?<\/style>/gi, '').trim();
+
+      await submitMutation.mutateAsync({
+        challenge: challenge.id,
+        html_code: htmlCode,
+        css_code: cssCode,
+        is_auto_save: true,
+      });
+
+      console.log('Code auto-submitted on session timeout');
+    } catch (error) {
+      console.error('Auto-submit failed:', error);
+    }
+  }, [code, challenge, exceedsLimit, submitMutation]);
+
+  // Register auto-submit callback with AuthContext
+  useEffect(() => {
+    registerAutoSubmit(handleAutoSubmit);
+    return () => registerAutoSubmit(null);
+  }, [registerAutoSubmit, handleAutoSubmit]);
 
   // Handle CTRL+ENTER shortcut
   useEffect(() => {
@@ -161,23 +191,41 @@ export const ChallengePage: React.FC = () => {
 
     if (!challenge) return;
 
+    // Check submission limit (max 2 manual submissions)
+    if (submissionCount >= 2) {
+      toast.error('Maximum 2 submissions allowed per challenge');
+      return;
+    }
+
     try {
       const styleMatch = code.match(/<style>([\s\S]*?)<\/style>/i);
       const cssCode = styleMatch ? styleMatch[1].trim() : '';
       const htmlCode = code.replace(/<style>[\s\S]*?<\/style>/gi, '').trim();
 
-      await submitMutation.mutateAsync({
+      const response = await submitMutation.mutateAsync({
         challenge: challenge.id,
         html_code: htmlCode,
         css_code: cssCode,
+        is_auto_save: false,
       });
 
-      toast.success('Solution submitted successfully!');
+      // Update submission count from response
+      if (response && 'submission_count' in response) {
+        setSubmissionCount((response as any).submission_count);
+      }
+
       localStorage.removeItem(autoSaveKey);
+      
+      // Show appropriate message based on submission count
+      if (submissionCount === 0) {
+        toast.success('First submission successful! You have 1 more submission remaining.');
+      } else {
+        toast.success('Final submission successful! No more submissions allowed.');
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Submission failed');
+      // Error toast is already handled by the mutation hook
     }
-  }, [code, challenge, exceedsLimit, submitMutation, autoSaveKey]);
+  }, [code, challenge, exceedsLimit, submitMutation, autoSaveKey, submissionCount]);
 
   const handleReset = useCallback(() => {
     if (challenge && window.confirm('Reset to boilerplate? This will discard your current code.')) {
@@ -252,22 +300,22 @@ export const ChallengePage: React.FC = () => {
             
             <button
               onClick={handleSubmit}
-              disabled={submitMutation.isPending || exceedsLimit || !code.trim()}
+              disabled={submitMutation.isPending || exceedsLimit || !code.trim() || submissionCount >= 2}
               className="px-6 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all text-sm shadow-lg shadow-purple-primary/30 font-rajdhani"
             >
-              {submitMutation.isPending ? 'Submitting...' : 'Submit'}
+              {submitMutation.isPending ? 'Submitting...' : submissionCount >= 2 ? 'Max Submissions Reached' : `Submit (${2 - submissionCount} left)`}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Grid Layout - Full Viewport Width */}
+      {/* Grid Layout - Editor Left, Preview Right */}
       <div 
         style={{ 
           width: '100vw', 
           height: 'calc(100vh - 60px)',
           display: 'grid',
-          gridTemplateColumns: '1.3fr 1fr 0.8fr',
+          gridTemplateColumns: '1fr 1fr',
           overflow: 'hidden'
         }}
       >
@@ -287,112 +335,62 @@ export const ChallengePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Column 2: Output Preview */}
-        <div className="flex flex-col border-r border-purple-primary/20 overflow-hidden">
-          <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 flex items-center justify-between">
-            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Your Output</h3>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={scaleToFit}
-                onChange={(e) => setScaleToFit(e.target.checked)}
-                className="w-4 h-4 rounded border-purple-primary/30 bg-dark-bg text-purple-primary focus:ring-purple-primary focus:ring-offset-0"
-              />
-              <span className="text-xs text-text-secondary font-rajdhani">Scale to Fit</span>
-            </label>
-          </div>
-          <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-8 overflow-hidden">
-            <div 
-              className="flex items-center justify-center"
-              style={{
-                background: '#f5f5f5',
-                padding: '24px',
-                borderRadius: '8px',
-                border: '1px solid #ddd',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-            >
+        {/* Column 2: Preview + Colors + Description */}
+        <div className="flex flex-col overflow-hidden">
+          {/* Color Palette - Top */}
+          {challenge.palette && challenge.palette.length > 0 && (
+            <div className="px-6 py-4 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <h4 className="text-xs font-bold text-text-secondary uppercase tracking-wider font-rajdhani">Colors:</h4>
+                <div className="flex gap-2">
+                  {challenge.palette.map((color, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center gap-2 group cursor-pointer px-3 py-1.5 bg-dark-bg rounded border border-purple-primary/20 hover:border-purple-primary transition-all" 
+                      onClick={() => {
+                        navigator.clipboard.writeText(color);
+                        toast.success(`Copied ${color}`);
+                      }}
+                    >
+                      <div
+                        className="w-6 h-6 rounded border border-purple-primary/30 flex-shrink-0 group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-text-primary font-mono text-xs group-hover:text-purple-primary transition-colors">{color}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Preview Section */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Your Output</h3>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={scaleToFit}
+                  onChange={(e) => setScaleToFit(e.target.checked)}
+                  className="w-4 h-4 rounded border-purple-primary/30 bg-dark-bg text-purple-primary focus:ring-purple-primary focus:ring-offset-0"
+                />
+                <span className="text-xs text-text-secondary font-rajdhani">Scale to Fit</span>
+              </label>
+            </div>
+            <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-8 overflow-hidden bg-dark-bg">
               <iframe
                 ref={iframeRef}
                 sandbox="allow-same-origin"
-                className="bg-white"
+                className="bg-white border border-purple-primary/20 rounded"
                 style={{
                   width: `${canvasSize.width}px`,
                   height: `${canvasSize.height}px`,
-                  border: 'none',
                   display: 'block'
                 }}
                 title="Code Preview"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Column 3: Target */}
-        <div className="flex flex-col overflow-hidden">
-          <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0">
-            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Target</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6">
-            {challenge.preview_image && (
-              <div className="mb-6">
-                <div 
-                  className="flex items-center justify-center"
-                  style={{
-                    background: '#f5f5f5',
-                    padding: '24px',
-                    borderRadius: '8px',
-                    border: '1px solid #ddd',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  <div 
-                    className="bg-white flex items-center justify-center overflow-hidden"
-                    style={{
-                      width: `${canvasSize.width}px`,
-                      height: `${canvasSize.height}px`
-                    }}
-                  >
-                    <img
-                      src={challenge.preview_image}
-                      alt={challenge.title}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain'
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {challenge.palette && challenge.palette.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider font-rajdhani">Colors</h4>
-                <div className="space-y-2">
-                  {challenge.palette.map((color, index) => (
-                    <div key={index} className="flex items-center gap-3 group cursor-pointer" onClick={() => {
-                      navigator.clipboard.writeText(color);
-                      toast.success(`Copied ${color}`);
-                    }}>
-                      <div
-                        className="w-10 h-10 rounded border-2 border-purple-primary/30 flex-shrink-0 group-hover:scale-110 transition-transform"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="text-text-primary font-mono text-sm group-hover:text-purple-primary transition-colors">{color}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {challenge.description && (
-              <div>
-                <h4 className="text-xs font-bold text-text-secondary mb-3 uppercase tracking-wider font-rajdhani">Description</h4>
-                <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap font-rajdhani">{challenge.description}</p>
-              </div>
-            )}
           </div>
         </div>
       </div>

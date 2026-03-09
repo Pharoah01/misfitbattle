@@ -26,6 +26,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   clearError: () => void;
+  registerAutoSubmit: (callback: (() => Promise<void>) | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -39,6 +40,80 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Session timeout: 5 minutes of inactivity
+  const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSubmitCallbackRef = React.useRef<(() => Promise<void>) | null>(null);
+
+  /**
+   * Register auto-submit callback from ChallengePage
+   * This allows the auth context to trigger auto-submit before logout
+   */
+  const registerAutoSubmit = useCallback((callback: (() => Promise<void>) | null) => {
+    autoSubmitCallbackRef.current = callback;
+  }, []);
+
+  /**
+   * Reset inactivity timer
+   */
+  const resetInactivityTimer = useCallback(() => {
+    // Clear existing timer
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Only set timer if user is authenticated
+    if (user) {
+      timeoutRef.current = setTimeout(async () => {
+        // Auto-submit code if callback is registered (from ChallengePage)
+        if (autoSubmitCallbackRef.current) {
+          try {
+            console.log('Session timeout - auto-submitting code before logout');
+            await autoSubmitCallbackRef.current();
+          } catch (error) {
+            console.error('Auto-submit failed:', error);
+          }
+        }
+        
+        // Auto-logout after 5 minutes of inactivity
+        console.log('Session timeout - logging out due to inactivity');
+        await logout();
+      }, SESSION_TIMEOUT);
+    }
+  }, [user]);
+
+  /**
+   * Track user activity
+   */
+  useEffect(() => {
+    if (!user) return;
+
+    // Events that indicate user activity
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+
+    const handleActivity = () => {
+      resetInactivityTimer();
+    };
+
+    // Add event listeners
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity);
+    });
+
+    // Initialize timer
+    resetInactivityTimer();
+
+    // Cleanup
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity);
+      });
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [user, resetInactivityTimer]);
 
   /**
    * Restore session on mount
@@ -182,6 +257,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     refreshUser,
     clearError,
+    registerAutoSubmit,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

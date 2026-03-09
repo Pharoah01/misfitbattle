@@ -177,6 +177,7 @@ REST_FRAMEWORK = {
         'user': '1000/hour',  # Authenticated users: 1000 requests per hour
         'submissions': '80/hour',  # Submissions: 30 per hour per user
         'auth': '20/hour',  # Auth endpoints: 10 per hour per IP
+        'login': '4/minute',  # Login endpoint: 4 attempts per minute per IP
     }
 }
 
@@ -264,6 +265,8 @@ RENDERING_TIMEOUT = 10  # seconds
 MAX_RENDERED_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 
 # Celery Configuration
+# Set USE_CELERY=False in development to process submissions synchronously
+USE_CELERY = os.getenv('USE_CELERY', 'False' if DEBUG else 'True') == 'True'
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_TASK_SERIALIZER = 'json'

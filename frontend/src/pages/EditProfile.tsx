@@ -1,5 +1,5 @@
 /**
- * Edit Profile Page
+ * Edit Profile Page - Purple Cyber-Tech Theme
  * Allows users to update their profile information
  */
 
@@ -104,123 +104,150 @@ export const EditProfile: React.FC = () => {
   return (
     <div className="min-h-screen bg-dark-bg">
       {/* Header */}
-      <header className="bg-dark-surface border-b border-dark-border px-4 py-3">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+      <header className="bg-dark-surface/50 backdrop-blur-sm border-b border-purple-primary/20">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={handleCancel}
-              className="text-text-secondary hover:text-text-primary transition-colors"
+              className="text-text-secondary hover:text-purple-primary transition-colors flex items-center gap-2 font-rajdhani font-semibold"
             >
-              ← Back
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
             </button>
-            <h1 className="text-xl font-bold text-text-primary">Edit Profile</h1>
+            <div className="h-6 w-px bg-purple-primary/30"></div>
+            <h1 className="text-2xl font-bold text-text-primary font-orbitron">
+              <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
+                Edit Profile
+              </span>
+            </h1>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-dark-surface border border-dark-border rounded-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Register Number (Read-only) */}
-            <div>
-              <label htmlFor="register_number" className="block text-sm font-medium text-text-primary mb-2">
-                Register Number
-              </label>
-              <input
-                type="text"
-                id="register_number"
-                value={user?.register_number || ''}
-                disabled
-                className="w-full px-4 py-2 bg-dark-bg border border-dark-border rounded text-text-secondary cursor-not-allowed"
-              />
-              <p className="mt-1 text-xs text-text-secondary">Register number cannot be changed</p>
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Register Number (Read-only) */}
+              <div>
+                <label htmlFor="register_number" className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">
+                  Register Number
+                </label>
+                <input
+                  type="text"
+                  id="register_number"
+                  value={user?.register_number || ''}
+                  disabled
+                  className="w-full px-4 py-3 bg-dark-bg/50 border border-purple-primary/10 rounded-lg text-text-secondary cursor-not-allowed font-mono"
+                />
+                <p className="mt-2 text-xs text-text-secondary font-rajdhani">Register number cannot be changed</p>
+              </div>
 
-            {/* Name Field */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
-                placeholder="Enter your full name"
-                disabled={isSubmitting}
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-primary">{errors.name}</p>
-              )}
-            </div>
+              {/* Name Field */}
+              <div>
+                <label htmlFor="name" className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">
+                  Full Name <span className="text-purple-primary">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all font-rajdhani"
+                  placeholder="Enter your full name"
+                  disabled={isSubmitting}
+                />
+                {errors.name && (
+                  <p className="mt-2 text-sm text-red-500 font-rajdhani">{errors.name}</p>
+                )}
+              </div>
 
-            {/* College Name Field */}
-            <div>
-              <label htmlFor="college_name" className="block text-sm font-medium text-text-primary mb-2">
-                College/Institution *
-              </label>
-              <select
-                id="college_name"
-                name="college_name"
-                value={formData.college_name}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
-                disabled={isSubmitting}
-              >
-                <option value="">Select your college</option>
-                {COLLEGES.map((college) => (
-                  <option key={college} value={college}>
-                    {college}
-                  </option>
-                ))}
-              </select>
-              {errors.college_name && (
-                <p className="mt-1 text-sm text-primary">{errors.college_name}</p>
-              )}
-            </div>
+              {/* College Name Field */}
+              <div>
+                <label htmlFor="college_name" className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">
+                  College/Institution <span className="text-purple-primary">*</span>
+                </label>
+                <select
+                  id="college_name"
+                  name="college_name"
+                  value={formData.college_name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all font-rajdhani appearance-none cursor-pointer"
+                  disabled={isSubmitting}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B2DFF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 0.75rem center',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="">Select your college</option>
+                  {COLLEGES.map((college) => (
+                    <option key={college} value={college}>
+                      {college}
+                    </option>
+                  ))}
+                </select>
+                {errors.college_name && (
+                  <p className="mt-2 text-sm text-red-500 font-rajdhani">{errors.college_name}</p>
+                )}
+              </div>
 
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
-                Email (Optional)
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
-                placeholder="Enter your email address"
-                disabled={isSubmitting}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-primary">{errors.email}</p>
-              )}
-            </div>
+              {/* Email Field */}
+              <div>
+                <label htmlFor="email" className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">
+                  Email <span className="text-text-secondary text-xs">(Optional)</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all font-mono"
+                  placeholder="your.email@example.com"
+                  disabled={isSubmitting}
+                />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-500 font-rajdhani">{errors.email}</p>
+                )}
+              </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-                className="flex-1 px-6 py-3 bg-dark-bg hover:bg-dark-border disabled:opacity-50 disabled:cursor-not-allowed text-text-primary border border-dark-border font-medium rounded transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 px-6 py-3 bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded transition-colors"
-              >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-3 bg-dark-bg hover:bg-dark-surface disabled:opacity-50 disabled:cursor-not-allowed text-text-primary border border-purple-primary/30 hover:border-purple-primary font-bold rounded-lg transition-all font-rajdhani"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all font-rajdhani shadow-lg shadow-purple-primary/30"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

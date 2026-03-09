@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
 from .serializers import UserRegistrationSerializer, UserSerializer
-from utils.throttling import AuthRateThrottle
+from utils.throttling import AuthRateThrottle, LoginRateThrottle
 
 User = get_user_model()
 
@@ -50,10 +50,10 @@ class SignInView(generics.GenericAPIView):
     Authenticates user with register_number and password.
     Returns authentication token upon successful login.
     
-    Rate limit: 10 requests per hour per IP
+    Rate limit: 4 attempts per minute per IP
     """
     permission_classes = [AllowAny]
-    throttle_classes = [AuthRateThrottle]
+    throttle_classes = [LoginRateThrottle]
     
     def post(self, request):
         register_number = request.data.get('register_number')

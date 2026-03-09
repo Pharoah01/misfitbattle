@@ -115,21 +115,6 @@ export const Dashboard: React.FC = () => {
                     key={challenge.id}
                     className="bg-dark-surface rounded-lg border border-purple-primary/20 hover:border-purple-primary cursor-pointer transition-all group hover:shadow-xl hover:shadow-purple-primary/20"
                   >
-                    {/* Challenge Preview Image */}
-                    <div className="relative overflow-hidden bg-dark-bg rounded-t-lg">
-                      {challenge.preview_image ? (
-                        <img
-                          src={challenge.preview_image}
-                          alt={challenge.title}
-                          className="w-full h-48 object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-48 flex items-center justify-center">
-                          <span className="text-text-secondary text-sm font-rajdhani">No preview</span>
-                        </div>
-                      )}
-                    </div>
-
                     {/* Challenge Info */}
                     <div className="p-5">
                       <div className="flex items-start justify-between mb-3">

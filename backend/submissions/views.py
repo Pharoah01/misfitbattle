@@ -4,10 +4,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import IntegrityError
+from django.conf import settings
 from .models import Submission
 from .serializers import SubmissionSerializer, SubmissionCreateSerializer
 from .permissions import IsOwnerOrAdmin
 from .tasks import process_submission_task
+import asyncio
+from .services.renderer import HTMLRenderer
+from pathlib import Path
 
 
 class SubmissionViewSet(viewsets.ModelViewSet):
@@ -62,37 +66,146 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """
-        Create a new submission with duplicate check and async processing.
+        Create or update submission with resubmission logic.
         
-        Returns 409 if user has already submitted for this challenge.
+        Rules:
+        - Auto-save (is_auto_save=True): Always allowed, doesn't count toward limit
+        - Manual submission: Max 2 submissions allowed per user per challenge
+        - First submission: Creates new submission
+        - Second submission: Updates existing submission
+        - Third+ submission: Returns 403 error
+        
         Queues background task for rendering and similarity scoring.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        try:
-            # Save submission with status='pending'
-            submission = serializer.save(user=request.user, status='pending')
+        challenge_id = serializer.validated_data['challenge'].id
+        is_auto_save = request.data.get('is_auto_save', False)
+        
+        # Check existing submissions for this user+challenge
+        existing_submissions = Submission.objects.filter(
+            user=request.user,
+            challenge_id=challenge_id
+        ).order_by('-submitted_at')
+        
+        # Count manual submissions only (exclude auto-saves)
+        manual_submission_count = existing_submissions.filter(is_auto_save=False).count()
+        
+        # Auto-save: Always allowed, create new or update latest auto-save
+        if is_auto_save:
+            latest_auto_save = existing_submissions.filter(is_auto_save=True).first()
             
-            # Queue background processing task
-            process_submission_task.delay(submission.id)
+            if latest_auto_save:
+                # Update existing auto-save
+                latest_auto_save.html_code = serializer.validated_data['html_code']
+                latest_auto_save.css_code = serializer.validated_data['css_code']
+                latest_auto_save.status = 'pending'
+                latest_auto_save.error_message = None
+                latest_auto_save.save()
+                submission = latest_auto_save
+            else:
+                # Create new auto-save
+                submission = serializer.save(
+                    user=request.user,
+                    status='pending',
+                    is_auto_save=True,
+                    submission_count=0
+                )
             
-            # Return immediate response
-            response_serializer = SubmissionSerializer(submission)
+            # Queue background processing
+            if getattr(settings, 'USE_CELERY', True):
+                process_submission_task.delay(submission.id)
+            else:
+                self._process_submission_sync(submission)
+            
             return Response({
                 'id': submission.id,
-                'status': 'pending',
-                'message': 'Submission received and queued for processing',
+                'status': 'pending' if getattr(settings, 'USE_CELERY', True) else submission.status,
+                'message': 'Code auto-saved',
                 'submitted_at': submission.submitted_at,
                 'challenge': submission.challenge.id,
-                'code_length': submission.code_length
-            }, status=status.HTTP_201_CREATED)
+                'code_length': submission.code_length,
+                'is_auto_save': True
+            }, status=status.HTTP_200_OK if latest_auto_save else status.HTTP_201_CREATED)
         
-        except IntegrityError:
-            # Duplicate submission (unique constraint violation)
+        # Manual submission: Check limit (max 2)
+        if manual_submission_count >= 2:
             return Response({
-                'error': 'You have already submitted for this challenge'
-            }, status=status.HTTP_409_CONFLICT)
+                'error': 'Maximum 2 submissions allowed per challenge. You have already submitted twice.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # First manual submission: Create new
+        if manual_submission_count == 0:
+            submission = serializer.save(
+                user=request.user,
+                status='pending',
+                is_auto_save=False,
+                submission_count=1
+            )
+            message = 'First submission received and queued for processing'
+        
+        # Second manual submission: Update existing
+        else:  # manual_submission_count == 1
+            latest_manual = existing_submissions.filter(is_auto_save=False).first()
+            latest_manual.html_code = serializer.validated_data['html_code']
+            latest_manual.css_code = serializer.validated_data['css_code']
+            latest_manual.status = 'pending'
+            latest_manual.error_message = None
+            latest_manual.submission_count = 2
+            latest_manual.save()
+            submission = latest_manual
+            message = 'Second submission received and queued for processing. This is your final submission.'
+        
+        # Process submission (async with Celery in production, sync in development)
+        if getattr(settings, 'USE_CELERY', True):
+            # Production: Queue background task
+            process_submission_task.delay(submission.id)
+        else:
+            # Development: Process synchronously
+            self._process_submission_sync(submission)
+        
+        return Response({
+            'id': submission.id,
+            'status': 'pending' if getattr(settings, 'USE_CELERY', True) else submission.status,
+            'message': message,
+            'submitted_at': submission.submitted_at,
+            'challenge': submission.challenge.id,
+            'code_length': submission.code_length,
+            'is_auto_save': False,
+            'submission_count': submission.submission_count,
+            'remaining_submissions': 2 - submission.submission_count
+        }, status=status.HTTP_201_CREATED if manual_submission_count == 0 else status.HTTP_200_OK)
+    
+    def _process_submission_sync(self, submission):
+        """
+        Synchronous submission processing for development (when Celery is not available).
+        Only renders the image, skips heatmap comparison.
+        """
+        try:
+            submission.status = 'processing'
+            submission.save(update_fields=['status'])
+            
+            # Render HTML/CSS to image
+            renderer = HTMLRenderer()
+            image_path = asyncio.run(
+                renderer.render_submission(
+                    html_code=submission.html_code,
+                    css_code=submission.css_code,
+                    challenge_name=submission.challenge.title,
+                    user_name=submission.user.name
+                )
+            )
+            
+            submission.rendered_image = image_path
+            submission.status = 'completed'
+            submission.error_message = None
+            submission.save(update_fields=['rendered_image', 'status', 'error_message'])
+            
+        except Exception as e:
+            submission.status = 'failed'
+            submission.error_message = str(e)
+            submission.save(update_fields=['status', 'error_message'])
     
     def perform_destroy(self, instance):
         """Allow users to delete their own submissions, admins can delete any."""
