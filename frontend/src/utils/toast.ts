@@ -186,7 +186,7 @@ class ToastManager {
    * Clear all toasts
    */
   clearAll(): void {
-    this.toasts.forEach((toast, id) => {
+    this.toasts.forEach((_, id) => {
       this.remove(id);
     });
   }
