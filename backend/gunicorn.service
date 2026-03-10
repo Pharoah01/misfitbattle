@@ -1,0 +1,24 @@
+[Unit]
+Description=Gunicorn daemon for Misfits Battle
+Requires=network.target
+After=network.target
+
+[Service]
+Type=notify
+User=misfits
+Group=misfits
+RuntimeDirectory=gunicorn
+WorkingDirectory=/opt/misfits/MisfitsBattle/backend
+Environment="PATH=/opt/misfits/MisfitsBattle/backend/venv/bin"
+ExecStart=/opt/misfits/MisfitsBattle/backend/venv/bin/gunicorn \
+          --config /opt/misfits/MisfitsBattle/backend/gunicorn.conf.py \
+          backend.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
