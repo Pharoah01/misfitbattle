@@ -234,7 +234,7 @@ This project is built for educational purposes and college events.
 ## 👥 Team
 
 **Binary Misfits**
-- Built for college coding competitions
+- Built for css coding competitions
 - Inspired by CSSBattle
 - Designed for student developers
 
@@ -258,4 +258,4 @@ This project is built for educational purposes and college events.
 
 **Made with 💜 by Binary Misfits**
 
-*For college events, hackathons, and coding competitions*
+<!-- *For college events, hackathons, and coding competitions* -->
