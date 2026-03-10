@@ -3,14 +3,65 @@
  * Public page showing platform overview and challenge preview
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, useChallenges } from '@/hooks';
+import { toast } from '@/utils';
 
 export const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { data: challenges, isLoading } = useChallenges();
+
+  // Security: Prevent screenshots, right-click, and drag-drop
+  useEffect(() => {
+    // Prevent right-click context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast.error('Right-click is disabled');
+      return false;
+    };
+
+    // Prevent drag and drop
+    const handleDragStart = (e: DragEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Prevent all screenshot shortcuts (cross-platform)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Windows: PrtScn, Alt+PrtScn, Win+Shift+S, Shift+Win+S
+      // Mac: Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5
+      // Linux: PrtScn, Shift+PrtScn, Ctrl+PrtScn
+      
+      const isPrintScreen = e.key === 'PrintScreen';
+      const isWindowsSnip = (e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S');
+      const isWindowsSnipTool = e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S');
+      const isMacScreenshot = e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key);
+      const isLinuxScreenshot = e.ctrlKey && e.key === 'PrintScreen';
+      
+      if (isPrintScreen || isWindowsSnip || isWindowsSnipTool || isMacScreenshot || isLinuxScreenshot) {
+        e.preventDefault();
+        e.stopPropagation();
+        toast.error('Screenshots are disabled');
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyDown); // Also prevent on keyup
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyDown);
+    };
+  }, []);
 
   // Redirect authenticated users to dashboard
   React.useEffect(() => {
