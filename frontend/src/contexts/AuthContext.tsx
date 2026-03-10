@@ -12,7 +12,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as authAPI from '@/api/auth';
-import { clearAccessToken } from '@/api/client';
+import { clearAccessToken, getAccessToken } from '@/api/client';
 import type { User, LoginFormData, RegisterFormData } from '@/types';
 
 interface AuthContextValue {
@@ -121,24 +121,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    */
   const restoreSession = useCallback(async () => {
     try {
+      console.log('AuthContext: Starting session restoration');
       setLoading(true);
       
+      // Check if we have a token before making API call
+      const token = getAccessToken();
+      if (!token) {
+        // No token - user needs to login
+        console.log('AuthContext: No token found, setting user to null');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
+      console.log('AuthContext: Token found, fetching current user');
       // Backend uses simple token auth (no refresh token)
       // Just try to get current user - if it fails, user needs to login
       try {
         const userData = await authAPI.getCurrentUser();
+        console.log('AuthContext: User data fetched successfully', userData);
         setUser(userData);
       } catch (error) {
         // No valid token - user needs to login
+        console.log('AuthContext: Failed to fetch user data, clearing token', error);
         setUser(null);
         clearAccessToken();
       }
     } catch (err) {
       // Session restoration failed - user needs to login
+      console.log('AuthContext: Session restoration failed', err);
       setUser(null);
       clearAccessToken();
     } finally {
       setLoading(false);
+      console.log('AuthContext: Session restoration complete');
     }
   }, []);
 
@@ -146,8 +162,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * Initialize auth state on mount
    */
   useEffect(() => {
-    restoreSession();
-  }, [restoreSession]);
+    // Only restore session once on mount
+    let mounted = true;
+    
+    const initAuth = async () => {
+      if (mounted) {
+        await restoreSession();
+      }
+    };
+    
+    initAuth();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   /**
    * Login user

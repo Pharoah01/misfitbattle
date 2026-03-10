@@ -212,7 +212,14 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    os.getenv('FRONTEND_URL', 'http://localhost:5173'),
+]
 
 # Security Settings
 if not DEBUG:

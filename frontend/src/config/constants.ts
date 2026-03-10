@@ -5,11 +5,12 @@
 
 // API Configuration
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 export const API_ENDPOINTS = {
   AUTH: {
-    REGISTER: '/api/auth/register/',
-    LOGIN: '/api/auth/login/',
-    LOGOUT: '/api/auth/logout/',
+    REGISTER: '/api/auth/signup/',
+    LOGIN: '/api/auth/signin/',
+    LOGOUT: '/api/auth/signout/',
     ME: '/api/auth/me/',
     REFRESH: '/api/auth/token/refresh/',
   },

@@ -7,7 +7,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Purple Cyber-Tech Theme
         purple: {
           primary: '#6B2DFF',
           secondary: '#7C3AED',

@@ -90,30 +90,44 @@ export const ChallengePage: React.FC = () => {
     };
   }, []);
 
-  // Calculate scaled canvas size
+  // Calculate scaled canvas size - Prevent overflow
   const canvasSize = useMemo(() => {
-    if (!scaleToFit || !previewContainerRef.current) {
-      return { width: 400, height: 225 }; // 16:9 aspect ratio (400 / 16 * 9 = 225)
+    if (!previewContainerRef.current) {
+      return { width: 300, height: 169 }; // Default 16:9 ratio, smaller
     }
 
     const container = previewContainerRef.current;
-    const containerWidth = container.clientWidth - 88; // Subtract padding and frame
-    const containerHeight = container.clientHeight - 88;
+    const containerWidth = container.clientWidth - 32; // Account for padding
+    const containerHeight = container.clientHeight - 32;
     
-    // Maintain 16:9 aspect ratio
-    const aspectRatio = 16 / 9;
-    let width = containerWidth;
-    let height = width / aspectRatio;
+    // Ensure minimum container size
+    const availableWidth = Math.max(200, containerWidth);
+    const availableHeight = Math.max(150, containerHeight);
     
-    if (height > containerHeight) {
-      height = containerHeight;
-      width = height * aspectRatio;
+    if (scaleToFit) {
+      // Scale to fit container while maintaining aspect ratio
+      const aspectRatio = 16 / 9;
+      let width = availableWidth;
+      let height = width / aspectRatio;
+      
+      if (height > availableHeight) {
+        height = availableHeight;
+        width = height * aspectRatio;
+      }
+      
+      return {
+        width: Math.floor(Math.min(width, availableWidth)),
+        height: Math.floor(Math.min(height, availableHeight))
+      };
+    } else {
+      // Fixed size that fits well in most containers
+      const maxWidth = Math.min(350, availableWidth);
+      
+      return {
+        width: maxWidth,
+        height: Math.floor(maxWidth * 9 / 16)
+      };
     }
-    
-    return {
-      width: Math.floor(width),
-      height: Math.floor(height)
-    };
   }, [scaleToFit, previewContainerRef.current?.clientWidth, previewContainerRef.current?.clientHeight]);
 
   // Load challenge boilerplate or auto-saved code
@@ -315,37 +329,37 @@ export const ChallengePage: React.FC = () => {
   }
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }} className="bg-dark-bg flex flex-col">
-      {/* Header Bar */}
-      <header className="bg-dark-surface/50 backdrop-blur-sm border-b border-purple-primary/20 px-6 py-3 flex-shrink-0" style={{ height: '60px' }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
+    <div className="w-full h-screen overflow-hidden bg-dark-bg flex flex-col">
+      {/* Header Bar - Fixed Height */}
+      <header className="bg-dark-surface/80 backdrop-blur-sm border-b border-purple-primary/20 px-4 py-2 flex-shrink-0 h-14 w-full">
+        <div className="flex items-center justify-between h-full max-w-full">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-text-secondary hover:text-purple-primary transition-colors flex items-center gap-2 font-rajdhani font-semibold"
+              className="text-text-secondary hover:text-purple-primary transition-colors flex items-center gap-2 font-rajdhani font-semibold text-sm flex-shrink-0"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back
             </button>
-            <div className="h-6 w-px bg-purple-primary/30"></div>
-            <div>
-              <h1 className="text-lg font-bold text-text-primary font-rajdhani">{challenge.title}</h1>
+            <div className="h-4 w-px bg-purple-primary/30 flex-shrink-0"></div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base font-bold text-text-primary font-rajdhani truncate">{challenge.title}</h1>
             </div>
-            <div className="px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full">
-              <span className="text-orange-500 text-sm font-bold font-rajdhani">{challenge.points} pts</span>
+            <div className="px-2 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full flex-shrink-0">
+              <span className="text-orange-500 text-xs font-bold font-rajdhani">{challenge.points} pts</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className={`text-sm font-mono px-3 py-1 rounded ${exceedsLimit ? 'bg-red-500/10 text-red-500' : 'bg-dark-bg text-text-secondary border border-purple-primary/20'}`}>
+          <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+            <div className={`text-xs font-mono px-2 py-1 rounded flex-shrink-0 ${exceedsLimit ? 'bg-red-500/10 text-red-500' : 'bg-dark-bg text-text-secondary border border-purple-primary/20'}`}>
               {codeLength} / {VALIDATION.MAX_CODE_LENGTH}
             </div>
             
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all text-sm font-semibold font-rajdhani"
+              className="px-3 py-1 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all text-xs font-semibold font-rajdhani flex-shrink-0"
             >
               Reset
             </button>
@@ -353,7 +367,7 @@ export const ChallengePage: React.FC = () => {
             <button
               onClick={handleSubmit}
               disabled={submitMutation.isPending || exceedsLimit || !code.trim() || submissionCount >= 1}
-              className="px-6 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all text-sm shadow-lg shadow-purple-primary/30 font-rajdhani"
+              className="px-4 py-1 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded transition-all text-xs shadow-lg shadow-purple-primary/30 font-rajdhani flex-shrink-0"
             >
               {submitMutation.isPending ? 'Submitting...' : submissionCount >= 1 ? 'Already Submitted' : 'Submit'}
             </button>
@@ -361,87 +375,97 @@ export const ChallengePage: React.FC = () => {
         </div>
       </header>
 
-      {/* Grid Layout - Editor Left, Preview Right */}
-      <div 
-        style={{ 
-          width: '100vw', 
-          height: 'calc(100vh - 60px)',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          overflow: 'hidden'
-        }}
-      >
-        {/* Column 1: Code Editor */}
-        <div className="flex flex-col border-r border-purple-primary/20 overflow-hidden">
-          <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0">
-            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Code Editor</h3>
+      {/* Main Content - Responsive Grid */}
+      <div className="flex-1 overflow-hidden w-full">
+        <div className="grid grid-cols-1 xl:grid-cols-2 h-full w-full">
+          {/* Left Column: Code Editor */}
+          <div className="flex flex-col xl:border-r border-purple-primary/20 overflow-hidden w-full">
+            <div className="px-4 py-2 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 w-full">
+              <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Code Editor</h3>
+            </div>
+            <div className="flex-1 overflow-hidden bg-[#1e1e1e] min-h-0 w-full">
+              <CodeEditor
+                language="html"
+                value={code}
+                onChange={setCode}
+                height="100%"
+                options={{ 
+                  automaticLayout: true,
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  folding: true,
+                  lineNumbers: 'on',
+                  renderWhitespace: 'selection',
+                  scrollbar: {
+                    horizontal: 'auto',
+                    vertical: 'auto'
+                  }
+                }}
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-hidden bg-[#1e1e1e]">
-            <CodeEditor
-              language="html"
-              value={code}
-              onChange={setCode}
-              height="100%"
-              options={{ automaticLayout: true }}
-            />
-          </div>
-        </div>
 
-        {/* Column 2: Preview + Colors + Description */}
-        <div className="flex flex-col overflow-hidden">
-          {/* Color Palette - Top */}
-          {challenge.palette && challenge.palette.length > 0 && (
-            <div className="px-6 py-4 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <h4 className="text-xs font-bold text-text-secondary uppercase tracking-wider font-rajdhani">Colors:</h4>
-                <div className="flex gap-2">
-                  {challenge.palette.map((color, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center gap-2 group cursor-pointer px-3 py-1.5 bg-dark-bg rounded border border-purple-primary/20 hover:border-purple-primary transition-all" 
-                      onClick={() => {
-                        navigator.clipboard.writeText(color);
-                        toast.success(`Copied ${color}`);
-                      }}
-                    >
-                      <div
-                        className="w-6 h-6 rounded border border-purple-primary/30 flex-shrink-0 group-hover:scale-110 transition-transform"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="text-text-primary font-mono text-xs group-hover:text-purple-primary transition-colors">{color}</span>
-                    </div>
-                  ))}
+          {/* Right Column: Color Palette + Preview */}
+          <div className="flex flex-col overflow-hidden min-h-0 w-full">
+            {/* Color Palette - Compact */}
+            {challenge.palette && challenge.palette.length > 0 && (
+              <div className="px-4 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 w-full">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h4 className="text-xs font-bold text-text-secondary uppercase tracking-wider font-rajdhani flex-shrink-0">Colors:</h4>
+                  <div className="flex gap-1 flex-wrap min-w-0 overflow-hidden">
+                    {challenge.palette.map((color, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center gap-1 group cursor-pointer px-2 py-1 bg-dark-bg rounded border border-purple-primary/20 hover:border-purple-primary transition-all flex-shrink-0" 
+                        onClick={() => {
+                          navigator.clipboard.writeText(color);
+                          toast.success(`Copied ${color}`);
+                        }}
+                      >
+                        <div
+                          className="w-4 h-4 rounded border border-purple-primary/30 flex-shrink-0 group-hover:scale-110 transition-transform"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-text-primary font-mono text-xs group-hover:text-purple-primary transition-colors">{color}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Preview Section */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="px-6 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Your Output</h3>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={scaleToFit}
-                  onChange={(e) => setScaleToFit(e.target.checked)}
-                  className="w-4 h-4 rounded border-purple-primary/30 bg-dark-bg text-purple-primary focus:ring-purple-primary focus:ring-offset-0"
+            {/* Preview Section - Takes remaining space */}
+            <div className="flex-1 flex flex-col overflow-hidden min-h-0 w-full">
+              <div className="px-4 py-2 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 flex items-center justify-between w-full">
+                <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Your Output</h3>
+                <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={scaleToFit}
+                    onChange={(e) => setScaleToFit(e.target.checked)}
+                    className="w-3 h-3 rounded border-purple-primary/30 bg-dark-bg text-purple-primary focus:ring-purple-primary focus:ring-offset-0"
+                  />
+                  <span className="text-xs text-text-secondary font-rajdhani">Scale to Fit</span>
+                </label>
+              </div>
+              <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-dark-bg min-h-0 w-full">
+                <iframe
+                  ref={iframeRef}
+                  sandbox="allow-same-origin"
+                  className="bg-white border border-purple-primary/20 rounded shadow-lg flex-shrink-0"
+                  style={{
+                    width: `${canvasSize.width}px`,
+                    height: `${canvasSize.height}px`,
+                    display: 'block',
+                    maxWidth: '100%',
+                    maxHeight: '100%'
+                  }}
+                  title="Code Preview"
                 />
-                <span className="text-xs text-text-secondary font-rajdhani">Scale to Fit</span>
-              </label>
-            </div>
-            <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-8 overflow-hidden bg-dark-bg">
-              <iframe
-                ref={iframeRef}
-                sandbox="allow-same-origin"
-                className="bg-white border border-purple-primary/20 rounded"
-                style={{
-                  width: `${canvasSize.width}px`,
-                  height: `${canvasSize.height}px`,
-                  display: 'block'
-                }}
-                title="Code Preview"
-              />
+              </div>
             </div>
           </div>
         </div>

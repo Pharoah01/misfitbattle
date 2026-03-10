@@ -10,8 +10,9 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '@/config/constants';
 
-// Token storage key
-const TOKEN_STORAGE_KEY = 'auth_token';
+// Token storage keys
+const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 
 /**
  * Set access token in localStorage
@@ -19,9 +20,9 @@ const TOKEN_STORAGE_KEY = 'auth_token';
  */
 export const setAccessToken = (token: string | null): void => {
   if (token) {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(ACCESS_TOKEN_KEY, token);
   } else {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
   }
 };
 
@@ -30,14 +31,49 @@ export const setAccessToken = (token: string | null): void => {
  * @returns Current access token or null
  */
 export const getAccessToken = (): string | null => {
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 };
 
 /**
  * Clear access token from localStorage
  */
 export const clearAccessToken = (): void => {
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+};
+
+/**
+ * Set refresh token in localStorage
+ * @param token - Refresh token
+ */
+export const setRefreshToken = (token: string | null): void => {
+  if (token) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
+};
+
+/**
+ * Get refresh token from localStorage
+ * @returns Current refresh token or null
+ */
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+};
+
+/**
+ * Clear refresh token from localStorage
+ */
+export const clearRefreshToken = (): void => {
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+};
+
+/**
+ * Clear all tokens from localStorage
+ */
+export const clearAllTokens = (): void => {
+  clearAccessToken();
+  clearRefreshToken();
 };
 
 /**
@@ -49,6 +85,7 @@ const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 second timeout
+  withCredentials: true, // Enable CORS credentials
 });
 
 /**
@@ -60,7 +97,7 @@ apiClient.interceptors.request.use(
     const token = getAccessToken();
     
     // Add Authorization header if token exists
-    // Backend uses DRF Token Authentication (not JWT)
+    // Use Token format for Django Token authentication
     if (token && config.headers) {
       config.headers.Authorization = `Token ${token}`;
     }
@@ -74,7 +111,7 @@ apiClient.interceptors.request.use(
 
 /**
  * Response Interceptor
- * Handles 401 errors (backend uses simple token auth without refresh)
+ * Handles 401 errors by clearing tokens (let AuthContext handle navigation)
  */
 apiClient.interceptors.response.use(
   (response) => {
@@ -84,10 +121,9 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     // Check if error is 401 Unauthorized
     if (error.response?.status === 401) {
-      // Token is invalid - clear it and let user login again
-      clearAccessToken();
-      
-      // Redirect to login page will be handled by AuthContext
+      // Clear tokens but let AuthContext handle navigation
+      // This prevents infinite redirect loops
+      clearAllTokens();
     }
     
     return Promise.reject(error);
