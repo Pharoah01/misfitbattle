@@ -60,16 +60,19 @@ export const ChallengePage: React.FC = () => {
 
     // Prevent all screenshot shortcuts (cross-platform)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Windows: PrtScn, Alt+PrtScn, Win+Shift+S
+      // Windows: PrtScn, Alt+PrtScn, Win+Shift+S, Shift+Win+S
       // Mac: Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5
       // Linux: PrtScn, Shift+PrtScn, Ctrl+PrtScn
       
-      const isPrintScreen = e.key === 'PrintScreen' || e.keyCode === 44;
-      const isWindowsSnip = (e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 's';
+      const isPrintScreen = e.key === 'PrintScreen';
+      const isWindowsSnip = (e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S');
+      const isWindowsSnipTool = e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S');
       const isMacScreenshot = e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key);
+      const isLinuxScreenshot = e.ctrlKey && e.key === 'PrintScreen';
       
-      if (isPrintScreen || isWindowsSnip || isMacScreenshot) {
+      if (isPrintScreen || isWindowsSnip || isWindowsSnipTool || isMacScreenshot || isLinuxScreenshot) {
         e.preventDefault();
+        e.stopPropagation();
         toast.error('Screenshots are disabled during the challenge');
         return false;
       }
@@ -240,19 +243,6 @@ export const ChallengePage: React.FC = () => {
     return () => registerAutoSubmit(null);
   }, [registerAutoSubmit, handleAutoSubmit]);
 
-  // Handle CTRL+ENTER shortcut
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [code, challenge]);
-
   const handleSubmit = useCallback(async () => {
     if (exceedsLimit) {
       toast.error('Code exceeds maximum length');
@@ -291,6 +281,19 @@ export const ChallengePage: React.FC = () => {
       // Error toast is already handled by the mutation hook
     }
   }, [code, challenge, exceedsLimit, submitMutation, autoSaveKey, submissionCount]);
+
+  // Handle CTRL+ENTER shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSubmit]);
 
   const handleReset = useCallback(() => {
     if (challenge && window.confirm('Reset to boilerplate? This will discard your current code.')) {
