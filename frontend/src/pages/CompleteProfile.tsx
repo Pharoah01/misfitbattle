@@ -25,7 +25,16 @@ export const CompleteProfile: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // For register_number, only allow numeric characters
+    if (name === 'register_number') {
+      // Remove any non-numeric characters
+      const numericValue = value.replace(/[^0-9]/g, '');
+      setFormData(prev => ({ ...prev, [name]: numericValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -124,8 +133,10 @@ export const CompleteProfile: React.FC = () => {
                 name="register_number"
                 value={formData.register_number}
                 onChange={handleChange}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
-                placeholder="Enter your register number"
+                placeholder="Enter your register number (numbers only)"
                 disabled={isSubmitting}
               />
               {errors.register_number && (

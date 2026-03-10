@@ -37,7 +37,17 @@ export const register = async (data: RegisterFormData): Promise<RegisterResponse
  * @returns Login response with token and user data
  */
 export const login = async (data: LoginFormData): Promise<LoginResponse> => {
-  const response = await apiClient.post<{ token: string; user: User }>(
+  const response = await apiClient.post<{ 
+    token: string; 
+    session_id: string;
+    user: User;
+    session_info: {
+      ip_address: string;
+      country: string;
+      city: string;
+      created_at: string;
+    };
+  }>(
     API_ENDPOINTS.AUTH.LOGIN,
     {
       register_number: data.register_number,
@@ -52,6 +62,8 @@ export const login = async (data: LoginFormData): Promise<LoginResponse> => {
     access: response.data.token,
     refresh: '', // Backend uses DRF Token Auth (no refresh token)
     user: response.data.user,
+    session_id: response.data.session_id,
+    session_info: response.data.session_info,
   };
 };
 
