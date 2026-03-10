@@ -2,7 +2,7 @@
 
 A CSSBattle-style coding competition platform built for college events and hackathons. Test your HTML/CSS skills, solve visual challenges, and compete with others!
 
-![Postgress](https://img.shields.io/badge/Theme-Purple%20Cyber--Tech-6B2DFF?style=for-the-badge)
+![Postgress](https://img.shields.io/badge/postgresql-6B2DFF?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
 ![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)
