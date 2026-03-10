@@ -147,13 +147,11 @@ export const Register: React.FC = () => {
                 Register Number
               </label>
               <input
-                type="text"
+                type="number"
                 id="register_number"
                 name="register_number"
                 value={formData.register_number}
                 onChange={handleChange}
-                inputMode="numeric"
-                pattern="[0-9]*"
                 className={`w-full px-4 py-3 bg-dark-bg border ${
                   errors.register_number ? 'border-red-500' : 'border-purple-primary/30'
                 } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}

@@ -128,13 +128,11 @@ export const CompleteProfile: React.FC = () => {
                 Register Number
               </label>
               <input
-                type="text"
+                type="number"
                 id="register_number"
                 name="register_number"
                 value={formData.register_number}
                 onChange={handleChange}
-                inputMode="numeric"
-                pattern="[0-9]*"
                 className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
                 placeholder="Enter your register number (numbers only)"
                 disabled={isSubmitting}
