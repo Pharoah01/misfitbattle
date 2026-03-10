@@ -2,7 +2,7 @@
 
 A CSSBattle-style coding competition platform built for college events and hackathons. Test your HTML/CSS skills, solve visual challenges, and compete with others!
 
-![Purple Cyber-Tech Theme](https://img.shields.io/badge/Theme-Purple%20Cyber--Tech-6B2DFF?style=for-the-badge)
+![Postgress](https://img.shields.io/badge/Theme-Purple%20Cyber--Tech-6B2DFF?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
 ![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)
@@ -11,8 +11,8 @@ A CSSBattle-style coding competition platform built for college events and hacka
 
 ## 🚀 Quick Start
 
-### For Deployment
-👉 **[Start Here: Deployment Quick Start](docs/deployment/DEPLOYMENT_QUICK_START.md)**
+<!-- ### For Deployment
+👉 **[Start Here: Deployment Quick Start](docs/deployment/DEPLOYMENT_QUICK_START.md)** -->
 
 ### For Development
 ```bash
@@ -28,53 +28,6 @@ python manage.py runserver
 cd frontend
 npm install
 npm run dev
-```
-
----
-
-## 📚 Documentation
-
-All documentation is organized in the [`docs/`](docs/) folder:
-
-### 🚀 Deployment
-- **[Quick Start Guide](docs/deployment/DEPLOYMENT_QUICK_START.md)** - Fast-track deployment
-- **[AWS EC2 Deployment](docs/deployment/AWS_EC2_DEPLOYMENT.md)** - Complete backend setup
-- **[Deployment Checklist](docs/deployment/DEPLOYMENT_CHECKLIST.md)** - Step-by-step verification
-- **[Netlify Deployment](frontend/NETLIFY_DEPLOYMENT.md)** - Frontend deployment
-
-### � Development
-- **[Frontend Specification](docs/development/FRONTEND_SPEC.md)** - Technical specs and architecture
-
-### 📊 Project Status
-- **[Project Overview](docs/project-status/PROJECT_OVERVIEW.md)** - High-level overview
-- **[Current Status](docs/project-status/PROJECT_STATUS.md)** - Progress and next steps
-
-### 📦 Archive
-- Historical documents and completed features in [`docs/archive/`](docs/archive/)
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────┐
-│         User's Browser              │
-└────────────┬────────────────────────┘
-             │
-             ├─────────────────────────┐
-             │                         │
-             ▼                         ▼
-┌────────────────────┐    ┌───────────────────────┐
-│   Netlify (CDN)    │    │   AWS EC2             │
-│   ─────────────    │    │   ─────────────       │
-│   • React App      │───▶│   • Django API        │
-│   • Vite Build     │    │   • Gunicorn          │
-│   • TypeScript     │    │   • Celery Worker     │
-│   • Purple Theme   │    │   • Redis             │
-│   • HTTPS (Free)   │    │   • PostgreSQL        │
-│                    │    │   • Nginx             │
-│   $0/month         │    │   $0-17/month         │
-└────────────────────┘    └───────────────────────┘
 ```
 
 ---
@@ -144,7 +97,7 @@ All documentation is organized in the [`docs/`](docs/) folder:
 - **Frontend**: Netlify (CDN, HTTPS, Auto-deploy)
 - **Backend**: AWS EC2 (Ubuntu 22.04)
 - **SSL**: Let's Encrypt (Free certificates)
-- **Cost**: $0-17/month total
+<!-- - **Cost**: $0-17/month total -->
 
 ---
 
@@ -237,14 +190,14 @@ misfits-battle/
    - Backend API: http://localhost:8000/api/
    - Admin Panel: http://localhost:8000/admin/
 
-### Production Deployment
+<!-- ### Production Deployment
 
 Follow the comprehensive deployment guides:
 
 1. **[Deployment Quick Start](docs/deployment/DEPLOYMENT_QUICK_START.md)** - Overview
 2. **[AWS EC2 Deployment](docs/deployment/AWS_EC2_DEPLOYMENT.md)** - Backend setup
 3. **[Netlify Deployment](frontend/NETLIFY_DEPLOYMENT.md)** - Frontend setup
-4. **[Deployment Checklist](docs/deployment/DEPLOYMENT_CHECKLIST.md)** - Verification
+4. **[Deployment Checklist](docs/deployment/DEPLOYMENT_CHECKLIST.md)** - Verification -->
 
 ---
 
@@ -287,13 +240,13 @@ This project is built for educational purposes and college events.
 
 ---
 
-## 🆘 Support
+<!-- ## 🆘 Support
 
 - **Documentation**: Check the [`docs/`](docs/) folder
 - **Deployment Issues**: See [troubleshooting guides](docs/deployment/DEPLOYMENT_QUICK_START.md#troubleshooting)
 - **Development Questions**: Review [development docs](docs/development/)
 
----
+--- -->
 
 ## 🎉 Acknowledgments
 
