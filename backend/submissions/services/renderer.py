@@ -48,7 +48,7 @@ class HTMLRenderer:
         html_code: str,
         css_code: str,
         challenge_name: str,
-        user_name: str
+        user_email: str
     ) -> str:
         """
         Renders HTML/CSS to PNG image.
@@ -57,7 +57,7 @@ class HTMLRenderer:
             html_code: User's HTML code
             css_code: User's CSS code
             challenge_name: Name of the challenge
-            user_name: Name of the user
+            user_email: Email of the user
         
         Returns:
             str: File path to saved image (relative to MEDIA_ROOT)
@@ -69,7 +69,7 @@ class HTMLRenderer:
         """
         try:
             # Generate filename
-            filename = self._generate_filename(challenge_name, user_name)
+            filename = self._generate_filename(challenge_name, user_email)
             
             # Ensure output directory exists
             output_dir = Path(settings.MEDIA_ROOT) / 'submission_renders'
@@ -193,40 +193,42 @@ class HTMLRenderer:
 """
         return html_document
     
-    def _generate_filename(self, challenge_name: str, user_name: str) -> str:
+    def _generate_filename(self, challenge_name: str, user_email: str) -> str:
         """
-        Generate sanitized filename from challenge and user names.
+        Generate sanitized filename from challenge name and user email.
         
-        Format: {challenge-name}-{user-name}.png
+        Format: {challenge-name}-{user-email}.png
         - Convert to lowercase
         - Replace spaces with hyphens
         - Remove special characters
         
         Args:
             challenge_name: Name of the challenge
-            user_name: Name of the user
+            user_email: Email of the user
         
         Returns:
             str: Sanitized filename
         """
         # Convert to lowercase
         challenge_slug = challenge_name.lower()
-        user_slug = user_name.lower()
+        email_slug = user_email.lower()
         
         # Replace spaces with hyphens
         challenge_slug = challenge_slug.replace(' ', '-')
-        user_slug = user_slug.replace(' ', '-')
         
-        # Remove special characters (keep only alphanumeric and hyphens)
+        # Remove special characters from challenge name (keep only alphanumeric and hyphens)
         challenge_slug = re.sub(r'[^a-z0-9-]', '', challenge_slug)
-        user_slug = re.sub(r'[^a-z0-9-]', '', user_slug)
+        
+        # For email, replace @ and . with hyphens, remove other special chars
+        email_slug = email_slug.replace('@', '-at-').replace('.', '-')
+        email_slug = re.sub(r'[^a-z0-9-]', '', email_slug)
         
         # Remove consecutive hyphens
         challenge_slug = re.sub(r'-+', '-', challenge_slug)
-        user_slug = re.sub(r'-+', '-', user_slug)
+        email_slug = re.sub(r'-+', '-', email_slug)
         
         # Remove leading/trailing hyphens
         challenge_slug = challenge_slug.strip('-')
-        user_slug = user_slug.strip('-')
+        email_slug = email_slug.strip('-')
         
-        return f"{challenge_slug}-{user_slug}.png"
+        return f"{challenge_slug}-{email_slug}.png"

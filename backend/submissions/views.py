@@ -66,14 +66,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """
-        Create or update submission with resubmission logic.
+        Create or update submission with single submission limit.
         
         Rules:
         - Auto-save (is_auto_save=True): Always allowed, doesn't count toward limit
-        - Manual submission: Max 2 submissions allowed per user per challenge
-        - First submission: Creates new submission
-        - Second submission: Updates existing submission
-        - Third+ submission: Returns 403 error
+        - Manual submission: Max 1 submission allowed per user per challenge
+        - Second+ submission: Returns 403 error
         
         Queues background task for rendering and similarity scoring.
         """
@@ -129,33 +127,20 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 'is_auto_save': True
             }, status=status.HTTP_200_OK if latest_auto_save else status.HTTP_201_CREATED)
         
-        # Manual submission: Check limit (max 2)
-        if manual_submission_count >= 2:
+        # Manual submission: Check limit (max 1)
+        if manual_submission_count >= 1:
             return Response({
-                'error': 'Maximum 2 submissions allowed per challenge. You have already submitted twice.'
+                'error': 'You have already submitted for this challenge. Only one submission is allowed.'
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # First manual submission: Create new
-        if manual_submission_count == 0:
-            submission = serializer.save(
-                user=request.user,
-                status='pending',
-                is_auto_save=False,
-                submission_count=1
-            )
-            message = 'First submission received and queued for processing'
-        
-        # Second manual submission: Update existing
-        else:  # manual_submission_count == 1
-            latest_manual = existing_submissions.filter(is_auto_save=False).first()
-            latest_manual.html_code = serializer.validated_data['html_code']
-            latest_manual.css_code = serializer.validated_data['css_code']
-            latest_manual.status = 'pending'
-            latest_manual.error_message = None
-            latest_manual.submission_count = 2
-            latest_manual.save()
-            submission = latest_manual
-            message = 'Second submission received and queued for processing. This is your final submission.'
+        # First and only manual submission: Create new
+        submission = serializer.save(
+            user=request.user,
+            status='pending',
+            is_auto_save=False,
+            submission_count=1
+        )
+        message = 'Submission received and queued for processing. This is your only submission.'
         
         # Process submission (async with Celery in production, sync in development)
         if getattr(settings, 'USE_CELERY', True):
@@ -174,8 +159,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             'code_length': submission.code_length,
             'is_auto_save': False,
             'submission_count': submission.submission_count,
-            'remaining_submissions': 2 - submission.submission_count
-        }, status=status.HTTP_201_CREATED if manual_submission_count == 0 else status.HTTP_200_OK)
+            'remaining_submissions': 0
+        }, status=status.HTTP_201_CREATED)
     
     def _process_submission_sync(self, submission):
         """
@@ -193,7 +178,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                     html_code=submission.html_code,
                     css_code=submission.css_code,
                     challenge_name=submission.challenge.title,
-                    user_name=submission.user.name
+                    user_email=submission.user.email
                 )
             )
             

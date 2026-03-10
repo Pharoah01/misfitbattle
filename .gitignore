@@ -140,4 +140,8 @@ dmypy.json
 # Documentation (archived)
 # ============================================
 # Uncomment if you don't want to commit certain docs
-# docs/archive/
+docs/archive/
+docs/deployment/
+docs/development/
+docs/project-status/
+docs/

@@ -50,7 +50,7 @@ def process_submission_task(self, submission_id: int):
                     html_code=submission.html_code,
                     css_code=submission.css_code,
                     challenge_name=submission.challenge.title,
-                    user_name=submission.user.name
+                    user_email=submission.user.email
                 )
             )
             

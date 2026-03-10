@@ -29,7 +29,7 @@ export const ChallengePage: React.FC = () => {
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
-  const autoSaveKey = useMemo(() => `challenge_${slug}_autosave`, [slug]);
+  const autoSaveKey = useMemo(() => `user_session_${slug}`, [slug]);
   
   // Calculate submission count from existing submissions (exclude auto-saves)
   const submissionCount = useMemo(() => {
@@ -42,6 +42,53 @@ export const ChallengePage: React.FC = () => {
     
     return manualSubmissions.length;
   }, [existingSubmissions]);
+
+  // Security: Prevent screenshots, right-click, and drag-drop
+  useEffect(() => {
+    // Prevent right-click context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast.error('Right-click is disabled during the challenge');
+      return false;
+    };
+
+    // Prevent drag and drop
+    const handleDragStart = (e: DragEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Prevent all screenshot shortcuts (cross-platform)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Windows: PrtScn, Alt+PrtScn, Win+Shift+S
+      // Mac: Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5
+      // Linux: PrtScn, Shift+PrtScn, Ctrl+PrtScn
+      
+      const isPrintScreen = e.key === 'PrintScreen' || e.keyCode === 44;
+      const isWindowsSnip = (e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 's';
+      const isMacScreenshot = e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key);
+      
+      if (isPrintScreen || isWindowsSnip || isMacScreenshot) {
+        e.preventDefault();
+        toast.error('Screenshots are disabled during the challenge');
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyDown); // Also prevent on keyup
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyDown);
+    };
+  }, []);
 
   // Calculate scaled canvas size
   const canvasSize = useMemo(() => {
@@ -205,9 +252,9 @@ export const ChallengePage: React.FC = () => {
 
     if (!challenge) return;
 
-    // Check submission limit (max 2 manual submissions)
-    if (submissionCount >= 2) {
-      toast.error('Maximum 2 submissions allowed per challenge');
+    // Check submission limit (max 1 manual submission)
+    if (submissionCount >= 1) {
+      toast.error('You have already submitted for this challenge');
       return;
     }
 
@@ -225,12 +272,7 @@ export const ChallengePage: React.FC = () => {
 
       localStorage.removeItem(autoSaveKey);
       
-      // Show appropriate message based on submission count
-      if (submissionCount === 0) {
-        toast.success('First submission successful! You have 1 more submission remaining.');
-      } else {
-        toast.success('Final submission successful! No more submissions allowed.');
-      }
+      toast.success('Submission successful! This was your only allowed submission.');
     } catch (error: any) {
       // Error toast is already handled by the mutation hook
     }
@@ -310,10 +352,10 @@ export const ChallengePage: React.FC = () => {
             
             <button
               onClick={handleSubmit}
-              disabled={submitMutation.isPending || exceedsLimit || !code.trim() || submissionCount >= 2}
+              disabled={submitMutation.isPending || exceedsLimit || !code.trim() || submissionCount >= 1}
               className="px-6 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all text-sm shadow-lg shadow-purple-primary/30 font-rajdhani"
             >
-              {submitMutation.isPending ? 'Submitting...' : submissionCount >= 2 ? 'Max Submissions Reached' : `Submit (${2 - submissionCount} left)`}
+              {submitMutation.isPending ? 'Submitting...' : submissionCount >= 1 ? 'Already Submitted' : 'Submit'}
             </button>
           </div>
         </div>
