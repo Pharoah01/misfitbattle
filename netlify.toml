@@ -44,7 +44,7 @@
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: https: http:;
-      connect-src 'self' http://localhost:8000 https://your-backend-domain.com;
+      connect-src 'self' http://localhost:8000 https://api.binarymisfits.info https://65.0.92.164;
       frame-src 'self';
     """
     
