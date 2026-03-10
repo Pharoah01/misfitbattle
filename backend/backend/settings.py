@@ -47,7 +47,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'backend.csrf_middleware.DisableCSRFMiddleware',  # Custom CSRF middleware
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'users.middleware.ProfileCompletionMiddleware',  # Profile completion enforcement
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -220,6 +220,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:5173',
     os.getenv('FRONTEND_URL', 'http://localhost:5173'),
 ]
+
+# Disable CSRF for authentication endpoints
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
 
 # Security Settings
 if not DEBUG:

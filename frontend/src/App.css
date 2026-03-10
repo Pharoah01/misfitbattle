@@ -2,6 +2,22 @@
   text-align: center;
 }
 
+/* Global text selection prevention */
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Allow text selection for input fields and textareas */
+input, textarea, [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

@@ -3,15 +3,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from .serializers import UserRegistrationSerializer, UserSerializer
 from utils.throttling import AuthRateThrottle, LoginRateThrottle
 
 User = get_user_model()
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SignUpView(generics.CreateAPIView):
     """
     User registration endpoint.
@@ -47,7 +44,6 @@ class SignUpView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SignInView(generics.GenericAPIView):
     """
     User login endpoint.

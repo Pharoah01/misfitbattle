@@ -62,18 +62,87 @@ class ToastManager {
       color: white;
       font-size: 0.875rem;
       line-height: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      position: relative;
     `;
 
-    toast.textContent = message;
+    // Create message container
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
+    messageSpan.style.cssText = `
+      flex: 1;
+      word-wrap: break-word;
+    `;
+
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '×';
+    closeButton.style.cssText = `
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.25rem;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.25rem;
+      transition: background-color 0.2s ease;
+      flex-shrink: 0;
+    `;
+
+    // Add hover effect to close button
+    closeButton.addEventListener('mouseenter', () => {
+      closeButton.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+    });
+
+    closeButton.addEventListener('mouseleave', () => {
+      closeButton.style.backgroundColor = 'transparent';
+    });
+
+    // Add click handler to close button
+    closeButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.remove(id);
+    });
+
+    // Add keyboard accessibility
+    closeButton.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.remove(id);
+      }
+    });
+
+    // Make button focusable
+    closeButton.setAttribute('tabindex', '0');
+    closeButton.setAttribute('aria-label', 'Close notification');
+
+    // Append elements to toast
+    toast.appendChild(messageSpan);
+    toast.appendChild(closeButton);
 
     // Add to container
     this.container.appendChild(toast);
     this.toasts.set(id, toast);
 
     // Auto-remove after duration
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       this.remove(id);
     }, duration);
+
+    // Store timeout ID so we can clear it if manually closed
+    (toast as any).timeoutId = timeoutId;
   }
 
   /**
@@ -82,6 +151,11 @@ class ToastManager {
   private remove(id: string): void {
     const toast = this.toasts.get(id);
     if (!toast) return;
+
+    // Clear auto-remove timeout if it exists
+    if ((toast as any).timeoutId) {
+      clearTimeout((toast as any).timeoutId);
+    }
 
     toast.style.animation = 'slideOut 0.3s ease-in';
     setTimeout(() => {
@@ -106,6 +180,15 @@ class ToastManager {
       default:
         return '#6B7280'; // gray-500
     }
+  }
+
+  /**
+   * Clear all toasts
+   */
+  clearAll(): void {
+    this.toasts.forEach((toast, id) => {
+      this.remove(id);
+    });
   }
 
   /**
@@ -151,6 +234,20 @@ style.textContent = `
       transform: translateX(100%);
       opacity: 0;
     }
+  }
+
+  /* Toast close button accessibility */
+  #toast-container button:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 1px;
+  }
+
+  /* Prevent text selection on toast close button */
+  #toast-container button {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 `;
 document.head.appendChild(style);

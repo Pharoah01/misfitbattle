@@ -45,6 +45,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         wordWrap: 'on',
         readOnly,
         padding: { top: 10, bottom: 10 },
+        contextmenu: false, // Disable right-click context menu
         ...options,
       }}
     />

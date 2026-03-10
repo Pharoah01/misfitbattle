@@ -18,7 +18,6 @@ export const Home: React.FC = () => {
     // Prevent right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      toast.error('Right-click is disabled');
       return false;
     };
 
@@ -76,8 +75,8 @@ export const Home: React.FC = () => {
       <header className="border-b border-purple-primary/20 bg-dark-surface/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-text-primary font-orbitron tracking-wider">
-              <span className="text-purple-primary">MISFITS</span>-BATTLE
+            <h1 className="text-2xl font-bold text-text-primary font-orbitron tracking-wider group">
+              <span className="text-purple-primary group-hover:text-purple-primary transition-colors duration-300">MISFITS</span><span className="group-hover:text-purple-primary transition-colors duration-300">-BATTLE</span>
             </h1>
             <div className="flex gap-3">
               <Link
@@ -99,10 +98,6 @@ export const Home: React.FC = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Purple gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-primary/10 via-purple-secondary/5 to-transparent"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(107,45,255,0.15),transparent_50%)]"></div>
-        
         <div className="container mx-auto px-4 py-24 text-center relative z-10">
           <h2 className="text-5xl md:text-6xl font-bold text-text-primary mb-6 font-orbitron tracking-tight">
             <span className="bg-gradient-to-r from-purple-primary via-purple-secondary to-purple-tertiary bg-clip-text text-transparent">
@@ -240,7 +235,7 @@ export const Home: React.FC = () => {
       <footer className="border-t border-purple-primary/20 mt-16 bg-dark-surface/50">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-text-secondary text-sm font-rajdhani">
-            <p>© 2026 Binary Misfits.</p>
+            <p>© 2026 <a href="https://binarymisfits.in.net" target="_blank" rel="noopener noreferrer" className="text-purple-primary hover:text-purple-secondary transition-colors">Binary Misfits</a>.</p>
           </div>
         </div>
       </footer>

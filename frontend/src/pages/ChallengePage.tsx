@@ -186,12 +186,14 @@ export const ChallengePage: React.FC = () => {
       
       if (iframeRef.current && iframeRef.current.contentWindow) {
         const doc = iframeRef.current.contentWindow.document;
-        doc.open();
-        doc.write(`
+        
+        // Use innerHTML instead of doc.write to avoid security issues
+        const htmlContent = `
           <!DOCTYPE html>
           <html>
             <head>
               <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
               </style>
@@ -200,7 +202,11 @@ export const ChallengePage: React.FC = () => {
               ${sanitized}
             </body>
           </html>
-        `);
+        `;
+        
+        // Clear and set new content safely
+        doc.open();
+        doc.write(htmlContent);
         doc.close();
       }
     }, 300);
@@ -457,7 +463,7 @@ export const ChallengePage: React.FC = () => {
               <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-dark-bg min-h-0 w-full">
                 <iframe
                   ref={iframeRef}
-                  sandbox="allow-same-origin"
+                  sandbox="allow-same-origin allow-scripts"
                   className="bg-white border border-purple-primary/20 rounded shadow-lg flex-shrink-0"
                   style={{
                     width: `${canvasSize.width}px`,
