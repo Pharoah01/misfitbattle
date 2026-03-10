@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks';
 import { toast } from '@/utils';
+import { PrivacyNotice } from '@/components';
 import type { LoginFormData } from '@/types';
 
 export const Login: React.FC = () => {
@@ -77,10 +78,8 @@ export const Login: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-text-primary mb-2 font-orbitron tracking-wider">
-            <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
-              MISFITS-BATTLE
-            </span>
+          <h1 className="text-4xl font-bold text-text-primary mb-2 font-orbitron tracking-wider group cursor-pointer transition-colors duration-300 hover:text-purple-primary">
+            <span className="text-purple-primary">MISFITS</span>-BATTLE
           </h1>
           <p className="text-text-secondary font-rajdhani text-lg">
             Sign in to start competing
@@ -180,6 +179,11 @@ export const Login: React.FC = () => {
           >
             ← Back to home
           </Link>
+        </div>
+
+        {/* Privacy Notice */}
+        <div className="mt-6">
+          <PrivacyNotice compact />
         </div>
       </div>
     </div>

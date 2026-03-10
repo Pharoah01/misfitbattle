@@ -7,7 +7,6 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 import dj_database_url
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -47,8 +46,10 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'backend.csrf_middleware.DisableCSRFMiddleware',  # Custom CSRF middleware
+    'backend.csrf_middleware.DisableCSRFMiddleware',  # Custom CSRF middleware for API endpoints
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'users.session_middleware.IPTrackingMiddleware',  # IP tracking
+    'users.session_middleware.SessionSecurityMiddleware',  # Session validation
     'users.middleware.ProfileCompletionMiddleware',  # Profile completion enforcement
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -221,9 +222,11 @@ CSRF_TRUSTED_ORIGINS = [
     os.getenv('FRONTEND_URL', 'http://localhost:5173'),
 ]
 
-# Disable CSRF for authentication endpoints
+# Disable CSRF for API endpoints (handled by custom middleware)
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False if DEBUG else True
 
 # Security Settings
 if not DEBUG:
@@ -286,3 +289,16 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+
+# Session Security Configuration
+SESSION_TIMEOUT_MINUTES = int(os.getenv('SESSION_TIMEOUT_MINUTES', '30'))
+ENABLE_SUSPICIOUS_LOGIN_DETECTION = os.getenv('ENABLE_SUSPICIOUS_LOGIN_DETECTION', 'True') == 'True'
+ENABLE_IP_MONITORING = os.getenv('ENABLE_IP_MONITORING', 'True') == 'True'
+
+# Privacy and Security Notice
+PRIVACY_NOTICE = """
+We log IP addresses for security and contest integrity purposes.
+This helps us detect suspicious activities and ensure fair competition.
+"""
+
+GEOIP_PATH = BASE_DIR / "geoip2"

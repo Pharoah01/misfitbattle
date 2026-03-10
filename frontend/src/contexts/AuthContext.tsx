@@ -12,7 +12,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as authAPI from '@/api/auth';
-import { clearAccessToken, getAccessToken } from '@/api/client';
+import { clearAccessToken, getAccessToken, clearAllTokens, setSessionId, getSessionId } from '@/api/client';
 import type { User, LoginFormData, RegisterFormData } from '@/types';
 
 interface AuthContextValue {
@@ -21,6 +21,7 @@ interface AuthContextValue {
   isAdmin: boolean;
   loading: boolean;
   error: string | null;
+  sessionInfo: any | null;
   login: (data: LoginFormData) => Promise<void>;
   register: (data: RegisterFormData) => Promise<void>;
   logout: () => Promise<void>;
@@ -37,6 +38,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [sessionInfo, setSessionInfo] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -143,15 +145,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(userData);
       } catch (error) {
         // No valid token - user needs to login
-        console.log('AuthContext: Failed to fetch user data, clearing token', error);
+        console.log('AuthContext: Failed to fetch user data, clearing tokens', error);
         setUser(null);
-        clearAccessToken();
+        setSessionInfo(null);
+        clearAllTokens();
       }
     } catch (err) {
       // Session restoration failed - user needs to login
       console.log('AuthContext: Session restoration failed', err);
       setUser(null);
-      clearAccessToken();
+      setSessionInfo(null);
+      clearAllTokens();
     } finally {
       setLoading(false);
       console.log('AuthContext: Session restoration complete');
@@ -189,6 +193,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const response = await authAPI.login(data);
       setUser(response.user);
+      
+      // Store session information if provided
+      if (response.session_id) {
+        setSessionId(response.session_id);
+      }
+      if (response.session_info) {
+        setSessionInfo(response.session_info);
+      }
       
       // Navigate to dashboard on successful login
       navigate('/dashboard');
@@ -244,9 +256,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Even if logout fails, clear local state
       console.error('Logout error:', err);
     } finally {
-      // Clear user state and access token
+      // Clear user state and all tokens/session data
       setUser(null);
-      clearAccessToken();
+      setSessionInfo(null);
+      clearAllTokens();
       setLoading(false);
       
       // Navigate to login page
@@ -281,6 +294,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAdmin: user?.is_admin || false,
     loading,
     error,
+    sessionInfo,
     login,
     register,
     logout,

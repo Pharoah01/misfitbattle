@@ -36,7 +36,7 @@ export const Profile: React.FC = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 
-              className="text-2xl font-bold text-text-primary font-orbitron tracking-wider cursor-pointer hover:text-purple-primary transition-colors"
+              className="text-2xl font-bold text-text-primary font-orbitron tracking-wider cursor-pointer group transition-colors duration-300 hover:text-purple-primary"
               onClick={() => navigate('/dashboard')}
             >
               <span className="text-purple-primary">MISFITS</span>-BATTLE

@@ -5,6 +5,8 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
 from .serializers import UserRegistrationSerializer, UserSerializer
 from utils.throttling import AuthRateThrottle, LoginRateThrottle
+from .session_service import SessionSecurityService
+from .session_models import UserSession
 
 User = get_user_model()
 
@@ -29,8 +31,12 @@ class SignUpView(generics.CreateAPIView):
         # Create token for the new user
         token, created = Token.objects.get_or_create(user=user)
         
+        # Create secure session
+        session = SessionSecurityService.create_session(user, request)
+        
         return Response({
             'token': token.key,
+            'session_id': str(session.session_id),
             'user': {
                 'id': user.id,
                 'register_number': user.register_number,
@@ -60,6 +66,13 @@ class SignInView(generics.GenericAPIView):
         password = request.data.get('password')
         
         if not register_number or not password:
+            # Log failed attempt
+            SessionSecurityService.log_login_attempt(
+                register_number=register_number or '',
+                ip_address=SessionSecurityService.get_client_ip(request),
+                user_agent=SessionSecurityService.get_user_agent(request),
+                success=False
+            )
             return Response({
                 'error': 'Please provide both register_number and password'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -67,6 +80,13 @@ class SignInView(generics.GenericAPIView):
         user = authenticate(request, username=register_number, password=password)
         
         if user is None:
+            # Log failed attempt
+            SessionSecurityService.log_login_attempt(
+                register_number=register_number,
+                ip_address=SessionSecurityService.get_client_ip(request),
+                user_agent=SessionSecurityService.get_user_agent(request),
+                success=False
+            )
             return Response({
                 'error': 'Invalid credentials'
             }, status=status.HTTP_401_UNAUTHORIZED)
@@ -74,8 +94,12 @@ class SignInView(generics.GenericAPIView):
         # Get or create token
         token, created = Token.objects.get_or_create(user=user)
         
+        # Create secure session (this will invalidate any existing sessions)
+        session = SessionSecurityService.create_session(user, request)
+        
         return Response({
             'token': token.key,
+            'session_id': str(session.session_id),
             'user': {
                 'id': user.id,
                 'register_number': user.register_number,
@@ -84,6 +108,12 @@ class SignInView(generics.GenericAPIView):
                 'college_name': user.college_name,
                 'profile_completed': user.profile_completed,
                 'is_admin': user.is_admin
+            },
+            'session_info': {
+                'ip_address': session.ip_address,
+                'country': session.country,
+                'city': session.city,
+                'created_at': session.created_at
             }
         })
 
@@ -97,6 +127,9 @@ class SignOutView(generics.GenericAPIView):
     
     def post(self, request):
         try:
+            # Invalidate user session
+            SessionSecurityService.invalidate_session(request.user)
+            
             # Delete the user's token
             request.user.auth_token.delete()
             return Response({'message': 'Successfully signed out'}, status=status.HTTP_200_OK)

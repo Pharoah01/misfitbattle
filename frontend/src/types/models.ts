@@ -60,6 +60,8 @@ export interface Submission {
 
 // Auth Response Models
 export interface LoginResponse {
+  session_id: any;
+  session_info: any;
   access: string;
   refresh: string;
   user: User;

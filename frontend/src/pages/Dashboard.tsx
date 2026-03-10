@@ -36,7 +36,7 @@ export const Dashboard: React.FC = () => {
       <header className="bg-dark-surface/50 backdrop-blur-sm border-b border-purple-primary/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-text-primary font-orbitron tracking-wider">
+            <h1 className="text-2xl font-bold text-text-primary font-orbitron tracking-wider group cursor-pointer transition-colors duration-300 hover:text-purple-primary">
               <span className="text-purple-primary">MISFITS</span>-BATTLE
             </h1>
             <div className="flex items-center gap-4">

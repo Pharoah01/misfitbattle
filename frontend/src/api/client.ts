@@ -1,9 +1,10 @@
 /**
- * Secure Axios Client with Token Management
+ * Secure Axios Client with Token Management and Session Security
  * 
  * Security Features:
  * - Access token stored in localStorage for persistence
  * - Automatic token attachment to requests
+ * - Session ID tracking for single active session per user
  * - CSRF protection via withCredentials
  */
 
@@ -12,6 +13,7 @@ import { API_BASE_URL } from '@/config/constants';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
+const SESSION_ID_KEY = 'session_id';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
 /**
@@ -42,6 +44,33 @@ export const clearAccessToken = (): void => {
 };
 
 /**
+ * Set session ID in localStorage
+ * @param sessionId - Session identifier
+ */
+export const setSessionId = (sessionId: string | null): void => {
+  if (sessionId) {
+    localStorage.setItem(SESSION_ID_KEY, sessionId);
+  } else {
+    localStorage.removeItem(SESSION_ID_KEY);
+  }
+};
+
+/**
+ * Get session ID from localStorage
+ * @returns Current session ID or null
+ */
+export const getSessionId = (): string | null => {
+  return localStorage.getItem(SESSION_ID_KEY);
+};
+
+/**
+ * Clear session ID from localStorage
+ */
+export const clearSessionId = (): void => {
+  localStorage.removeItem(SESSION_ID_KEY);
+};
+
+/**
  * Set refresh token in localStorage
  * @param token - Refresh token
  */
@@ -69,10 +98,11 @@ export const clearRefreshToken = (): void => {
 };
 
 /**
- * Clear all tokens from localStorage
+ * Clear all tokens and session data from localStorage
  */
 export const clearAllTokens = (): void => {
   clearAccessToken();
+  clearSessionId();
   clearRefreshToken();
 };
 
@@ -111,7 +141,7 @@ apiClient.interceptors.request.use(
 
 /**
  * Response Interceptor
- * Handles 401 errors by clearing tokens (let AuthContext handle navigation)
+ * Handles 401 errors and session expiration
  */
 apiClient.interceptors.response.use(
   (response) => {
@@ -119,11 +149,23 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    // Check if error is 401 Unauthorized
+    // Check if error is 401 Unauthorized or session-related
     if (error.response?.status === 401) {
-      // Clear tokens but let AuthContext handle navigation
-      // This prevents infinite redirect loops
-      clearAllTokens();
+      const errorData = error.response.data as any;
+      
+      // Handle session expiration or no active session
+      if (errorData?.code === 'SESSION_EXPIRED' || errorData?.code === 'NO_ACTIVE_SESSION') {
+        // Clear all session data
+        clearAllTokens();
+        
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      } else {
+        // Regular 401 - clear tokens but let AuthContext handle navigation
+        clearAllTokens();
+      }
     }
     
     return Promise.reject(error);

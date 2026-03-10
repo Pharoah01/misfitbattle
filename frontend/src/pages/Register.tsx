@@ -115,10 +115,8 @@ export const Register: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-text-primary mb-2 font-orbitron tracking-wider">
-            <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
-              MISFITS-BATTLE
-            </span>
+          <h1 className="text-4xl font-bold text-text-primary mb-2 font-orbitron tracking-wider group cursor-pointer transition-colors duration-300 hover:text-purple-primary">
+            <span className="text-purple-primary">MISFITS</span>-BATTLE
           </h1>
           <p className="text-text-secondary font-rajdhani text-lg">
             Create your account to start competing

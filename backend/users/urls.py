@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import SignUpView, SignInView, SignOutView, CurrentUserView, CompleteProfileView, UpdateProfileView
+from . import admin_views
 
 urlpatterns = [
     # Primary endpoints
@@ -14,4 +15,12 @@ urlpatterns = [
     path('register/', SignUpView.as_view(), name='register'),
     path('login/', SignInView.as_view(), name='login'),
     path('logout/', SignOutView.as_view(), name='logout'),
+    
+    # Admin session management endpoints
+    path('admin/sessions/', admin_views.SessionManagementView.as_view(), name='admin-sessions'),
+    path('admin/security-dashboard/', admin_views.SecurityDashboardView.as_view(), name='admin-security-dashboard'),
+    path('admin/login-attempts/', admin_views.LoginAttemptsView.as_view(), name='admin-login-attempts'),
+    path('admin/force-logout/<int:user_id>/', admin_views.force_logout_user, name='admin-force-logout'),
+    path('admin/resolve-alert/<int:alert_id>/', admin_views.resolve_security_alert, name='admin-resolve-alert'),
+    path('admin/cleanup-sessions/', admin_views.cleanup_expired_sessions, name='admin-cleanup-sessions'),
 ]
