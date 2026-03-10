@@ -244,6 +244,7 @@ export const ChallengePage: React.FC = () => {
     }
   }, [challenge, autoSaveKey]);
 
+
   if (isLoading) {
     return (
       <div style={{ width: '100%', height: '100vh' }} className="bg-dark-bg flex items-center justify-center">
