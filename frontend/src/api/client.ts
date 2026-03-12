@@ -12,6 +12,17 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '@/config/constants';
 
+// Import debug logger
+let securityDebugger: any = null;
+try {
+  // Dynamic import to avoid circular dependencies
+  import('@/components/debug/SecurityDebug').then(module => {
+    securityDebugger = module.securityDebugger;
+  });
+} catch (e) {
+  // Ignore if debug component not available
+}
+
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
 const SESSION_ID_KEY = 'session_id';
@@ -128,6 +139,18 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     
+    // Debug logging
+    const debugData = {
+      url: config.url,
+      method: config.method,
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 10) + '...' : 'No token'
+    };
+    
+    if (securityDebugger) {
+      securityDebugger.addLog('AUTH', debugData);
+    }
+    
     // Add Authorization header if token exists
     if (token && config.headers) {
       config.headers.Authorization = `Token ${token}`;
@@ -146,6 +169,26 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response) => {
+    // Debug logging for submissions endpoint
+    if (response.config.url?.includes('/api/submissions/')) {
+      const debugData = {
+        url: response.config.url,
+        status: response.status,
+        dataType: Array.isArray(response.data) ? 'array' : typeof response.data,
+        dataLength: Array.isArray(response.data) ? response.data.length : 'N/A',
+        firstItem: Array.isArray(response.data) && response.data.length > 0 ? {
+          id: response.data[0].id,
+          user: response.data[0].user,
+          challenge: response.data[0].challenge,
+          is_auto_save: response.data[0].is_auto_save
+        } : null
+      };
+      
+      if (securityDebugger) {
+        securityDebugger.addLog('API_RESPONSE', debugData);
+      }
+    }
+    
     return response;
   },
   async (error: AxiosError) => {

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useChallenge, useSubmitSolution, useSubmissions } from '@/hooks';
 import { CodeEditor, RulesPopup, SubmissionSuccess } from '@/components';
 import { VALIDATION } from '@/config/constants';
@@ -15,6 +15,7 @@ import DOMPurify from 'dompurify';
 export const ChallengePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { registerAutoSubmit } = useAuth();
 
   const { data: challenge, isLoading, error } = useChallenge(slug || '');
@@ -27,6 +28,7 @@ export const ChallengePage: React.FC = () => {
   const [scaleToFit, setScaleToFit] = useState(true); // Default to true
   const [showRulesPopup, setShowRulesPopup] = useState(false);
   const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
+  const [isViewingSolution, setIsViewingSolution] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -138,16 +140,38 @@ export const ChallengePage: React.FC = () => {
   // Load challenge boilerplate or auto-saved code
   useEffect(() => {
     if (challenge) {
-      // Show rules popup when challenge loads (only once per session)
-      const rulesShownKey = `rules_shown_${slug}`;
-      const rulesShown = sessionStorage.getItem(rulesShownKey);
-      if (!rulesShown) {
-        setShowRulesPopup(true);
-        sessionStorage.setItem(rulesShownKey, 'true');
+      // Check if we're viewing a solution
+      const state = location.state as any;
+      if (state?.viewSolution && state?.submissionData) {
+        setIsViewingSolution(true);
+        const { html_code, css_code } = state.submissionData;
+        const submittedCode = `${html_code}\n<style>\n${css_code}\n</style>`;
+        setCode(submittedCode);
+        
+        // Show a toast to indicate they're viewing their solution (only once)
+        if (!sessionStorage.getItem(`solution_toast_${slug}`)) {
+          toast.success('Viewing your submitted solution');
+          sessionStorage.setItem(`solution_toast_${slug}`, 'true');
+        }
+        
+        // Clear the navigation state
+        navigate(location.pathname, { replace: true, state: {} });
+        return;
       }
 
+      // Show rules popup when challenge loads (only once per session) - but not for solution viewing
+      if (!isViewingSolution) {
+        const rulesShownKey = `rules_shown_${slug}`;
+        const rulesShown = sessionStorage.getItem(rulesShownKey);
+        if (!rulesShown) {
+          setShowRulesPopup(true);
+          sessionStorage.setItem(rulesShownKey, 'true');
+        }
+      }
+
+      // Load auto-saved code or boilerplate
       const saved = localStorage.getItem(autoSaveKey);
-      if (saved) {
+      if (saved && !isViewingSolution) {
         try {
           const { code: savedCode } = JSON.parse(saved);
           setCode(savedCode);
@@ -157,14 +181,23 @@ export const ChallengePage: React.FC = () => {
         }
       }
       
-      const boilerplate = `${challenge.html_boilerplate || ''}\n<style>\n${challenge.css_boilerplate || ''}\n</style>`;
-      setCode(boilerplate);
+      if (!isViewingSolution) {
+        const boilerplate = `${challenge.html_boilerplate || ''}\n<style>\n${challenge.css_boilerplate || ''}\n</style>`;
+        setCode(boilerplate);
+      }
     }
-  }, [challenge, autoSaveKey, slug]);
+
+    // Cleanup function to clear solution toast when component unmounts
+    return () => {
+      if (slug) {
+        sessionStorage.removeItem(`solution_toast_${slug}`);
+      }
+    };
+  }, [challenge, autoSaveKey, slug, location.state, location.pathname, navigate, isViewingSolution]);
 
   // Auto-save to localStorage
   useEffect(() => {
-    if (!code) return;
+    if (!code || isViewingSolution) return; // Don't auto-save when viewing solution
 
     const timeoutId = setTimeout(() => {
       try {
@@ -374,7 +407,14 @@ export const ChallengePage: React.FC = () => {
             </button>
             <div className="h-4 w-px bg-purple-primary/30 flex-shrink-0"></div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-base font-bold text-text-primary font-rajdhani truncate">{challenge.title}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold text-text-primary font-rajdhani truncate">{challenge.title}</h1>
+                {isViewingSolution && (
+                  <span className="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full border border-green-500/30 font-rajdhani flex-shrink-0">
+                    SOLUTION
+                  </span>
+                )}
+              </div>
             </div>
             <div className="px-2 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full flex-shrink-0">
               <span className="text-orange-500 text-xs font-bold font-rajdhani">{challenge.points} pts</span>
@@ -402,10 +442,16 @@ export const ChallengePage: React.FC = () => {
             
             <button
               onClick={handleSubmit}
-              disabled={submitMutation.isPending || exceedsLimit || !code.trim() || submissionCount >= 1}
+              disabled={submitMutation.isPending || exceedsLimit || !code.trim() || submissionCount >= 1 || isViewingSolution}
               className="px-4 py-1 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded transition-all text-xs shadow-lg shadow-purple-primary/30 font-rajdhani flex-shrink-0"
             >
-              {submitMutation.isPending ? 'Submitting...' : submissionCount >= 1 ? 'Already Submitted' : 'Submit'}
+              {isViewingSolution 
+                ? 'Viewing Solution' 
+                : submitMutation.isPending 
+                ? 'Submitting...' 
+                : submissionCount >= 1 
+                ? 'Already Submitted' 
+                : 'Submit'}
             </button>
           </div>
         </div>

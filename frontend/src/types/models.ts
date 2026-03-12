@@ -106,3 +106,17 @@ export interface SubmissionFormData {
   css_code: string;
   is_auto_save?: boolean;
 }
+/**
+ * Paginated API response structure
+ */
+export interface PaginatedResponse<T> {
+  results: T[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
+/**
+ * Specific type for paginated submissions response
+ */
+export type SubmissionsResponse = Submission[] | PaginatedResponse<Submission>;

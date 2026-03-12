@@ -11,8 +11,10 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import * as authAPI from '@/api/auth';
 import { getAccessToken, clearAllTokens, setSessionId } from '@/api/client';
+import { QUERY_KEYS } from '@/config/constants';
 import type { User, LoginFormData, RegisterFormData } from '@/types';
 
 interface AuthContextValue {
@@ -42,6 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   // Session timeout: 30 minutes of inactivity (matches backend)
   const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -185,6 +188,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []); // Empty dependency array - only run once on mount
 
   /**
+   * Clear submissions cache when user changes
+   * This prevents cross-user data contamination
+   */
+  useEffect(() => {
+    // Clear submissions cache when user changes (including logout)
+    queryClient.invalidateQueries({ 
+      queryKey: [QUERY_KEYS.SUBMISSIONS],
+      exact: false // This will invalidate all submission-related queries
+    });
+  }, [user?.id, queryClient]); // Trigger when user ID changes
+
+  /**
    * Login user
    * @param data - Login credentials
    */
@@ -192,6 +207,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Clear any existing cached data before login
+      queryClient.clear();
       
       const response = await authAPI.login(data);
       setUser(response.user);
@@ -215,7 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   /**
    * Register new user
@@ -262,12 +280,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setSessionInfo(null);
       clearAllTokens();
+      
+      // Clear all React Query cache to prevent data leakage between users
+      queryClient.clear();
+      
       setLoading(false);
       
       // Navigate to login page
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   /**
    * Clear error message

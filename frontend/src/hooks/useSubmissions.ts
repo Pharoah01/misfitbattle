@@ -7,15 +7,21 @@ import { submitSolution, fetchSubmissions, fetchSubmission, deleteSubmission } f
 import { QUERY_KEYS, CACHE_TIME } from '@/config/constants';
 import type { SubmissionFormData } from '@/types';
 import { toast } from '@/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * Hook to fetch user's submissions
  */
 export const useSubmissions = (challengeId?: number) => {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: [QUERY_KEYS.SUBMISSIONS, challengeId],
+    queryKey: [QUERY_KEYS.SUBMISSIONS, user?.id, challengeId],
     queryFn: () => fetchSubmissions(challengeId),
     staleTime: CACHE_TIME.SUBMISSIONS,
+    enabled: !!user, // Only fetch when user is available
+    // Ensure fresh data for each user by making queries user-specific
+    gcTime: 0, // Don't cache data after component unmounts
   });
 };
 
@@ -35,11 +41,12 @@ export const useSubmission = (id: number) => {
  */
 export const useSubmitSolution = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: (data: SubmissionFormData) => submitSolution(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBMISSIONS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBMISSIONS, user?.id] });
       // Toast is handled by the component for better context-specific messages
     },
     onError: (error: any) => {
@@ -57,11 +64,12 @@ export const useSubmitSolution = () => {
  */
 export const useDeleteSubmission = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: deleteSubmission,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBMISSIONS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBMISSIONS, user?.id] });
       toast.success('Submission deleted successfully!');
     },
     onError: (error: any) => {

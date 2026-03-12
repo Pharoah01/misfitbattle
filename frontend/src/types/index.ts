@@ -14,4 +14,6 @@ export type {
   LoginFormData,
   RegisterFormData,
   SubmissionFormData,
+  PaginatedResponse,
+  SubmissionsResponse,
 } from './models';
