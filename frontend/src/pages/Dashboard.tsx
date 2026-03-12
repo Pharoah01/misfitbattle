@@ -2,16 +2,18 @@
  * Dashboard Page - Difficulty Levels Feature
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth, useChallenges } from '@/hooks';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth, useChallenges, useSubmissions } from '@/hooks';
 import { SkeletonLoader, ErrorState } from '@/components';
 import { getDifficultyBadgeClasses } from '@/utils/difficulty';
+import { toast } from '@/utils';
 import type { Challenge } from '@/types';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'points' | '-points'>('points');
@@ -23,6 +25,19 @@ export const Dashboard: React.FC = () => {
     ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
   });
 
+  // Get user submissions to mark completed challenges
+  const { data: userSubmissions } = useSubmissions();
+
+  const isCompleted = (challengeId: number): boolean => {
+    if (!userSubmissions || !Array.isArray(userSubmissions)) return false;
+    return userSubmissions.some((sub: any) => sub.challenge === challengeId && !sub.is_auto_save);
+  };
+
+  const getUserSubmission = (challengeId: number) => {
+    if (!userSubmissions || !Array.isArray(userSubmissions)) return null;
+    return userSubmissions.find((sub: any) => sub.challenge === challengeId && !sub.is_auto_save);
+  };
+
   const createSlug = (title: string): string => {
     return title
       .toLowerCase()
@@ -33,8 +48,36 @@ export const Dashboard: React.FC = () => {
   const handleChallengeClick = (challenge: Challenge) => {
     const slug = challenge.slug || createSlug(challenge.title);
     const route = `/play/${slug}`;
-    navigate(route);
+    
+    // Check if user has completed this challenge
+    const userSubmission = getUserSubmission(challenge.id);
+    if (userSubmission) {
+      // Navigate with the user's submission data to pre-populate the editor
+      navigate(route, { 
+        state: { 
+          viewSolution: true,
+          submissionData: {
+            html_code: userSubmission.html_code,
+            css_code: userSubmission.css_code,
+            submitted_at: userSubmission.submitted_at
+          }
+        } 
+      });
+    } else {
+      // Regular navigation for new challenges
+      navigate(route);
+    }
   };
+
+  // Show success message when redirected after submission
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.submissionSuccess) {
+      toast.success(`🎉 Challenge "${state.challengeTitle}" completed! +${state.points} points earned!`);
+      // Clear the state to prevent showing the message again on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   return (
     <div className="min-h-screen bg-dark-bg">
@@ -46,6 +89,12 @@ export const Dashboard: React.FC = () => {
               <span className="text-purple-primary">MISFITS</span>-BATTLE
             </h1>
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/rules')}
+                className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
+              >
+                Rules
+              </button>
               <span className="text-text-secondary hidden sm:inline font-rajdhani">
                 {user?.name}
               </span>
@@ -123,16 +172,31 @@ export const Dashboard: React.FC = () => {
           <>
             {challenges.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {challenges.map((challenge: Challenge) => (
+                {challenges.map((challenge: Challenge) => {
+                  const completed = isCompleted(challenge.id);
+                  return (
                   <div
                     key={challenge.id}
-                    className="bg-dark-surface rounded-lg border border-purple-primary/20 hover:border-purple-primary cursor-pointer transition-all group hover:shadow-xl hover:shadow-purple-primary/20"
+                    className={`bg-dark-surface rounded-lg border transition-all group hover:shadow-xl hover:shadow-purple-primary/20 ${
+                      completed 
+                        ? 'border-green-500/30 hover:border-green-500' 
+                        : 'border-purple-primary/20 hover:border-purple-primary'
+                    } cursor-pointer`}
                   >
                     <div className="p-5">
                       <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-text-primary flex-1 group-hover:text-purple-primary transition-colors font-rajdhani">
-                          {challenge.title}
-                        </h3>
+                        <div className="flex items-center gap-2 flex-1">
+                          <h3 className="text-lg font-semibold text-text-primary group-hover:text-purple-primary transition-colors font-rajdhani">
+                            {challenge.title}
+                          </h3>
+                          {completed && (
+                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 ml-2">
                           <span className={getDifficultyBadgeClasses(challenge.difficulty)}>
                             {challenge.difficulty.toUpperCase()}
@@ -162,13 +226,18 @@ export const Dashboard: React.FC = () => {
 
                       <button 
                         onClick={() => handleChallengeClick(challenge)}
-                        className="w-full py-2.5 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white font-bold rounded-lg transition-all font-rajdhani shadow-lg shadow-purple-primary/30 hover:shadow-purple-primary/50"
+                        className={`w-full py-2.5 font-bold rounded-lg transition-all font-rajdhani shadow-lg ${
+                          completed
+                            ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-green-600/30 hover:shadow-green-600/50'
+                            : 'bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white shadow-purple-primary/30 hover:shadow-purple-primary/50'
+                        }`}
                       >
-                        Play
+                        {completed ? 'View Solution' : 'Play'}
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-16">

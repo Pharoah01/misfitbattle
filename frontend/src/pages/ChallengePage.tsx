@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChallenge, useSubmitSolution, useSubmissions } from '@/hooks';
-import { CodeEditor } from '@/components';
+import { CodeEditor, RulesPopup, SubmissionSuccess } from '@/components';
 import { VALIDATION } from '@/config/constants';
 import { toast } from '@/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +25,8 @@ export const ChallengePage: React.FC = () => {
 
   const [code, setCode] = useState('');
   const [scaleToFit, setScaleToFit] = useState(true); // Default to true
+  const [showRulesPopup, setShowRulesPopup] = useState(false);
+  const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -136,6 +138,14 @@ export const ChallengePage: React.FC = () => {
   // Load challenge boilerplate or auto-saved code
   useEffect(() => {
     if (challenge) {
+      // Show rules popup when challenge loads (only once per session)
+      const rulesShownKey = `rules_shown_${slug}`;
+      const rulesShown = sessionStorage.getItem(rulesShownKey);
+      if (!rulesShown) {
+        setShowRulesPopup(true);
+        sessionStorage.setItem(rulesShownKey, 'true');
+      }
+
       const saved = localStorage.getItem(autoSaveKey);
       if (saved) {
         try {
@@ -150,7 +160,7 @@ export const ChallengePage: React.FC = () => {
       const boilerplate = `${challenge.html_boilerplate || ''}\n<style>\n${challenge.css_boilerplate || ''}\n</style>`;
       setCode(boilerplate);
     }
-  }, [challenge, autoSaveKey]);
+  }, [challenge, autoSaveKey, slug]);
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -290,7 +300,9 @@ export const ChallengePage: React.FC = () => {
 
       localStorage.removeItem(autoSaveKey);
       
-      toast.success('Submission successful! This was your only allowed submission.');
+      // Show success modal instead of toast
+      setShowSubmissionSuccess(true);
+      
     } catch (error: any) {
       // Error toast is already handled by the mutation hook
     }
@@ -379,6 +391,13 @@ export const ChallengePage: React.FC = () => {
               className="px-3 py-1 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all text-xs font-semibold font-rajdhani flex-shrink-0"
             >
               Reset
+            </button>
+            
+            <button
+              onClick={() => setShowRulesPopup(true)}
+              className="px-3 py-1 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all text-xs font-semibold font-rajdhani flex-shrink-0"
+            >
+              Rules
             </button>
             
             <button
@@ -487,6 +506,34 @@ export const ChallengePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Rules Popup */}
+      {challenge && (
+        <RulesPopup
+          isOpen={showRulesPopup}
+          onClose={() => setShowRulesPopup(false)}
+          difficulty={challenge.difficulty}
+        />
+      )}
+
+      {/* Submission Success Modal */}
+      {challenge && (
+        <SubmissionSuccess
+          isOpen={showSubmissionSuccess}
+          challenge={challenge}
+          onClose={() => {
+            setShowSubmissionSuccess(false);
+            navigate('/dashboard', { 
+              state: { 
+                submissionSuccess: true, 
+                challengeTitle: challenge.title,
+                points: challenge.points 
+              } 
+            });
+          }}
+          redirectCountdown={5}
+        />
+      )}
     </div>
   );
 };

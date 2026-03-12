@@ -10,3 +10,4 @@ export { Profile } from './Profile';
 export { ChallengePage } from './ChallengePage';
 export { CompleteProfile } from './CompleteProfile';
 export { EditProfile } from './EditProfile';
+export { Rules } from './Rules';
