@@ -19,7 +19,15 @@ Code submission and evaluation system for challenges.
 Interactive coding challenges with difficulty levels (Easy, Medium, Hard) and real-time preview.
 
 ### Security
-Advanced security features including API endpoint obfuscation, attack detection, and admin alerts.
+- **API Endpoint Obfuscation** - Hidden API structure with coded endpoint keys
+- **Attack Detection** - SQL injection, path traversal, and endpoint enumeration protection
+- **Admin Alert System** - Real-time email notifications and automatic IP blocking
+- **Session Security** - Secure session management with IP logging and geographic tracking
+- **Frontend Protection** - Console logging disabled, developer tools blocked in production
+- **Authentication Security** - JWT tokens with refresh mechanism and protected routes
+- **CSRF Protection** - Custom middleware preventing cross-site request forgery
+- **Input Sanitization** - XSS prevention and secure code submission handling
+- **Production Hardening** - HTTPS enforcement, secure headers, and environment protection
 
 ## Technology Stack
 
