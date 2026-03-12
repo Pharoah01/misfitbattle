@@ -79,16 +79,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [language, options]);
 
-  const handleEditorError = useCallback(() => {
-    setMonacoFailed(true);
-    setIsLoading(false);
-    
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
-
   // Set fallback timeout
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
@@ -216,7 +206,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           padding: { top: 10, bottom: 10 },
           smoothScrolling: true,
           cursorBlinking: 'smooth',
-          cursorSmoothCaretAnimation: true,
+          cursorSmoothCaretAnimation: 'on',
           renderLineHighlight: 'line',
           selectOnLineNumbers: true,
           roundedSelection: false,
