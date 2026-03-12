@@ -38,6 +38,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     filterset_fields = {
         'points': ['exact', 'gte', 'lte'],
         'created_at': ['gte', 'lte'],
+        'difficulty': ['exact'],
     }
     search_fields = ['title', 'description']
     ordering_fields = ['points', 'created_at', 'title']

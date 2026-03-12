@@ -22,6 +22,12 @@ def validate_palette(value):
 
 
 class Challenge(models.Model):
+    DIFFICULTY_CHOICES = [
+        ('easy', 'Easy'),
+        ('medium', 'Medium'),
+        ('hard', 'Hard'),
+    ]
+    
     title = models.CharField(max_length=255)
     slug = models.SlugField(
         max_length=255,
@@ -58,6 +64,12 @@ class Challenge(models.Model):
     points = models.IntegerField(
         default=100,
         help_text = "Points Awarded!!"
+    )
+    difficulty = models.CharField(
+        max_length=10,
+        choices=DIFFICULTY_CHOICES,
+        default='easy',
+        help_text="Challenge difficulty level"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

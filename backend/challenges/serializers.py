@@ -8,7 +8,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Challenge
         fields = ['id', 'title', 'slug', 'description', 'html_boilerplate', 'css_boilerplate', 
-                  'palette', 'preview_image', 'points', 'created_at']
+                  'palette', 'preview_image', 'points', 'difficulty', 'created_at']
         read_only_fields = ['id', 'created_at', 'palette']
     
     def get_palette(self, obj):

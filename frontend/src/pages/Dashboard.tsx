@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useChallenges } from '@/hooks';
 import { SkeletonLoader, ErrorState } from '@/components';
+import { getDifficultyBadgeClasses } from '@/utils/difficulty';
 import type { Challenge } from '@/types';
 
 export const Dashboard: React.FC = () => {
@@ -15,10 +16,12 @@ export const Dashboard: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'points' | '-points'>('points');
+  const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
   
   const { data: challenges, isLoading, error, refetch } = useChallenges({
     search: searchTerm,
     ordering: sortBy,
+    ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
   });
 
   /**
@@ -91,6 +94,18 @@ export const Dashboard: React.FC = () => {
             />
           </div>
 
+          {/* Difficulty Filter */}
+          <select
+            value={difficultyFilter}
+            onChange={(e) => setDifficultyFilter(e.target.value as 'all' | 'easy' | 'medium' | 'hard')}
+            className="px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
+          >
+            <option value="all">All Difficulties</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+
           {/* Sort */}
           <select
             value={sortBy}
@@ -133,9 +148,16 @@ export const Dashboard: React.FC = () => {
                         <h3 className="text-lg font-semibold text-text-primary flex-1 group-hover:text-purple-primary transition-colors font-rajdhani">
                           {challenge.title}
                         </h3>
-                        <span className="ml-2 px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded-full font-rajdhani shadow-lg shadow-orange-500/20">
-                          {challenge.points} pts
-                        </span>
+                        <div className="flex items-center gap-2 ml-2">
+                          {/* Difficulty Badge */}
+                          <span className={getDifficultyBadgeClasses(challenge.difficulty)}>
+                            {challenge.difficulty.toUpperCase()}
+                          </span>
+                          {/* Points Badge */}
+                          <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded-full font-rajdhani shadow-lg shadow-orange-500/20">
+                            {challenge.points} pts
+                          </span>
+                        </div>
                       </div>
 
                       <p className="text-text-secondary text-sm line-clamp-2 mb-4 font-rajdhani">

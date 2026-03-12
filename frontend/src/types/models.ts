@@ -26,6 +26,7 @@ export interface Challenge {
   palette: string[]; // Array of hex colors (read-only)
   preview_image: string | null; // Image URL
   points: number;
+  difficulty: 'easy' | 'medium' | 'hard'; // Difficulty level
   created_at: string;
 }
 
@@ -35,6 +36,7 @@ export interface ChallengeQueryParams {
   ordering?: 'points' | '-points' | 'created_at' | '-created_at';
   points__gte?: number;
   points__lte?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 // Submission Model

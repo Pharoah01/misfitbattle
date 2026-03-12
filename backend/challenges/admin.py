@@ -4,14 +4,14 @@ from .models import Challenge
 
 @admin.register(Challenge)
 class ChallengeAdmin(admin.ModelAdmin):
-    list_display = ['title', 'points', 'palette', 'created_at']
-    list_filter = ['points', 'created_at']
+    list_display = ['title', 'difficulty', 'points', 'palette', 'created_at']
+    list_filter = ['difficulty', 'points', 'created_at']
     search_fields = ['title', 'description']
     ordering = ['-created_at']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'description', 'points')
+            'fields': ('title', 'description', 'difficulty', 'points')
         }),
         ('Code Templates', {
             'fields': ('html_boilerplate', 'css_boilerplate')
