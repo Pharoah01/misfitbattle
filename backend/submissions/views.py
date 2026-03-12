@@ -55,8 +55,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     ordering = ['-submitted_at']
     
     def get_queryset(self):
-        if self.request.user.is_admin:
-            return Submission.objects.select_related('user', 'challenge').all()
+        # SECURITY FIX: Personal profile should ALWAYS show only user's own submissions
+        # Admin functionality is handled by separate endpoints (/all/, /challenge/{id}/, /user/{id}/)
         return Submission.objects.select_related('user', 'challenge').filter(user=self.request.user)
     
     def get_serializer_class(self):
