@@ -35,7 +35,3 @@ export const isValidEndpoint = (key: string): key is keyof typeof ENDPOINT_MAP =
 };
 
 export type EndpointKey = keyof typeof ENDPOINT_MAP;
-
-if (import.meta.env.DEV) {
-  console.log('Available endpoint keys:', Object.keys(ENDPOINT_MAP));
-}

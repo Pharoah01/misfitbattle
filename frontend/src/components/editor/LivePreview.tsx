@@ -54,7 +54,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ htmlCode, cssCode, cla
         iframeDoc.close();
       }
     } catch (error) {
-      console.error('Failed to render preview:', error);
+      // Failed to render preview
     }
   }, [htmlCode, cssCode]);
 

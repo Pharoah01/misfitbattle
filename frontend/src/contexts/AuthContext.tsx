@@ -74,15 +74,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Auto-submit code if callback is registered (from ChallengePage)
         if (autoSubmitCallbackRef.current) {
           try {
-            console.log('Session timeout - auto-submitting code before logout');
             await autoSubmitCallbackRef.current();
           } catch (error) {
-            console.error('Auto-submit failed:', error);
+            // Auto-submit failed, continue with logout
           }
         }
         
         // Auto-logout after 5 minutes of inactivity
-        console.log('Session timeout - logging out due to inactivity');
         await logout();
       }, SESSION_TIMEOUT);
     }
@@ -126,44 +124,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    */
   const restoreSession = useCallback(async () => {
     try {
-      console.log('AuthContext: Starting session restoration');
       setLoading(true);
       
       // Check if we have a token before making API call
       const token = getAccessToken();
-      console.log('AuthContext: Token check result:', token ? 'Token found' : 'No token found');
       
       if (!token) {
         // No token - user needs to login
-        console.log('AuthContext: No token found, setting user to null');
         setUser(null);
         setLoading(false);
         return;
       }
       
-      console.log('AuthContext: Token found, fetching current user from API');
       // Backend uses simple token auth (no refresh token)
       // Just try to get current user - if it fails, user needs to login
       try {
         const userData = await authAPI.getCurrentUser();
-        console.log('AuthContext: User data fetched successfully', userData);
         setUser(userData);
       } catch (error) {
         // No valid token - user needs to login
-        console.log('AuthContext: Failed to fetch user data, clearing tokens', error);
         setUser(null);
         setSessionInfo(null);
         clearAllTokens();
       }
     } catch (err) {
       // Session restoration failed - user needs to login
-      console.log('AuthContext: Session restoration failed', err);
       setUser(null);
       setSessionInfo(null);
       clearAllTokens();
     } finally {
       setLoading(false);
-      console.log('AuthContext: Session restoration complete');
     }
   }, []);
 
@@ -274,7 +264,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authAPI.logout();
     } catch (err) {
       // Even if logout fails, clear local state
-      console.error('Logout error:', err);
     } finally {
       // Clear user state and all tokens/session data
       setUser(null);
@@ -307,7 +296,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userData = await authAPI.getCurrentUser();
       setUser(userData);
     } catch (err) {
-      console.error('Failed to refresh user data:', err);
       throw err;
     }
   }, []);

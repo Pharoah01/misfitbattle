@@ -10,7 +10,7 @@ import { useAuth, useSubmissions, useDeleteSubmission } from '@/hooks';
 export const Profile: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { data: submissions, isLoading, error } = useSubmissions();
+  const { data: submissions, isLoading } = useSubmissions();
   const deleteSubmissionMutation = useDeleteSubmission();
 
   // Backend filtering ensures only current user's submissions are returned
@@ -30,13 +30,6 @@ export const Profile: React.FC = () => {
       }
     }
   };
-
-  // Debug logging
-  React.useEffect(() => {
-    console.log('Profile - Submissions data:', submissions);
-    console.log('Profile - Is loading:', isLoading);
-    console.log('Profile - Error:', error);
-  }, [submissions, isLoading, error]);
 
   // Safely calculate stats using backend-filtered submissions
   const submissionsArray = Array.isArray(submissions) ? submissions : [];

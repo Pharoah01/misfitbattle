@@ -26,44 +26,27 @@ export const fetchSubmissions = async (challengeId?: number): Promise<Submission
     if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
       // Check if it's a paginated response structure
       if ('results' in response.data && Array.isArray(response.data.results)) {
-        console.log('fetchSubmissions: Detected paginated response format', {
-          resultsCount: response.data.results.length,
-          responseKeys: Object.keys(response.data)
-        });
         return response.data.results;
       }
 
       // Handle case where response.data is an object but not paginated
-      console.warn('fetchSubmissions: Unexpected response format - object without results array', {
-        responseKeys: Object.keys(response.data),
-        responseType: typeof response.data
-      });
       return [];
     }
 
     // Handle direct array response
     if (Array.isArray(response.data)) {
-      console.log('fetchSubmissions: Detected direct array response format', {
-        submissionsCount: response.data.length
-      });
       return response.data;
     }
 
     // Handle null/undefined response
     if (response.data === null || response.data === undefined) {
-      console.warn('fetchSubmissions: Received null/undefined response data');
       return [];
     }
 
     // Fallback for unexpected response types
-    console.error('fetchSubmissions: Unexpected response data type', {
-      dataType: typeof response.data,
-      data: response.data
-    });
     return [];
 
   } catch (error) {
-    console.error('fetchSubmissions: API call failed', error);
     // Return empty array on error to prevent client-side filtering fallback
     return [];
   }

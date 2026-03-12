@@ -85,8 +85,6 @@ export const EditProfile: React.FC = () => {
       toast.success('Profile updated successfully!');
       navigate('/profile');
     } catch (error: any) {
-      console.error('Profile update error:', error);
-      
       if (error.response?.data?.error) {
         toast.error(error.response.data.error);
       } else {

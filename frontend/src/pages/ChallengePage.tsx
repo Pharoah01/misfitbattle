@@ -177,7 +177,7 @@ export const ChallengePage: React.FC = () => {
           setCode(savedCode);
           return;
         } catch (e) {
-          console.error('Failed to load auto-saved code:', e);
+          // Failed to load auto-saved code, continue with boilerplate
         }
       }
       
@@ -206,7 +206,7 @@ export const ChallengePage: React.FC = () => {
           timestamp: Date.now(),
         }));
       } catch (e) {
-        console.error('Failed to auto-save:', e);
+        // Failed to auto-save
       }
     }, 1000);
 
@@ -254,7 +254,6 @@ export const ChallengePage: React.FC = () => {
           doc.close();
         } catch (error) {
           // Fallback: set innerHTML directly
-          console.warn('doc.write failed, using innerHTML fallback:', error);
           if (doc.documentElement) {
             doc.documentElement.innerHTML = htmlContent.replace(/<!DOCTYPE html>\s*<html[^>]*>|<\/html>/gi, '');
           }
@@ -287,10 +286,8 @@ export const ChallengePage: React.FC = () => {
         css_code: cssCode,
         is_auto_save: true,
       });
-
-      console.log('Code auto-submitted on session timeout');
     } catch (error) {
-      console.error('Auto-submit failed:', error);
+      // Auto-submit failed
     }
   }, [code, challenge, exceedsLimit, submitMutation]);
 

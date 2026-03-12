@@ -58,8 +58,8 @@ export const queryClient = new QueryClient({
       retry: false, // Don't retry mutations by default
       
       // Global mutation error handler
-      onError: (error: any) => {
-        console.error('Mutation error:', error);
+      onError: () => {
+        // Error handling can be done here if needed
       },
     },
   },

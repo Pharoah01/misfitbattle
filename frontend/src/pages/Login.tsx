@@ -25,7 +25,6 @@ export const Login: React.FC = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated && !loading) {
-      console.log('Login: User is authenticated, redirecting');
       const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     }
