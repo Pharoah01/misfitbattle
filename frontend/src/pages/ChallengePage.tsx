@@ -17,6 +17,8 @@ export const ChallengePage: React.FC = () => {
   const navigate = useNavigate();
   const { registerAutoSubmit } = useAuth();
 
+  console.log('ChallengePage: Loading challenge with slug:', slug);
+
   const { data: challenge, isLoading, error } = useChallenge(slug || '');
   const submitMutation = useSubmitSolution();
   
@@ -24,7 +26,7 @@ export const ChallengePage: React.FC = () => {
   const { data: existingSubmissions } = useSubmissions(challenge?.id);
 
   const [code, setCode] = useState('');
-  const [scaleToFit, setScaleToFit] = useState(false);
+  const [scaleToFit, setScaleToFit] = useState(true); // Default to true
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -205,9 +207,17 @@ export const ChallengePage: React.FC = () => {
         `;
         
         // Clear and set new content safely
-        doc.open();
-        doc.write(htmlContent);
-        doc.close();
+        try {
+          doc.open();
+          doc.write(htmlContent);
+          doc.close();
+        } catch (error) {
+          // Fallback: set innerHTML directly
+          console.warn('doc.write failed, using innerHTML fallback:', error);
+          if (doc.documentElement) {
+            doc.documentElement.innerHTML = htmlContent.replace(/<!DOCTYPE html>\s*<html[^>]*>|<\/html>/gi, '');
+          }
+        }
       }
     }, 300);
 

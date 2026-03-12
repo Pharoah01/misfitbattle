@@ -6,10 +6,12 @@
  * - Automatic token attachment to requests
  * - Session ID tracking for single active session per user
  * - CSRF protection via withCredentials
+ * - Obfuscated logging in production
  */
 
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '@/config/constants';
+import { obfuscateForLogging } from '@/utils/security';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
@@ -21,10 +23,17 @@ const REFRESH_TOKEN_KEY = 'refresh_token';
  * @param token - Authentication token
  */
 export const setAccessToken = (token: string | null): void => {
+  console.log('Token Storage: Setting access token', { 
+    hasToken: !!token, 
+    tokenPreview: obfuscateForLogging(token ? `${token.substring(0, 10)}...` : null)
+  });
+  
   if (token) {
     localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    console.log('Token Storage: Token saved to localStorage');
   } else {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
+    console.log('Token Storage: Token removed from localStorage');
   }
 };
 
@@ -33,7 +42,12 @@ export const setAccessToken = (token: string | null): void => {
  * @returns Current access token or null
  */
 export const getAccessToken = (): string | null => {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  console.log('Token Storage: Getting access token', { 
+    hasToken: !!token, 
+    tokenPreview: obfuscateForLogging(token ? `${token.substring(0, 10)}...` : null)
+  });
+  return token;
 };
 
 /**
@@ -126,15 +140,25 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     
+    console.log('API Request:', {
+      endpoint: obfuscateForLogging(config.url),
+      hasToken: !!token,
+      method: config.method?.toUpperCase()
+    });
+    
     // Add Authorization header if token exists
     // Use Token format for Django Token authentication
     if (token && config.headers) {
       config.headers.Authorization = `Token ${token}`;
+      console.log('API Request: Added Authorization header');
+    } else {
+      console.log('API Request: No token available, skipping Authorization header');
     }
     
     return config;
   },
   (error) => {
+    console.error('API Request Error:', obfuscateForLogging(error));
     return Promise.reject(error);
   }
 );
@@ -146,12 +170,26 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     // Success response - return as is
+    console.log('API Response Success:', {
+      endpoint: obfuscateForLogging(response.config.url),
+      status: response.status,
+      statusText: response.statusText
+    });
     return response;
   },
   async (error: AxiosError) => {
+    console.error('API Response Error:', {
+      endpoint: obfuscateForLogging(error.config?.url),
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: obfuscateForLogging(error.response?.data)
+    });
+    
     // Check if error is 401 Unauthorized or session-related
     if (error.response?.status === 401) {
       const errorData = error.response.data as any;
+      
+      console.log('API: 401 Unauthorized detected, clearing tokens');
       
       // Handle session expiration or no active session
       if (errorData?.code === 'SESSION_EXPIRED' || errorData?.code === 'NO_ACTIVE_SESSION') {

@@ -9,9 +9,16 @@ import { AuthProvider } from '@/contexts';
 import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
 import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile } from '@/pages';
+import { initializeSecurity } from '@/utils/security';
+import { useEffect } from 'react';
 import './App.css';
 
 function App() {
+  // Initialize security measures on app start
+  useEffect(() => {
+    initializeSecurity();
+  }, []);
+
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
@@ -33,6 +40,7 @@ function App() {
               } 
             />
             
+            {/* Challenge route - slug-based */}
             <Route 
               path="/play/:slug" 
               element={
@@ -40,12 +48,6 @@ function App() {
                   <ChallengePage />
                 </ProtectedRoute>
               } 
-            />
-            
-            {/* Legacy route redirect */}
-            <Route 
-              path="/challenge/:id" 
-              element={<Navigate to="/dashboard" replace />} 
             />
             
             <Route 

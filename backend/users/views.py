@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
-from .serializers import UserRegistrationSerializer, UserSerializer
+from .serializers import UserRegistrationSerializer, UserSerializer, LoginSerializer
 from utils.throttling import AuthRateThrottle, LoginRateThrottle
 from .session_service import SessionSecurityService
 from .session_models import UserSession
@@ -58,6 +58,7 @@ class SignInView(generics.GenericAPIView):
     
     Rate limit: 4 attempts per minute per IP
     """
+    serializer_class = LoginSerializer
     permission_classes = [AllowAny]
     throttle_classes = [LoginRateThrottle]
     

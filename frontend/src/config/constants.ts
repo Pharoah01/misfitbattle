@@ -3,25 +3,28 @@
  * Centralized configuration for the application
  */
 
+import { getEndpoint } from './endpoints';
+
 // API Configuration
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// Obfuscated API endpoints - actual URLs are hidden from users
 export const API_ENDPOINTS = {
   AUTH: {
-    REGISTER: '/api/auth/signup/',
-    LOGIN: '/api/auth/signin/',
-    LOGOUT: '/api/auth/signout/',
-    ME: '/api/auth/me/',
-    REFRESH: '/api/auth/token/refresh/',
+    REGISTER: getEndpoint('A2'),
+    LOGIN: getEndpoint('A1'),
+    LOGOUT: getEndpoint('A3'),
+    ME: getEndpoint('A4'),
+    REFRESH: getEndpoint('A5'),
   },
   CHALLENGES: {
-    LIST: '/api/challenges/',
-    DETAIL: (id: number) => `/api/challenges/${id}/`,
+    LIST: getEndpoint('C1'),
+    DETAIL: (slug: string) => getEndpoint('C2', slug),
   },
   SUBMISSIONS: {
-    CREATE: '/api/submissions/',
-    LIST: '/api/submissions/',
-    DETAIL: (id: number) => `/api/submissions/${id}/`,
+    CREATE: getEndpoint('S1'),
+    LIST: getEndpoint('S1'),
+    DETAIL: (id: number) => getEndpoint('S2', id),
   },
 } as const;
 

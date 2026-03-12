@@ -47,3 +47,13 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'register_number', 'name', 'email', 'college_name', 'profile_completed', 'is_admin', 'created_at']
         read_only_fields = ['id', 'is_admin', 'created_at', 'profile_completed']
+
+
+class LoginSerializer(serializers.Serializer):
+    """Serializer for login endpoint"""
+    register_number = serializers.CharField(required=True)
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={'input_type': 'password'}
+    )

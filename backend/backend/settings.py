@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'corsheaders',
+    'security',  # API security middleware
     'users',
     'challenges',
     'submissions',
@@ -44,6 +45,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'security.middleware.APISecurityMiddleware',  # API security protection
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'backend.csrf_middleware.DisableCSRFMiddleware',  # Custom CSRF middleware for API endpoints
@@ -302,3 +304,64 @@ This helps us detect suspicious activities and ensure fair competition.
 """
 
 GEOIP_PATH = BASE_DIR / "geoip2"
+
+# Security email settings
+SECURITY_ADMIN_EMAIL = os.getenv(
+    "SECURITY_ADMIN_EMAIL",
+    "elavarasanjaswanth@gmail.com"
+)
+
+SECURITY_FROM_EMAIL = os.getenv(
+    "SECURITY_FROM_EMAIL",
+    "team.binarymisfits@gmail.com"
+)
+
+SITE_URL = os.getenv(
+    "SITE_URL",
+    "https://api.binarymisfits.info"
+)
+
+# Security thresholds
+SECURITY_ALERT_THRESHOLD = int(
+    os.getenv("SECURITY_ALERT_THRESHOLD", "3")
+)
+
+SECURITY_AUTO_BLOCK_THRESHOLD = int(
+    os.getenv("SECURITY_AUTO_BLOCK_THRESHOLD", "5")
+)
+
+SECURITY_BLOCK_DURATION_HOURS = int(
+    os.getenv("SECURITY_BLOCK_DURATION_HOURS", "24")
+)
+
+# Email Configuration (SMTP)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = os.getenv(
+    "EMAIL_HOST",
+    "smtp.gmail.com"
+)
+
+EMAIL_PORT = int(
+    os.getenv("EMAIL_PORT", "587")
+)
+
+EMAIL_USE_TLS = os.getenv(
+    "EMAIL_USE_TLS",
+    "True"
+) == "True"
+
+EMAIL_HOST_USER = os.getenv(
+    "EMAIL_HOST_USER",
+    "team.binarymisfits@gmail.com"
+)
+
+EMAIL_HOST_PASSWORD = os.getenv(
+    "EMAIL_HOST_PASSWORD",
+    ""
+)
+
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    "team.binarymisfits@gmail.com"
+)

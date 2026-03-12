@@ -128,6 +128,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Check if we have a token before making API call
       const token = getAccessToken();
+      console.log('AuthContext: Token check result:', token ? 'Token found' : 'No token found');
+      
       if (!token) {
         // No token - user needs to login
         console.log('AuthContext: No token found, setting user to null');
@@ -136,7 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
       
-      console.log('AuthContext: Token found, fetching current user');
+      console.log('AuthContext: Token found, fetching current user from API');
       // Backend uses simple token auth (no refresh token)
       // Just try to get current user - if it fails, user needs to login
       try {

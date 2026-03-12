@@ -40,12 +40,14 @@
     # Content Security Policy (adjust based on your needs)
     Content-Security-Policy = """
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com blob: data:;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com;
+      font-src 'self' https://fonts.gstatic.com data:;
       img-src 'self' data: https: http:;
       connect-src 'self' http://localhost:8000 https://api.binarymisfits.info https://65.0.92.164 https://cloudflareinsights.com;
       frame-src 'self';
+      worker-src 'self' blob: data:;
+      child-src 'self' blob: data:;
     """
     
     # Permissions Policy

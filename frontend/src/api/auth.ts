@@ -37,6 +37,8 @@ export const register = async (data: RegisterFormData): Promise<RegisterResponse
  * @returns Login response with token and user data
  */
 export const login = async (data: LoginFormData): Promise<LoginResponse> => {
+  console.log('Auth API: Starting login request');
+  
   const response = await apiClient.post<{ 
     token: string; 
     session_id: string;
@@ -55,8 +57,16 @@ export const login = async (data: LoginFormData): Promise<LoginResponse> => {
     }
   );
   
+  console.log('Auth API: Login response received', {
+    hasToken: !!response.data.token,
+    tokenPreview: response.data.token ? `${response.data.token.substring(0, 10)}...` : null,
+    user: response.data.user
+  });
+  
   // Store token in localStorage (backend uses simple token auth, not JWT)
   setAccessToken(response.data.token);
+  
+  console.log('Auth API: Token stored in localStorage');
   
   return {
     access: response.data.token,

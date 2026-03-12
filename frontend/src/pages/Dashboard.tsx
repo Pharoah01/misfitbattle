@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useChallenges } from '@/hooks';
-import { SkeletonLoader, ErrorState } from '@/components';
+import { SkeletonLoader, ErrorState, ApiTest } from '@/components';
 import type { Challenge } from '@/types';
 
 export const Dashboard: React.FC = () => {
@@ -22,11 +22,26 @@ export const Dashboard: React.FC = () => {
   });
 
   /**
+   * Convert title to URL-friendly slug
+   */
+  const createSlug = (title: string): string => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  /**
    * Handle challenge selection
    */
   const handleChallengeClick = (challenge: Challenge) => {
-    // Use slug if available, fallback to ID
-    const route = challenge.slug ? `/play/${challenge.slug}` : `/challenge/${challenge.id}`;
+    console.log('Dashboard: Play button clicked for challenge:', challenge);
+    
+    // Create slug from title if slug doesn't exist
+    const slug = challenge.slug || createSlug(challenge.title);
+    const route = `/play/${slug}`;
+    console.log('Dashboard: Navigating to route:', route);
+    
     navigate(route);
   };
 
@@ -56,6 +71,11 @@ export const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Debug API Test - Temporary */}
+        <div className="mb-8">
+          <ApiTest />
+        </div>
+
         {/* Section Title */}
         <div className="mb-8">
           <h2 className="text-4xl font-bold text-text-primary mb-2 font-orbitron">
@@ -145,7 +165,10 @@ export const Dashboard: React.FC = () => {
                       )}
 
                       <button 
-                        onClick={() => handleChallengeClick(challenge)}
+                        onClick={() => {
+                          console.log('Dashboard: Challenge data:', challenge);
+                          handleChallengeClick(challenge);
+                        }}
                         className="w-full py-2.5 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white font-bold rounded-lg transition-all font-rajdhani shadow-lg shadow-purple-primary/30 hover:shadow-purple-primary/50"
                       >
                         Play
