@@ -59,7 +59,9 @@ export const EditProfile: React.FC = () => {
       newErrors.college_name = 'College name is required';
     }
     
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
     
@@ -77,13 +79,22 @@ export const EditProfile: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      const wasProfileIncomplete = user && !user.profile_completed;
+      
       await apiClient.put('/api/auth/update-profile/', formData);
       
       // Refresh user data to get updated information
       await refreshUser();
       
       toast.success('Profile updated successfully!');
-      navigate('/profile');
+      
+      // If profile was incomplete and now completed, redirect to dashboard
+      if (wasProfileIncomplete) {
+        toast.success('🎉 Profile completed! Welcome to Misfits Battle!');
+        navigate('/dashboard');
+      } else {
+        navigate('/profile');
+      }
     } catch (error: any) {
       if (error.response?.data?.error) {
         toast.error(error.response.data.error);
@@ -199,7 +210,7 @@ export const EditProfile: React.FC = () => {
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">
-                  Email <span className="text-text-secondary text-xs">(Optional)</span>
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -207,6 +218,7 @@ export const EditProfile: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  required
                   className="w-full px-4 py-3 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all font-mono"
                   placeholder="your.email@example.com"
                   disabled={isSubmitting}

@@ -27,7 +27,7 @@ export const Register: React.FC = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      navigate('/profile', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 

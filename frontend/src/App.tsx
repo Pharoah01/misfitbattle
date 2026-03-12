@@ -34,7 +34,7 @@ function App() {
             <Route 
               path="/dashboard" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireProfileCompletion={true}>
                   <Dashboard />
                 </ProtectedRoute>
               } 
@@ -44,7 +44,7 @@ function App() {
             <Route 
               path="/play/:slug" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireProfileCompletion={true}>
                   <ChallengePage />
                 </ProtectedRoute>
               } 
@@ -53,7 +53,7 @@ function App() {
             <Route 
               path="/profile" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireProfileCompletion={false}>
                   <Profile />
                 </ProtectedRoute>
               } 
@@ -62,7 +62,7 @@ function App() {
             <Route 
               path="/edit-profile" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireProfileCompletion={false}>
                   <EditProfile />
                 </ProtectedRoute>
               } 
@@ -71,7 +71,7 @@ function App() {
             <Route 
               path="/rules" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireProfileCompletion={true}>
                   <Rules />
                 </ProtectedRoute>
               } 

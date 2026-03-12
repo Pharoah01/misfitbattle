@@ -25,6 +25,9 @@ export const Profile: React.FC = () => {
   const totalSubmissions = submissionsArray.length;
   const completedChallenges = new Set(submissionsArray.map(s => s.challenge)).size;
 
+  // Check if profile needs completion
+  const needsProfileCompletion = user && !user.profile_completed;
+
   return (
     <div className="min-h-screen bg-dark-bg">
       {/* Header */}
@@ -33,16 +36,22 @@ export const Profile: React.FC = () => {
           <div className="flex items-center justify-between">
             <h1 
               className="text-2xl font-bold text-text-primary font-orbitron tracking-wider cursor-pointer group transition-colors duration-300 hover:text-purple-primary"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => user?.profile_completed ? navigate('/dashboard') : undefined}
             >
               <span className="text-purple-primary">MISFITS</span>-BATTLE
             </h1>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
-            >
-              Back to Dashboard
-            </button>
+            {user?.profile_completed ? (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
+              >
+                Back to Dashboard
+              </button>
+            ) : (
+              <div className="px-4 py-2 bg-orange-500/10 text-orange-500 border border-orange-500/30 rounded font-rajdhani font-semibold">
+                Complete Profile Required
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -50,6 +59,33 @@ export const Profile: React.FC = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
+          {/* Profile Completion Banner */}
+          {needsProfileCompletion && (
+            <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg p-6 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-text-primary mb-2 font-orbitron">
+                    Complete Your Profile
+                  </h3>
+                  <p className="text-text-secondary font-rajdhani mb-4">
+                    Welcome to Misfits Battle! Please complete your profile to access challenges and start competing.
+                  </p>
+                  <button
+                    onClick={() => navigate('/edit-profile')}
+                    className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-lg transition-all font-rajdhani shadow-lg shadow-orange-500/30"
+                  >
+                    Complete Profile Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Profile Header with Stats */}
           <div className="bg-gradient-to-br from-purple-primary/10 to-purple-tertiary/10 rounded-lg border border-purple-primary/30 p-8 mb-6 relative overflow-hidden">
             {/* Decorative Elements */}

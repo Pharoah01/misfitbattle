@@ -212,8 +212,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSessionInfo(response.session_info);
       }
       
-      // Navigate to dashboard on successful login
-      navigate('/dashboard');
+      // Navigate to profile completion for new users
+      navigate('/profile');
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 
                           err.response?.data?.non_field_errors?.[0] ||
