@@ -199,7 +199,7 @@ We welcome contributions to improve Misfits-Battle. Please follow our coding sta
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Team
 
