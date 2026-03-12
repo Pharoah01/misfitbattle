@@ -218,18 +218,33 @@ class UpdateProfileView(generics.GenericAPIView):
                 'error': 'College name is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Update name and college (always required)
+        if not email:
+            return Response({
+                'error': 'Email is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate email format
+        import re
+        email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(email_pattern, email):
+            return Response({
+                'error': 'Invalid email format'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if email is already taken by another user
+        if User.objects.filter(email=email).exclude(id=user.id).exists():
+            return Response({
+                'error': 'This email is already in use'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update user profile
         user.name = name
         user.college_name = college_name
+        user.email = email
         
-        # Update email if provided and valid
-        if email:
-            # Check if email is already taken by another user
-            if User.objects.filter(email=email).exclude(id=user.id).exists():
-                return Response({
-                    'error': 'This email is already in use'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            user.email = email
+        # Mark profile as completed if all required fields are present
+        if name and college_name and email and user.register_number:
+            user.profile_completed = True
         
         user.save()
         

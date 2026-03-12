@@ -91,7 +91,7 @@ export const EditProfile: React.FC = () => {
       // If profile was incomplete and now completed, redirect to dashboard
       if (wasProfileIncomplete) {
         toast.success('🎉 Profile completed! Welcome to Misfits Battle!');
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       } else {
         navigate('/profile');
       }
