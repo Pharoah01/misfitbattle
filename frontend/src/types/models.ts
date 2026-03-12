@@ -1,9 +1,7 @@
 /**
- * Type definitions for API models
- * These match the backend Django models
+ * Type definitions for API models - Difficulty Levels Feature
  */
 
-// User Model
 export interface User {
   id: number;
   register_number: string;
@@ -15,22 +13,20 @@ export interface User {
   created_at: string;
 }
 
-// Challenge Model
 export interface Challenge {
   id: number;
   title: string;
-  slug: string | null; // URL-friendly identifier
+  slug: string | null;
   description: string;
   html_boilerplate: string;
   css_boilerplate: string;
-  palette: string[]; // Array of hex colors (read-only)
-  preview_image: string | null; // Image URL
+  palette: string[];
+  preview_image: string | null;
   points: number;
-  difficulty: 'easy' | 'medium' | 'hard'; // Difficulty level
+  difficulty: 'easy' | 'medium' | 'hard';
   created_at: string;
 }
 
-// Challenge Query Parameters
 export interface ChallengeQueryParams {
   search?: string;
   ordering?: 'points' | '-points' | 'created_at' | '-created_at';
@@ -39,7 +35,6 @@ export interface ChallengeQueryParams {
   difficulty?: 'easy' | 'medium' | 'hard';
 }
 
-// Submission Model
 export interface Submission {
   id: number;
   user: number;
@@ -60,7 +55,6 @@ export interface Submission {
   submitted_at: string;
 }
 
-// Auth Response Models
 export interface LoginResponse {
   session_id: string;
   session_info: {
@@ -88,13 +82,11 @@ export interface RegisterResponse {
   created_at: string;
 }
 
-// API Error Response
 export interface APIError {
   detail?: string;
   [key: string]: string | string[] | undefined;
 }
 
-// Form Data Types
 export interface LoginFormData {
   register_number: string;
   password: string;

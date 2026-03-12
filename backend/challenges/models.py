@@ -1,13 +1,10 @@
+# Challenge Models - Difficulty Levels Feature
 from django.db import models
 from django.core.exceptions import ValidationError
 import re
 
 
 def validate_palette(value):
-    """
-    Validate that palette is a comma-separated list of valid hex colors.
-    Format: #RRGGBB,#RRGGBB,#RRGGBB
-    """
     if not value:
         return
     
@@ -37,12 +34,8 @@ class Challenge(models.Model):
         help_text="URL-friendly identifier (e.g., 'center-square')"
     )
     description = models.TextField()
-    html_boilerplate = models.TextField(
-        help_text = "type your HTML code here."
-    )
-    css_boilerplate = models.TextField(
-        help_text = "Type your CSS code here."
-    )
+    html_boilerplate = models.TextField(help_text="type your HTML code here.")
+    css_boilerplate = models.TextField(help_text="Type your CSS code here.")
     palette = models.CharField(
         max_length=500,
         blank=True,
@@ -61,10 +54,7 @@ class Challenge(models.Model):
         null=True,
         help_text="Reference image for heatmap comparison"
     )
-    points = models.IntegerField(
-        default=100,
-        help_text = "Points Awarded!!"
-    )
+    points = models.IntegerField(default=100, help_text="Points Awarded!!")
     difficulty = models.CharField(
         max_length=10,
         choices=DIFFICULTY_CHOICES,
@@ -83,7 +73,6 @@ class Challenge(models.Model):
         return self.title
     
     def clean(self):
-        """Additional model-level validation"""
         super().clean()
         if self.palette:
             validate_palette(self.palette)

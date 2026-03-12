@@ -1,3 +1,4 @@
+# Challenge Serializers - Difficulty Levels Feature
 from rest_framework import serializers
 from .models import Challenge
 
@@ -12,8 +13,6 @@ class ChallengeSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'palette']
     
     def get_palette(self, obj):
-        """Convert comma-separated palette string to array"""
         if obj.palette:
-            # Split by comma and strip whitespace
             return [color.strip() for color in obj.palette.split(',') if color.strip()]
         return []

@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# Backend API Test Script
-# Tests the backend API endpoints directly
+# Backend API Test 
 
 API_BASE="https://api.binarymisfits.info"
 
 echo "🔍 Testing Backend API at $API_BASE"
 echo "=================================================="
 
-# Test 1: Health check (challenges endpoint without auth)
+
 echo "1. Testing Challenges API (no auth required)..."
 response=$(curl -s -w "HTTP_STATUS:%{http_code}" "$API_BASE/api/challenges/")
 http_status=$(echo "$response" | grep -o "HTTP_STATUS:[0-9]*" | cut -d: -f2)
@@ -24,7 +23,7 @@ fi
 
 echo ""
 
-# Test 2: Test login endpoint
+
 echo "2. Testing Login API structure..."
 response=$(curl -s -w "HTTP_STATUS:%{http_code}" -X POST "$API_BASE/api/auth/signin/" \
     -H "Content-Type: application/json" \
@@ -41,7 +40,7 @@ echo "📄 Response: $body"
 
 echo ""
 
-# Test 3: Test CORS headers
+
 echo "3. Testing CORS headers..."
 cors_headers=$(curl -s -I -X OPTIONS "$API_BASE/api/challenges/" | grep -i "access-control")
 if [ -n "$cors_headers" ]; then
@@ -53,7 +52,7 @@ fi
 
 echo ""
 
-# Test 4: Test SSL certificate
+
 echo "4. Testing SSL certificate..."
 ssl_info=$(curl -s -I "$API_BASE/api/challenges/" | head -1)
 echo "📋 SSL Response: $ssl_info"

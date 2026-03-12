@@ -1,6 +1,5 @@
 /**
- * Dashboard Page
- * Main page showing challenge list and user stats
+ * Dashboard Page - Difficulty Levels Feature
  */
 
 import React, { useState } from 'react';
@@ -24,9 +23,6 @@ export const Dashboard: React.FC = () => {
     ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
   });
 
-  /**
-   * Convert title to URL-friendly slug
-   */
   const createSlug = (title: string): string => {
     return title
       .toLowerCase()
@@ -34,14 +30,9 @@ export const Dashboard: React.FC = () => {
       .replace(/^-+|-+$/g, '');
   };
 
-  /**
-   * Handle challenge selection
-   */
   const handleChallengeClick = (challenge: Challenge) => {
-    // Create slug from title if slug doesn't exist
     const slug = challenge.slug || createSlug(challenge.title);
     const route = `/play/${slug}`;
-    
     navigate(route);
   };
 
@@ -69,53 +60,48 @@ export const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Section Title */}
-        <div className="mb-8">
-          <h2 className="text-4xl font-bold text-text-primary mb-2 font-orbitron">
-            <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
-              Challenges
-            </span>
-          </h2>
-          <p className="text-text-secondary font-rajdhani text-lg">Choose a challenge and start coding</p>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search challenges..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
-            />
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h2 className="text-4xl font-bold text-text-primary mb-2 font-orbitron">
+              <span className="bg-gradient-to-r from-purple-primary to-purple-tertiary bg-clip-text text-transparent">
+                Challenges
+              </span>
+            </h2>
+            <p className="text-text-secondary font-rajdhani text-lg">Choose a challenge and start coding</p>
           </div>
 
-          {/* Difficulty Filter */}
-          <select
-            value={difficultyFilter}
-            onChange={(e) => setDifficultyFilter(e.target.value as 'all' | 'easy' | 'medium' | 'hard')}
-            className="px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
-          >
-            <option value="all">All Difficulties</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
+          <div className="mb-8 flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search challenges..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
+              />
+            </div>
 
-          {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'points' | '-points')}
-            className="px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
-          >
-            <option value="points">Points: Low to High</option>
-            <option value="-points">Points: High to Low</option>
-          </select>
-        </div>
+            <select
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value as 'all' | 'easy' | 'medium' | 'hard')}
+              className="px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
+            >
+              <option value="all">All Difficulties</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'points' | '-points')}
+              className="px-4 py-3 bg-dark-surface border border-purple-primary/20 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent font-rajdhani transition-all"
+            >
+              <option value="points">Points: Low to High</option>
+              <option value="-points">Points: High to Low</option>
+            </select>
+          </div>
 
         {/* Challenge Grid - Loading State */}
         {isLoading && (
@@ -142,18 +128,15 @@ export const Dashboard: React.FC = () => {
                     key={challenge.id}
                     className="bg-dark-surface rounded-lg border border-purple-primary/20 hover:border-purple-primary cursor-pointer transition-all group hover:shadow-xl hover:shadow-purple-primary/20"
                   >
-                    {/* Challenge Info */}
                     <div className="p-5">
                       <div className="flex items-start justify-between mb-3">
                         <h3 className="text-lg font-semibold text-text-primary flex-1 group-hover:text-purple-primary transition-colors font-rajdhani">
                           {challenge.title}
                         </h3>
                         <div className="flex items-center gap-2 ml-2">
-                          {/* Difficulty Badge */}
                           <span className={getDifficultyBadgeClasses(challenge.difficulty)}>
                             {challenge.difficulty.toUpperCase()}
                           </span>
-                          {/* Points Badge */}
                           <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded-full font-rajdhani shadow-lg shadow-orange-500/20">
                             {challenge.points} pts
                           </span>
@@ -164,7 +147,6 @@ export const Dashboard: React.FC = () => {
                         {challenge.description}
                       </p>
 
-                      {/* Color Palette */}
                       {challenge.palette && challenge.palette.length > 0 && (
                         <div className="flex gap-2 mb-4">
                           {challenge.palette.slice(0, 5).map((color, index) => (

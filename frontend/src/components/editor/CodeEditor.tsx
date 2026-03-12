@@ -1,6 +1,5 @@
 /**
- * Code Editor Component
- * Monaco Editor wrapper for HTML/CSS editing with enhanced reliability
+ * Code Editor Component - Monaco Editor with Fallback
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -29,7 +28,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const timeoutRef = useRef<number | null>(null);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  // Clear timeout on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -51,7 +49,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       timeoutRef.current = null;
     }
 
-    // Configure editor for better performance
     editor.updateOptions({
       automaticLayout: true,
       scrollBeyondLastLine: false,
@@ -68,7 +65,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       ...options,
     });
 
-    // Add HTML/CSS specific configurations
     if (language === 'html') {
       editor.updateOptions({
         suggest: {
@@ -79,14 +75,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [language, options]);
 
-  // Set fallback timeout
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
       if (isLoading) {
         setMonacoFailed(true);
         setIsLoading(false);
       }
-    }, 8000); // 8 second timeout
+    }, 8000);
 
     return () => {
       if (timeoutRef.current) {
@@ -95,7 +90,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     };
   }, [isLoading]);
 
-  // Fallback textarea when Monaco fails
   if (monacoFailed) {
     return (
       <div className="w-full h-full bg-[#1e1e1e] text-white relative">
@@ -128,7 +122,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         onMount={handleEditorMount}
         theme="vs-dark"
         beforeMount={(monaco) => {
-          // Configure Monaco environment
           monaco.editor.defineTheme('custom-dark', {
             base: 'vs-dark',
             inherit: true,
@@ -147,7 +140,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             }
           });
           
-          // Set HTML language options
           monaco.languages.html.htmlDefaults.setOptions({
             format: {
               tabSize: 2,
@@ -166,7 +158,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             suggest: { html5: true }
           });
 
-          // Set CSS language options
           monaco.languages.css.cssDefaults.setOptions({
             validate: true,
             lint: {

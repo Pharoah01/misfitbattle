@@ -1,3 +1,4 @@
+# Challenge Admin - Difficulty Levels Feature
 from django.contrib import admin
 from .models import Challenge
 
