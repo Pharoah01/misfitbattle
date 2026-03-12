@@ -68,6 +68,4 @@ This project is licensed under the MIT License.
 
 For support, contact us at: team.binarymisfits@gmail.com
 
-## Acknowledgments
-
 **Made with 💜 by Binary Misfits**
