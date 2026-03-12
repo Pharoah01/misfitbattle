@@ -18,7 +18,13 @@ export const getEndpoint = (key: keyof typeof ENDPOINT_MAP, ...params: any[]): s
   const endpoint = ENDPOINT_MAP[key];
   
   if (typeof endpoint === 'function') {
-    return (endpoint as any)(...params);
+    // Handle function endpoints with proper parameter passing
+    if (key === 'C2') {
+      return (endpoint as (slug: string) => string)(params[0] as string);
+    }
+    if (key === 'S2') {
+      return (endpoint as (id: number) => string)(params[0] as number);
+    }
   }
   
   return endpoint as string;
