@@ -9,4 +9,4 @@ export { useAuth } from '@/contexts';
 export { useChallenges, useChallenge, useCreateChallenge, useUpdateChallenge, useDeleteChallenge } from './useChallenges';
 
 // Submission hooks
-export { useSubmissions, useSubmission, useSubmitSolution, useDeleteSubmission } from './useSubmissions';
+export { useSubmissions, useSubmission, useSubmitSolution } from './useSubmissions';

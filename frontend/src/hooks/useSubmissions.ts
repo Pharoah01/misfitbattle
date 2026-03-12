@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { submitSolution, fetchSubmissions, fetchSubmission, deleteSubmission } from '@/api/submissions';
+import { submitSolution, fetchSubmissions, fetchSubmission } from '@/api/submissions';
 import { QUERY_KEYS, CACHE_TIME } from '@/config/constants';
 import type { SubmissionFormData } from '@/types';
 import { toast } from '@/utils';
@@ -54,26 +54,6 @@ export const useSubmitSolution = () => {
                           error.response?.data?.html_code?.[0] ||
                           error.response?.data?.css_code?.[0] ||
                           'Failed to submit solution';
-      toast.error(errorMessage);
-    },
-  });
-};
-
-/**
- * Hook to delete a submission
- */
-export const useDeleteSubmission = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  return useMutation({
-    mutationFn: deleteSubmission,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBMISSIONS, user?.id] });
-      toast.success('Submission deleted successfully!');
-    },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.detail || 'Failed to delete submission';
       toast.error(errorMessage);
     },
   });

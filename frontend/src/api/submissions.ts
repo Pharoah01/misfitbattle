@@ -59,10 +59,3 @@ export const fetchSubmission = async (id: number): Promise<Submission> => {
   const response = await apiClient.get<Submission>(`/api/submissions/${id}/`);
   return response.data;
 };
-
-/**
- * Delete a submission
- */
-export const deleteSubmission = async (id: number): Promise<void> => {
-  await apiClient.delete(`/api/submissions/${id}/`);
-};

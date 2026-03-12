@@ -70,10 +70,6 @@ export const SubmissionSuccess: React.FC<SubmissionSuccessProps> = ({
               <span className="text-text-secondary font-rajdhani">Challenge:</span>
               <span className="text-text-primary font-semibold font-rajdhani">{challenge.title}</span>
             </div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-text-secondary font-rajdhani">Points Earned:</span>
-              <span className="text-orange-500 font-bold font-rajdhani">{challenge.points} pts</span>
-            </div>
             <div className="flex items-center justify-between">
               <span className="text-text-secondary font-rajdhani">Difficulty:</span>
               <span className={`px-2 py-1 rounded-full text-xs font-bold font-rajdhani border ${

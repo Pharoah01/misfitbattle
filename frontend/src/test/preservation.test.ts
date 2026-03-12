@@ -11,7 +11,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import fc from 'fast-check';
-import { submitSolution, fetchSubmission, deleteSubmission } from '@/api/submissions';
+import { submitSolution, fetchSubmission } from '@/api/submissions';
 import type { Submission, SubmissionFormData } from '@/types';
 
 // Mock the API client instead of axios directly
@@ -120,25 +120,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
             // Verify the result matches expected structure
             expect(result).toEqual(mockSubmission);
             expect(result.id).toBe(submissionId);
-          }
-        ),
-        { numRuns: 15 }
-      );
-    });
-
-    it('should preserve deleteSubmission behavior for valid submission IDs', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 1, max: 10000 }),
-          async (submissionId: number) => {
-            // Mock successful API response (delete returns void)
-            mockedApiClient.delete.mockResolvedValueOnce({ data: null });
-
-            // Test that deleteSubmission works correctly
-            await deleteSubmission(submissionId);
-
-            // Verify the API was called correctly
-            expect(mockedApiClient.delete).toHaveBeenCalledWith(`/api/submissions/${submissionId}/`);
           }
         ),
         { numRuns: 15 }

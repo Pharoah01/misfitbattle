@@ -6,7 +6,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, useChallenges, useSubmissions } from '@/hooks';
 import { SkeletonLoader, ErrorState } from '@/components';
-import { SecurityDebug } from '@/components/debug/SecurityDebug';
 import { getDifficultyBadgeClasses } from '@/utils/difficulty';
 import { toast } from '@/utils';
 import type { Challenge } from '@/types';
@@ -75,7 +74,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const state = location.state as any;
     if (state?.submissionSuccess) {
-      toast.success(`🎉 Challenge "${state.challengeTitle}" completed! +${state.points} points earned!`);
+      toast.success(`🎉 Challenge "${state.challengeTitle}" completed!`);
       // Clear the state to prevent showing the message again on refresh
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -91,24 +90,6 @@ export const Dashboard: React.FC = () => {
               <span className="text-purple-primary">MISFITS</span>-BATTLE
             </h1>
             <div className="flex items-center gap-4">
-              {/* CRITICAL DEBUG BUTTON - TEMPORARY */}
-              <button
-                onClick={() => {
-                  // Clear all browser storage
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  // Clear cookies by setting them to expire
-                  document.cookie.split(";").forEach(function(c) { 
-                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-                  });
-                  alert('All browser data cleared! Please refresh and login again.');
-                  window.location.reload();
-                }}
-                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white border border-red-500 rounded transition-all font-rajdhani font-semibold text-sm"
-              >
-                🚨 Clear All Data
-              </button>
-              
               <button
                 onClick={() => navigate('/rules')}
                 className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
@@ -297,9 +278,6 @@ export const Dashboard: React.FC = () => {
           </>
         )}
       </main>
-      
-      {/* CRITICAL DEBUG COMPONENT - TEMPORARY */}
-      <SecurityDebug />
     </div>
   );
 };
