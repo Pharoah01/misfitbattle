@@ -17,8 +17,6 @@ export const ChallengePage: React.FC = () => {
   const navigate = useNavigate();
   const { registerAutoSubmit } = useAuth();
 
-  console.log('ChallengePage: Loading challenge with slug:', slug);
-
   const { data: challenge, isLoading, error } = useChallenge(slug || '');
   const submitMutation = useSubmitSolution();
   

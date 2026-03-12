@@ -37,7 +37,7 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
     
-    # Content Security Policy (adjust based on your needs)
+    # Content Security Policy (optimized for Monaco Editor)
     Content-Security-Policy = """
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com blob: data:;
@@ -45,9 +45,11 @@
       font-src 'self' https://fonts.gstatic.com data:;
       img-src 'self' data: https: http:;
       connect-src 'self' http://localhost:8000 https://api.binarymisfits.info https://65.0.92.164 https://cloudflareinsights.com;
-      frame-src 'self';
+      frame-src 'self' data:;
       worker-src 'self' blob: data:;
       child-src 'self' blob: data:;
+      object-src 'none';
+      base-uri 'self';
     """
     
     # Permissions Policy

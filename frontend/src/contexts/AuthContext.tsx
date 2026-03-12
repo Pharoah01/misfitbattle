@@ -43,8 +43,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Session timeout: 5 minutes of inactivity
-  const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+  // Session timeout: 30 minutes of inactivity (matches backend)
+  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSubmitCallbackRef = React.useRef<(() => Promise<void>) | null>(null);
 
