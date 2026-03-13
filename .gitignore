@@ -154,3 +154,12 @@ docs/
 security-test/
 backend/scripts/
 frontend/.env.example
+
+# ============================================
+#  Personal Automated Scripts
+# ============================================
+
+clean_comments.sh
+ec2_organize_scripts.sh
+organize_backend_scripts.sh
+remove_comments.sh
