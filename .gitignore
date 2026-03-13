@@ -163,3 +163,4 @@ clean_comments.sh
 ec2_organize_scripts.sh
 organize_backend_scripts.sh
 remove_comments.sh
+test_clean_comments.sh

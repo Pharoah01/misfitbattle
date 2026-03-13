@@ -29,12 +29,10 @@ class Command(BaseCommand):
         revoke = options.get('revoke')
         difficulty = options.get('difficulty')
         
-        # Handle revoke operation
         if revoke:
             self.handle_revoke(revoke)
             return
         
-        # Handle generate operation
         self.handle_generate(difficulty)
     
     def handle_revoke(self, revoke_type):
@@ -66,10 +64,8 @@ class Command(BaseCommand):
     
     def handle_generate(self, difficulty=None):
         """Generate slugs for challenges"""
-        # Base query for challenges without slugs
         challenges = Challenge.objects.filter(slug__isnull=True) | Challenge.objects.filter(slug='')
         
-        # Filter by difficulty if specified
         if difficulty:
             challenges = challenges.filter(difficulty=difficulty)
         
