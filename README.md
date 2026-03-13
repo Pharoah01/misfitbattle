@@ -36,6 +36,14 @@
 - Automated security alert system with email notifications
 - IP-based blocking and monitoring
 - CSRF protection and secure headers
+
+### Project SAPTARA - Security Testing Framework
+- **🛡️ Comprehensive security testing suite** with microservices architecture
+- **Seven specialized relics** working in unity for layered protection
+- **Real-time vulnerability scanning** with 12+ test categories
+- **Attack simulation and penetration testing** capabilities
+- **Automated security validation** and compliance checking
+- Located in `saptara/` directory - [Learn more about SAPTARA](saptara/docs/PROJECT_SAPTARA.md)
 ## Technology Stack
 
 ### Frontend
@@ -113,6 +121,18 @@ misfits-battle/
 │   │   ├── services.py       # Email alert services
 │   │   └── admin.py          # Security admin interface
 │   └── requirements.txt       # Backend dependencies
+│
+├── saptara/                     # Project SAPTARA - Security Testing Framework
+│   ├── services/              # The Seven Relics (Microservices)
+│   │   ├── orchestrator/      # The Conductor - Coordination service
+│   │   ├── scanner/           # The Seeker - Vulnerability scanner
+│   │   ├── validator/         # The Guardian - Security validator
+│   │   └── simulator/         # The Challenger - Attack simulator
+│   ├── shared/                # Shared components and utilities
+│   ├── docs/                  # SAPTARA documentation
+│   │   └── PROJECT_SAPTARA.md # The philosophy and architecture
+│   ├── cli.py                 # Command-line interface
+│   └── docker-compose.yml     # Container orchestration
 │
 └── deployment/                  # Deployment configurations
     ├── netlify.toml            # Netlify deployment config
