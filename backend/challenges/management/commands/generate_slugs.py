@@ -4,7 +4,19 @@ import re
 
 
 class Command(BaseCommand):
-    help = 'Generate slugs for challenges that don\'t have them'
+    help = 'Generate or revoke slugs for challenges with difficulty filtering'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--revoke',
+            choices=['all', 'easy', 'medium', 'hard'],
+            help='Revoke slugs for challenges (all or by difficulty)'
+        )
+        parser.add_argument(
+            '--difficulty',
+            choices=['easy', 'medium', 'hard'],
+            help='Generate slugs only for challenges of specified difficulty'
+        )
 
     def slugify_title(self, title):
         """Convert title to slug format - matches frontend logic"""
@@ -14,13 +26,63 @@ class Command(BaseCommand):
         return slug
 
     def handle(self, *args, **options):
-        challenges = Challenge.objects.filter(slug__isnull=True) | Challenge.objects.filter(slug='')
+        revoke = options.get('revoke')
+        difficulty = options.get('difficulty')
         
-        if not challenges.exists():
-            self.stdout.write(self.style.SUCCESS('✓ All challenges already have slugs!'))
+        # Handle revoke operation
+        if revoke:
+            self.handle_revoke(revoke)
             return
         
-        self.stdout.write(f'Found {challenges.count()} challenge(s) without slugs')
+        # Handle generate operation
+        self.handle_generate(difficulty)
+    
+    def handle_revoke(self, revoke_type):
+        """Revoke slugs from challenges"""
+        if revoke_type == 'all':
+            challenges = Challenge.objects.exclude(slug__isnull=True).exclude(slug='')
+        else:
+            challenges = Challenge.objects.filter(difficulty=revoke_type).exclude(slug__isnull=True).exclude(slug='')
+        
+        if not challenges.exists():
+            self.stdout.write(self.style.WARNING(f'No challenges found with slugs for: {revoke_type}'))
+            return
+        
+        count = challenges.count()
+        self.stdout.write(f'Found {count} challenge(s) with slugs to revoke ({revoke_type})')
+        self.stdout.write('-' * 50)
+        
+        for challenge in challenges:
+            old_slug = challenge.slug
+            challenge.slug = None
+            challenge.save()
+            
+            self.stdout.write(f'✗ {challenge.title} ({challenge.difficulty})')
+            self.stdout.write(f'  Revoked slug: {old_slug}')
+            self.stdout.write('')
+        
+        self.stdout.write('-' * 50)
+        self.stdout.write(self.style.SUCCESS(f'✓ Revoked slugs from {count} challenge(s)'))
+    
+    def handle_generate(self, difficulty=None):
+        """Generate slugs for challenges"""
+        # Base query for challenges without slugs
+        challenges = Challenge.objects.filter(slug__isnull=True) | Challenge.objects.filter(slug='')
+        
+        # Filter by difficulty if specified
+        if difficulty:
+            challenges = challenges.filter(difficulty=difficulty)
+        
+        if not challenges.exists():
+            if difficulty:
+                self.stdout.write(self.style.SUCCESS(f'✓ All {difficulty} challenges already have slugs!'))
+            else:
+                self.stdout.write(self.style.SUCCESS('✓ All challenges already have slugs!'))
+            return
+        
+        count = challenges.count()
+        difficulty_text = f' ({difficulty})' if difficulty else ''
+        self.stdout.write(f'Found {count} challenge(s) without slugs{difficulty_text}')
         self.stdout.write('-' * 50)
         
         for challenge in challenges:
@@ -35,9 +97,9 @@ class Command(BaseCommand):
             challenge.slug = slug
             challenge.save()
             
-            self.stdout.write(f'✓ {challenge.title}')
+            self.stdout.write(f'✓ {challenge.title} ({challenge.difficulty})')
             self.stdout.write(f'  Slug: {slug}')
             self.stdout.write('')
         
         self.stdout.write('-' * 50)
-        self.stdout.write(self.style.SUCCESS(f'✓ Generated slugs for {challenges.count()} challenge(s)'))
+        self.stdout.write(self.style.SUCCESS(f'✓ Generated slugs for {count} challenge(s){difficulty_text}'))
