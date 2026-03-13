@@ -163,7 +163,15 @@ class WhatsAppSecurityService:
         """
         Format IP block notification for WhatsApp
         """
-        duration = "Permanent" if blocked_ip.is_permanent else f"Until {blocked_ip.blocked_until.strftime('%Y-%m-%d %H:%M')}"
+        if blocked_ip.is_permanent or blocked_ip.blocked_until is None:
+            duration = "Permanent"
+        else:
+            duration = f"Until {blocked_ip.blocked_until.strftime('%Y-%m-%d %H:%M')}"
+        
+        # Handle blocked_at timestamp safely
+        blocked_at_str = "Unknown"
+        if hasattr(blocked_ip, 'blocked_at') and blocked_ip.blocked_at:
+            blocked_at_str = blocked_ip.blocked_at.strftime('%Y-%m-%d %H:%M:%S')
         
         message = f"""🔒 *IP BLOCKED*
 
@@ -172,7 +180,7 @@ class WhatsAppSecurityService:
 ⏰ Duration: {duration}
 👤 Blocked by: {blocked_ip.blocked_by}
 📊 Incidents: {blocked_ip.incident_count}
-🕐 Blocked at: {blocked_ip.blocked_at.strftime('%Y-%m-%d %H:%M:%S')}
+🕐 Blocked at: {blocked_at_str}
 
 📝 Description: {blocked_ip.description}
 

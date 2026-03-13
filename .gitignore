@@ -5,6 +5,8 @@
 # ============================================
 # CRITICAL: Environment & Secrets
 # ============================================
+backend/.env.whatsapp.example
+backend/.env.example
 .env
 .env.local
 .env.*.local

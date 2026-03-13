@@ -365,3 +365,25 @@ DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL",
     "team.binarymisfits@gmail.com"
 )
+
+# WhatsApp Security Alerts Configuration
+WHATSAPP_ALERTS_ENABLED = os.getenv('WHATSAPP_ALERTS_ENABLED', 'False') == 'True'
+WHATSAPP_API_PROVIDER = os.getenv('WHATSAPP_API_PROVIDER', 'twilio')
+WHATSAPP_ADMIN_NUMBERS = [
+    num.strip() for num in os.getenv('WHATSAPP_ADMIN_NUMBERS', '').split(',') 
+    if num.strip()
+]
+WHATSAPP_ALERT_THRESHOLD = int(os.getenv('WHATSAPP_ALERT_THRESHOLD', '3'))
+
+# Twilio Configuration
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', '')
+TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER', '')
+
+# WhatsApp Business API Configuration
+WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN', '')
+WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID', '')
+
+# UltraMsg Configuration
+ULTRAMSG_TOKEN = os.getenv('ULTRAMSG_TOKEN', '')
+ULTRAMSG_INSTANCE_ID = os.getenv('ULTRAMSG_INSTANCE_ID', '')
