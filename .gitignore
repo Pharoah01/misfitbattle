@@ -48,6 +48,13 @@ wheels/
 *.egg
 MANIFEST
 
+# Security Scripts
+run_security_tests.py
+security_feature_validation.py
+fix_challenge_slugs.py
+security_vulnerability_simulation.py
+universal_security_scanner.py
+
 # Django specific
 *.log
 local_settings.py
