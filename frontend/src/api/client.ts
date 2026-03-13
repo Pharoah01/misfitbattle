@@ -128,7 +128,7 @@ apiClient.interceptors.request.use(
     const token = getAccessToken();
     
     if (token && config.headers) {
-      config.headers.Authorization = `Token ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     return config;
@@ -140,13 +140,57 @@ apiClient.interceptors.request.use(
 
 /**
  * Response Interceptor
- * Handles 401 errors and session expiration
+ * Handles 401 errors with token refresh and session expiration
  */
 apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
   async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      const refreshToken = getRefreshToken();
+      
+      if (refreshToken) {
+        try {
+          // Attempt to refresh the token
+          const response = await axios.post(`${API_BASE_URL}/api/auth/token/refresh/`, {
+            refresh: refreshToken
+          });
+          
+          const newAccessToken = response.data.access;
+          setAccessToken(newAccessToken);
+          
+          // Retry the original request with the new token
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          }
+          
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed, clear tokens and redirect
+          clearAllTokens();
+          
+          if (typeof window !== 'undefined') {
+            window.location.href = '/signin';
+          }
+          
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // No refresh token, clear tokens and redirect
+        clearAllTokens();
+        
+        if (typeof window !== 'undefined') {
+          window.location.href = '/signin';
+        }
+      }
+    }
+    
+    // Handle session-specific 401 errors
     if (error.response?.status === 401) {
       const errorData = error.response.data as any;
       
@@ -154,10 +198,8 @@ apiClient.interceptors.response.use(
         clearAllTokens();
         
         if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+          window.location.href = '/signin';
         }
-      } else {
-        clearAllTokens();
       }
     }
     

@@ -376,8 +376,8 @@ export const ChallengePage: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="px-2 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full flex-shrink-0">
-              <span className="text-orange-500 text-xs font-bold font-rajdhani">{challenge.points} pts</span>
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-full flex-shrink-0 flex items-center justify-center">
+              <span className="text-orange-500 text-xs font-bold font-rajdhani px-3 py-1">{challenge.points} pts</span>
             </div>
           </div>
           
@@ -425,7 +425,7 @@ export const ChallengePage: React.FC = () => {
             <div className="px-4 py-2 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 w-full">
               <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Code Editor</h3>
             </div>
-            <div className="flex-1 overflow-hidden bg-[#1e1e1e] min-h-0 w-full">
+            <div className="flex-1 bg-[#1e1e1e] min-h-0 w-full relative">
               <CodeEditor
                 language="html"
                 value={code}
@@ -438,13 +438,20 @@ export const ChallengePage: React.FC = () => {
                   minimap: { enabled: false },
                   scrollBeyondLastLine: false,
                   wordWrap: 'on',
+                  wordWrapColumn: 80,
+                  wrappingIndent: 'indent',
                   folding: true,
                   lineNumbers: 'on',
                   renderWhitespace: 'selection',
                   scrollbar: {
-                    horizontal: 'auto',
-                    vertical: 'auto'
-                  }
+                    horizontal: 'hidden',
+                    vertical: 'auto',
+                    horizontalScrollbarSize: 0,
+                    verticalScrollbarSize: 8
+                  },
+                  overviewRulerLanes: 0,
+                  hideCursorInOverviewRuler: true,
+                  overviewRulerBorder: false
                 }}
               />
             </div>
@@ -455,13 +462,13 @@ export const ChallengePage: React.FC = () => {
             {/* Color Palette - Compact */}
             {challenge.palette && challenge.palette.length > 0 && (
               <div className="px-4 py-3 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 w-full">
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center justify-center gap-2 min-w-0">
                   <h4 className="text-xs font-bold text-text-secondary uppercase tracking-wider font-rajdhani flex-shrink-0">Colors:</h4>
-                  <div className="flex gap-1 flex-wrap min-w-0 overflow-hidden">
+                  <div className="flex gap-2 flex-wrap justify-center min-w-0">
                     {challenge.palette.map((color, index) => (
                       <div 
                         key={index} 
-                        className="flex items-center gap-1 group cursor-pointer px-2 py-1 bg-dark-bg rounded border border-purple-primary/20 hover:border-purple-primary transition-all flex-shrink-0" 
+                        className="flex items-center justify-center gap-1 group cursor-pointer px-3 py-1 bg-dark-bg rounded border border-purple-primary/20 hover:border-purple-primary transition-all flex-shrink-0" 
                         onClick={() => {
                           navigator.clipboard.writeText(color);
                           toast.success(`Copied ${color}`);
@@ -471,7 +478,7 @@ export const ChallengePage: React.FC = () => {
                           className="w-4 h-4 rounded border border-purple-primary/30 flex-shrink-0 group-hover:scale-110 transition-transform"
                           style={{ backgroundColor: color }}
                         />
-                        <span className="text-text-primary font-mono text-xs group-hover:text-purple-primary transition-colors">{color}</span>
+                        <span className="text-text-primary font-mono text-xs group-hover:text-purple-primary transition-colors text-center">{color}</span>
                       </div>
                     ))}
                   </div>
