@@ -7,7 +7,6 @@ from .permissions import IsAdminOrReadOnly
 
 
 class ChallengeViewSet(viewsets.ModelViewSet):
-    queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -20,6 +19,10 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     ordering_fields = ['points', 'created_at', 'title']
     ordering = ['created_at']
     lookup_field = 'slug'
+    
+    def get_queryset(self):
+        """Only return challenges that have slugs (are visible)"""
+        return Challenge.objects.exclude(slug__isnull=True).exclude(slug='')
     
     def get_object(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
