@@ -153,3 +153,4 @@ docs/project-status/
 docs/
 security-test/
 backend/scripts/
+frontend/.env.example
