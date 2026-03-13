@@ -42,6 +42,10 @@ class BotProtectionMiddleware(MiddlewareMixin):
         """
         Check if the request is from a blocked bot
         """
+        # Skip bot protection for admin interface
+        if request.path.startswith('/admin/') or request.META.get('ADMIN_ACCESS'):
+            return None
+            
         user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
         
         # Check against blocked patterns

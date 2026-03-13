@@ -55,6 +55,10 @@ class APISecurityMiddleware(MiddlewareMixin):
         if request.path.startswith('/admin/') or request.path.startswith('/static/'):
             return None
             
+        # Skip if marked as admin access by AdminAccessMiddleware
+        if request.META.get('ADMIN_ACCESS'):
+            return None
+            
         # Get client IP
         client_ip = self.get_client_ip(request)
         
