@@ -175,7 +175,7 @@ apiClient.interceptors.response.use(
           clearAllTokens();
           
           if (typeof window !== 'undefined') {
-            window.location.href = '/signin';
+            window.location.href = '/login';
           }
           
           return Promise.reject(refreshError);
@@ -185,7 +185,7 @@ apiClient.interceptors.response.use(
         clearAllTokens();
         
         if (typeof window !== 'undefined') {
-          window.location.href = '/signin';
+          window.location.href = '/login';
         }
       }
     }
@@ -198,7 +198,7 @@ apiClient.interceptors.response.use(
         clearAllTokens();
         
         if (typeof window !== 'undefined') {
-          window.location.href = '/signin';
+          window.location.href = '/login';
         }
       }
     }

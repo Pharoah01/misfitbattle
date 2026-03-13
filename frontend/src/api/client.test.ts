@@ -258,7 +258,7 @@ describe('Response Interceptor for Token Refresh', () => {
     } catch (error) {
       expect(localStorage.getItem('access_token')).toBeNull();
       
-      expect(window.location.href).toBe('/signin');
+      expect(window.location.href).toBe('/login');
     } finally {
       apiClient.defaults.adapter = originalAdapter;
     }
@@ -289,7 +289,7 @@ describe('Response Interceptor for Token Refresh', () => {
       expect(localStorage.getItem('access_token')).toBeNull();
       expect(localStorage.getItem('refresh_token')).toBeNull();
       
-      expect(window.location.href).toBe('/signin');
+      expect(window.location.href).toBe('/login');
     } finally {
       apiClient.defaults.adapter = originalAdapter;
       axiosPostSpy.mockRestore();
@@ -322,7 +322,7 @@ describe('Response Interceptor for Token Refresh', () => {
     } catch (error) {
       expect(callCount).toBe(1);
       
-      expect(window.location.href).toBe('/signin');
+      expect(window.location.href).toBe('/login');
     } finally {
       apiClient.defaults.adapter = originalAdapter;
       axiosPostSpy.mockRestore();
