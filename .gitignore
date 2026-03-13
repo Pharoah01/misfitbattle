@@ -49,11 +49,11 @@ wheels/
 MANIFEST
 
 # Security Scripts
-run_security_tests.py
-security_feature_validation.py
+run_tests.py
+feature_validation.py
 fix_challenge_slugs.py
-security_vulnerability_simulation.py
-universal_security_scanner.py
+vulnerability_simulation.py
+security_scanner.py
 test-backend-api.sh
 
 # Django specific
