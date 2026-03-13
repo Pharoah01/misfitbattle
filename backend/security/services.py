@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from datetime import timedelta
 from .models import SecurityIncident, BlockedIP, SecurityAlert
+from .whatsapp_service import whatsapp_service
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,14 @@ class SecurityAlertService:
         )
         
         if should_alert and not self._recent_alert_sent(incident.ip_address):
+            # Send email alert
             self._send_incident_alert(incident)
+            
+            # Send WhatsApp alert
+            try:
+                whatsapp_service.send_security_incident_alert(incident)
+            except Exception as e:
+                logger.error(f"Failed to send WhatsApp alert: {e}")
     
     def _recent_alert_sent(self, ip_address, hours=1):
         """
@@ -195,7 +203,15 @@ This is an automated security alert from your application.
             
             if created:
                 logger.warning(f"IP {ip_address} blocked by {blocked_by}: {description}")
+                
+                # Send email notification
                 self._send_block_notification(blocked_ip)
+                
+                # Send WhatsApp notification
+                try:
+                    whatsapp_service.send_ip_block_alert(blocked_ip)
+                except Exception as e:
+                    logger.error(f"Failed to send WhatsApp block alert: {e}")
             
             return blocked_ip
             
