@@ -12,20 +12,16 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { data: submissions, isLoading } = useSubmissions();
 
-  // Backend filtering ensures only current user's submissions are returned
-  // No client-side filtering needed - trust the backend completely
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  // Safely calculate stats using backend-filtered submissions
   const submissionsArray = Array.isArray(submissions) ? submissions : [];
   const totalSubmissions = submissionsArray.length;
   const completedChallenges = new Set(submissionsArray.map(s => s.challenge)).size;
 
-  // Check if profile needs completion
   const needsProfileCompletion = user && !user.profile_completed;
 
   return (

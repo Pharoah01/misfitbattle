@@ -68,25 +68,19 @@ class HTMLRenderer:
             RenderError: For other rendering failures
         """
         try:
-            # Generate filename
             filename = self._generate_filename(challenge_name, user_email)
             
-            # Ensure output directory exists
             output_dir = Path(settings.MEDIA_ROOT) / 'submission_renders'
             output_dir.mkdir(parents=True, exist_ok=True)
             
-            # Full path to output file
             output_path = output_dir / filename
             
-            # Sanitize and combine HTML/CSS
             html_document = self._sanitize_html(html_code, css_code)
             
-            # Render with Playwright
             async with async_playwright() as p:
                 browser = await p.chromium.launch()
                 
                 try:
-                    # Create sandboxed context with JavaScript disabled
                     context = await browser.new_context(
                         viewport={'width': self.viewport_width, 'height': self.viewport_height},
                         java_script_enabled=False,  # Disable JavaScript for security
@@ -94,13 +88,11 @@ class HTMLRenderer:
                     
                     page = await context.new_page()
                     
-                    # Set content with timeout
                     await asyncio.wait_for(
                         page.set_content(html_document),
                         timeout=self.timeout_ms / 1000
                     )
                     
-                    # Capture screenshot with timeout
                     await asyncio.wait_for(
                         page.screenshot(path=str(output_path), full_page=False),
                         timeout=self.timeout_ms / 1000
@@ -111,7 +103,6 @@ class HTMLRenderer:
                 finally:
                     await browser.close()
             
-            # Verify image size
             image_size = output_path.stat().st_size
             if image_size > self.max_image_size_bytes:
                 output_path.unlink()  # Delete oversized image
@@ -119,7 +110,6 @@ class HTMLRenderer:
                     f"Rendered image exceeds size limit ({image_size} > {self.max_image_size_bytes} bytes)"
                 )
             
-            # Return relative path for database storage
             return f'submission_renders/{filename}'
         
         except asyncio.TimeoutError:
@@ -140,7 +130,6 @@ class HTMLRenderer:
         Returns:
             str: Complete HTML document with sanitized content
         """
-        # Sanitize HTML (remove script tags, event handlers, etc.)
         allowed_tags = [
             'div', 'span', 'p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
             'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody',
@@ -161,11 +150,9 @@ class HTMLRenderer:
             strip=True
         )
         
-        # Sanitize CSS (basic sanitization - remove @import, url() with javascript:)
         sanitized_css = re.sub(r'@import\s+', '', css)
         sanitized_css = re.sub(r'url\s*\(\s*["\']?javascript:', 'url(', sanitized_css)
         
-        # Combine into complete HTML document
         html_document = f"""
 <!DOCTYPE html>
 <html>
@@ -209,25 +196,19 @@ class HTMLRenderer:
         Returns:
             str: Sanitized filename
         """
-        # Convert to lowercase
         challenge_slug = challenge_name.lower()
         email_slug = user_email.lower()
         
-        # Replace spaces with hyphens
         challenge_slug = challenge_slug.replace(' ', '-')
         
-        # Remove special characters from challenge name (keep only alphanumeric and hyphens)
         challenge_slug = re.sub(r'[^a-z0-9-]', '', challenge_slug)
         
-        # For email, replace @ and . with hyphens, remove other special chars
         email_slug = email_slug.replace('@', '-at-').replace('.', '-')
         email_slug = re.sub(r'[^a-z0-9-]', '', email_slug)
         
-        # Remove consecutive hyphens
         challenge_slug = re.sub(r'-+', '-', challenge_slug)
         email_slug = re.sub(r'-+', '-', email_slug)
         
-        # Remove leading/trailing hyphens
         challenge_slug = challenge_slug.strip('-')
         email_slug = email_slug.strip('-')
         

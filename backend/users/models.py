@@ -11,13 +11,11 @@ class UserManager(BaseUserManager):
         if not name:
             raise ValueError('The Name field must be set')
         
-        # Email is optional, generate default if not provided
         if email:
             email = self.normalize_email(email)
         else:
             email = f"{register_number}@local.user"
         
-        # Regular users should not have staff or superuser access
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         extra_fields.setdefault('is_admin', False)
@@ -28,7 +26,6 @@ class UserManager(BaseUserManager):
         return user
     
     def create_superuser(self, register_number, name, email=None, password=None, **extra_fields):
-        # Auto-generate email for superuser if not provided
         if not email:
             email = f"{register_number}@admin.local"
         

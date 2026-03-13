@@ -7,21 +7,16 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 import dj_database_url
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables
 load_dotenv()
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-bwl@=(!=e5)5oe1yf12o#=c3c@7ur8%htv&r8tptz&13u8h=sf')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.137.171,testserver,*').split(',')
 
-# Application definition
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -79,10 +74,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# Use SQLite for development (PostgreSQL for production)
 USE_POSTGRES = os.getenv('USE_POSTGRES', 'False') == 'True'
 
 if USE_POSTGRES:
@@ -109,8 +101,6 @@ else:
     }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -128,8 +118,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -140,20 +128,15 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files (User uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Custom User Model
 AUTH_USER_MODEL = 'users.User'
 
-# REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -185,7 +168,6 @@ REST_FRAMEWORK = {
     }
 }
 
-# CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     os.getenv('FRONTEND_URL', 'http://localhost:5173'),
 ]
@@ -218,7 +200,6 @@ CORS_ALLOW_HEADERS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# CSRF Configuration
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
@@ -227,13 +208,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://binarymisfits.info',
 ]
 
-# Disable CSRF for API endpoints (handled by custom middleware)
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False if DEBUG else True
 
-# Security Settings
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -245,7 +224,6 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Logging Configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -275,16 +253,12 @@ LOGGING = {
 }
 
 
-# Heatmap Comparison API Configuration
 HEATMAP_API_URL = os.getenv('HEATMAP_API_URL', 'http://localhost:5000')
 HEATMAP_API_TIMEOUT = 30  # seconds
 
-# Rendering Configuration
 RENDERING_TIMEOUT = 10  # seconds
 MAX_RENDERED_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 
-# Celery Configuration
-# Set USE_CELERY=False in development to process submissions synchronously
 USE_CELERY = os.getenv('USE_CELERY', 'False' if DEBUG else 'True') == 'True'
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
@@ -295,12 +269,10 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
 
-# Session Security Configuration
 SESSION_TIMEOUT_MINUTES = int(os.getenv('SESSION_TIMEOUT_MINUTES', '30'))
 ENABLE_SUSPICIOUS_LOGIN_DETECTION = os.getenv('ENABLE_SUSPICIOUS_LOGIN_DETECTION', 'True') == 'True'
 ENABLE_IP_MONITORING = os.getenv('ENABLE_IP_MONITORING', 'True') == 'True'
 
-# Privacy and Security Notice
 PRIVACY_NOTICE = """
 We log IP addresses for security and contest integrity purposes.
 This helps us detect suspicious activities and ensure fair competition.
@@ -308,7 +280,6 @@ This helps us detect suspicious activities and ensure fair competition.
 
 GEOIP_PATH = BASE_DIR / "geoip2"
 
-# Security email settings
 SECURITY_ADMIN_EMAIL = os.getenv(
     "SECURITY_ADMIN_EMAIL",
     "elavarasanjaswanth@gmail.com"
@@ -324,7 +295,6 @@ SITE_URL = os.getenv(
     "https://api.binarymisfits.info"
 )
 
-# Security thresholds
 SECURITY_ALERT_THRESHOLD = int(
     os.getenv("SECURITY_ALERT_THRESHOLD", "3")
 )
@@ -337,7 +307,6 @@ SECURITY_BLOCK_DURATION_HOURS = int(
     os.getenv("SECURITY_BLOCK_DURATION_HOURS", "24")
 )
 
-# Email Configuration (SMTP)
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 EMAIL_HOST = os.getenv(
@@ -369,7 +338,6 @@ DEFAULT_FROM_EMAIL = os.getenv(
     "team.binarymisfits@gmail.com"
 )
 
-# WhatsApp Security Alerts Configuration
 WHATSAPP_ALERTS_ENABLED = os.getenv('WHATSAPP_ALERTS_ENABLED', 'False') == 'True'
 WHATSAPP_API_PROVIDER = os.getenv('WHATSAPP_API_PROVIDER', 'twilio')
 WHATSAPP_ADMIN_NUMBERS = [
@@ -378,15 +346,12 @@ WHATSAPP_ADMIN_NUMBERS = [
 ]
 WHATSAPP_ALERT_THRESHOLD = int(os.getenv('WHATSAPP_ALERT_THRESHOLD', '3'))
 
-# Twilio Configuration
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', '')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', '')
 TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER', '')
 
-# WhatsApp Business API Configuration
 WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN', '')
 WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID', '')
 
-# UltraMsg Configuration
 ULTRAMSG_TOKEN = os.getenv('ULTRAMSG_TOKEN', '')
 ULTRAMSG_INSTANCE_ID = os.getenv('ULTRAMSG_INSTANCE_ID', '')

@@ -2,7 +2,6 @@ import { afterEach, beforeAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 
-// Mock localStorage for tests
 beforeAll(() => {
   const storage: Record<string, string> = {};
   
@@ -33,7 +32,6 @@ beforeAll(() => {
   (globalThis as any).localStorage = localStorageMock as Storage;
 });
 
-// Cleanup after each test
 afterEach(() => {
   cleanup();
   localStorage.clear();

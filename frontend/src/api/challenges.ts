@@ -12,12 +12,10 @@ import type { Challenge, ChallengeQueryParams } from '@/types';
 export const fetchChallenges = async (params?: ChallengeQueryParams): Promise<Challenge[]> => {
   const response = await apiClient.get<any>('/api/challenges/', { params });
   
-  // Handle paginated response from Django REST Framework
   if (response.data && typeof response.data === 'object' && 'results' in response.data) {
     return response.data.results;
   }
   
-  // Handle direct array response
   return response.data;
 };
 

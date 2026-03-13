@@ -28,10 +28,8 @@ def process_submission_task(self, submission_id: int):
         - error_message (if failed)
     """
     try:
-        # Fetch submission
         submission = Submission.objects.select_related('user', 'challenge').get(id=submission_id)
         
-        # Update status to processing
         submission.status = 'processing'
         submission.save(update_fields=['status'])
         
@@ -40,11 +38,9 @@ def process_submission_task(self, submission_id: int):
             f"on challenge {submission.challenge.title}"
         )
         
-        # Step 1: Render HTML/CSS to image
         renderer = HTMLRenderer()
         
         try:
-            # Run async rendering in sync context
             image_path = asyncio.run(
                 renderer.render_submission(
                     html_code=submission.html_code,
@@ -66,12 +62,10 @@ def process_submission_task(self, submission_id: int):
         except RenderError as e:
             raise Exception(f"Rendering failed: {str(e)}")
         
-        # Step 2: Call heatmap comparison API
         if submission.challenge.ground_truth_image:
             heatmap_client = HeatmapComparisonClient()
             
             try:
-                # Get full paths for comparison
                 submission_image_path = str(Path(settings.MEDIA_ROOT) / image_path)
                 ground_truth_path = str(Path(settings.MEDIA_ROOT) / submission.challenge.ground_truth_image.name)
                 
@@ -88,7 +82,6 @@ def process_submission_task(self, submission_id: int):
                 logger.info(f"Calculated similarity score {similarity_score} for submission {submission_id}")
             
             except (HeatmapAPIError, HeatmapTimeoutError) as e:
-                # Log error but don't fail the task - submission is still valid without score
                 logger.warning(
                     f"Heatmap comparison failed for submission {submission_id}: {str(e)}. "
                     f"Submission will be marked complete without similarity score."
@@ -100,7 +93,6 @@ def process_submission_task(self, submission_id: int):
             submission.similarity_score = None
             submission.save(update_fields=['similarity_score'])
         
-        # Step 3: Mark as completed
         submission.status = 'completed'
         submission.error_message = None
         submission.save(update_fields=['status', 'error_message'])
@@ -121,7 +113,6 @@ def process_submission_task(self, submission_id: int):
     except Exception as e:
         logger.error(f"Error processing submission {submission_id}: {str(e)}", exc_info=True)
         
-        # Update submission with error
         try:
             submission = Submission.objects.get(id=submission_id)
             submission.status = 'failed'
@@ -130,7 +121,6 @@ def process_submission_task(self, submission_id: int):
         except Submission.DoesNotExist:
             pass
         
-        # Retry with exponential backoff
         try:
             raise self.retry(exc=e, countdown=60 * (2 ** self.request.retries))
         except self.MaxRetriesExceededError:

@@ -20,7 +20,6 @@ class SessionSecurityMiddleware:
     Middleware to validate active sessions on protected endpoints
     """
     
-    # Endpoints that require session validation
     PROTECTED_PATHS = [
         '/api/dashboard/',
         '/api/challenges/',
@@ -31,7 +30,6 @@ class SessionSecurityMiddleware:
         '/api/users/update-profile/',
     ]
     
-    # Endpoints to skip (auth endpoints, public endpoints)
     SKIP_PATHS = [
         '/api/auth/signin/',
         '/api/auth/signup/',
@@ -45,12 +43,10 @@ class SessionSecurityMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Process request before view
         response = self.process_request(request)
         if response:
             return response
             
-        # Get response from view
         response = self.get_response(request)
         
         return response
@@ -59,30 +55,24 @@ class SessionSecurityMiddleware:
         """
         Validate session before processing request
         """
-        # Skip validation for certain paths
         if any(request.path.startswith(path) for path in self.SKIP_PATHS):
             return None
             
-        # Only validate protected paths
         if not any(request.path.startswith(path) for path in self.PROTECTED_PATHS):
             return None
             
-        # Skip if no authorization header
         auth_header = request.META.get('HTTP_AUTHORIZATION')
         if not auth_header or not auth_header.startswith('Token '):
             return None
             
         try:
-            # Extract token
             token_key = auth_header.split(' ')[1]
             token = Token.objects.get(key=token_key)
             user = token.user
             
-            # Check if user has active session
             try:
                 session = UserSession.objects.get(user=user, is_active=True)
                 
-                # Validate session hasn't expired
                 if session.is_session_expired():
                     session.invalidate()
                     logger.info(f"Session expired for user {user.register_number}")
@@ -91,11 +81,9 @@ class SessionSecurityMiddleware:
                         'code': 'SESSION_EXPIRED'
                     }, status=401)
                 
-                # Update last activity
                 session.last_activity = timezone.now()
                 session.save(update_fields=['last_activity'])
                 
-                # Add session info to request
                 request.user_session = session
                 
             except UserSession.DoesNotExist:
@@ -106,7 +94,6 @@ class SessionSecurityMiddleware:
                 }, status=401)
                 
         except (Token.DoesNotExist, IndexError, ValueError):
-            # Invalid token format or token doesn't exist
             return None
             
         return None
@@ -121,7 +108,6 @@ class IPTrackingMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Add IP address to request
         request.client_ip = SessionSecurityService.get_client_ip(request)
         
         response = self.get_response(request)

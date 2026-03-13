@@ -46,7 +46,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Session timeout: 30 minutes of inactivity (matches backend)
   const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSubmitCallbackRef = React.useRef<(() => Promise<void>) | null>(null);
@@ -63,24 +62,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * Reset inactivity timer
    */
   const resetInactivityTimer = useCallback(() => {
-    // Clear existing timer
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Only set timer if user is authenticated
     if (user) {
       timeoutRef.current = setTimeout(async () => {
-        // Auto-submit code if callback is registered (from ChallengePage)
         if (autoSubmitCallbackRef.current) {
           try {
             await autoSubmitCallbackRef.current();
           } catch (error) {
-            // Auto-submit failed, continue with logout
           }
         }
         
-        // Auto-logout after 5 minutes of inactivity
         await logout();
       }, SESSION_TIMEOUT);
     }
@@ -92,22 +86,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    // Events that indicate user activity
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
 
     const handleActivity = () => {
       resetInactivityTimer();
     };
 
-    // Add event listeners
     events.forEach(event => {
       document.addEventListener(event, handleActivity);
     });
 
-    // Initialize timer
     resetInactivityTimer();
 
-    // Cleanup
     return () => {
       events.forEach(event => {
         document.removeEventListener(event, handleActivity);
@@ -126,29 +116,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       
-      // Check if we have a token before making API call
       const token = getAccessToken();
       
       if (!token) {
-        // No token - user needs to login
         setUser(null);
         setLoading(false);
         return;
       }
       
-      // Backend uses simple token auth (no refresh token)
-      // Just try to get current user - if it fails, user needs to login
       try {
         const userData = await authAPI.getCurrentUser();
         setUser(userData);
       } catch (error) {
-        // No valid token - user needs to login
         setUser(null);
         setSessionInfo(null);
         clearAllTokens();
       }
     } catch (err) {
-      // Session restoration failed - user needs to login
       setUser(null);
       setSessionInfo(null);
       clearAllTokens();
@@ -161,7 +145,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * Initialize auth state on mount
    */
   useEffect(() => {
-    // Only restore session once on mount
     let mounted = true;
     
     const initAuth = async () => {
@@ -182,7 +165,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * This prevents cross-user data contamination
    */
   useEffect(() => {
-    // Clear submissions cache when user changes (including logout)
     queryClient.invalidateQueries({ 
       queryKey: [QUERY_KEYS.SUBMISSIONS],
       exact: false // This will invalidate all submission-related queries
@@ -198,13 +180,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      // Clear any existing cached data before login
       queryClient.clear();
       
       const response = await authAPI.login(data);
       setUser(response.user);
       
-      // Store session information if provided
       if (response.session_id) {
         setSessionId(response.session_id);
       }
@@ -212,7 +192,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSessionInfo(response.session_info);
       }
       
-      // Navigate to profile completion for new users
       navigate('/profile');
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 
@@ -236,7 +215,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       await authAPI.register(data);
       
-      // After successful registration, login automatically
       await login({
         register_number: data.register_number,
         password: data.password,
@@ -260,22 +238,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       
-      // Call backend logout to invalidate refresh token
       await authAPI.logout();
     } catch (err) {
-      // Even if logout fails, clear local state
     } finally {
-      // Clear user state and all tokens/session data
       setUser(null);
       setSessionInfo(null);
       clearAllTokens();
       
-      // Clear all React Query cache to prevent data leakage between users
       queryClient.clear();
       
       setLoading(false);
       
-      // Navigate to login page
       navigate('/login');
     }
   }, [navigate, queryClient]);

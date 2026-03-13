@@ -1,4 +1,3 @@
-# Challenge Serializers - Difficulty Levels Feature
 from rest_framework import serializers
 from .models import Challenge
 

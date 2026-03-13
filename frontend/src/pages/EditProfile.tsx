@@ -23,10 +23,8 @@ export const EditProfile: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Load current user data
   useEffect(() => {
     if (user) {
-      // If user's college is not in the predefined list, default to empty (they need to select one)
       const collegeValue = user.college_name && isValidCollege(user.college_name) 
         ? user.college_name 
         : '';
@@ -42,7 +40,6 @@ export const EditProfile: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -83,12 +80,10 @@ export const EditProfile: React.FC = () => {
       
       await apiClient.put('/api/auth/update-profile/', formData);
       
-      // Refresh user data to get updated information
       await refreshUser();
       
       toast.success('Profile updated successfully!');
       
-      // If profile was incomplete and now completed, redirect to dashboard
       if (wasProfileIncomplete) {
         toast.success('🎉 Profile completed! Welcome to Misfits Battle!');
         navigate('/dashboard', { replace: true });

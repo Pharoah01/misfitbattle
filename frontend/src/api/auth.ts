@@ -55,7 +55,6 @@ export const login = async (data: LoginFormData): Promise<LoginResponse> => {
     }
   );
   
-  // Store token in localStorage (backend uses simple token auth, not JWT)
   setAccessToken(response.data.token);
   
   return {
@@ -75,7 +74,6 @@ export const logout = async (): Promise<void> => {
   try {
     await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
   } finally {
-    // Always clear access token, even if logout request fails
     clearAccessToken();
   }
 };
@@ -96,14 +94,10 @@ export const getCurrentUser = async (): Promise<User> => {
  * @returns Current access token
  */
 export const refreshToken = async (): Promise<string> => {
-  // Backend uses DRF Token Authentication which doesn't expire
-  // No refresh needed - just verify current user is still valid
   try {
     await getCurrentUser();
-    // If getCurrentUser succeeds, token is still valid
     return ''; // Token is already set in client
   } catch (error) {
-    // Token is invalid, user needs to login again
     clearAccessToken();
     throw error;
   }

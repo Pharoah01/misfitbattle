@@ -24,7 +24,6 @@ class SecurityAlertService:
         self.from_email = getattr(settings, 'SECURITY_FROM_EMAIL', 'security@example.com')
         self.site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
         
-        # Alert thresholds
         self.alert_threshold = getattr(settings, 'SECURITY_ALERT_THRESHOLD', 3)
         self.auto_block_threshold = getattr(settings, 'SECURITY_AUTO_BLOCK_THRESHOLD', 5)
         self.block_duration_hours = getattr(settings, 'SECURITY_BLOCK_DURATION_HOURS', 24)
@@ -47,10 +46,8 @@ class SecurityAlertService:
             details=details
         )
         
-        # Check if we should send an alert
         self._check_and_send_alert(incident)
         
-        # Check if we should auto-block the IP
         self._check_auto_block(ip_address)
         
         return incident
@@ -59,13 +56,11 @@ class SecurityAlertService:
         """
         Check if an alert should be sent for this incident
         """
-        # Count recent incidents from this IP
         recent_incidents = SecurityIncident.objects.filter(
             ip_address=incident.ip_address,
             timestamp__gte=timezone.now() - timedelta(hours=1)
         ).count()
         
-        # Send alert if threshold is reached or for critical incidents
         should_alert = (
             recent_incidents >= self.alert_threshold or 
             incident.severity == 'CRITICAL' or
@@ -73,10 +68,8 @@ class SecurityAlertService:
         )
         
         if should_alert and not self._recent_alert_sent(incident.ip_address):
-            # Send email alert
             self._send_incident_alert(incident)
             
-            # Send WhatsApp alert
             try:
                 whatsapp_service.send_security_incident_alert(incident)
             except Exception as e:
@@ -101,7 +94,6 @@ class SecurityAlertService:
         try:
             subject = f"🚨 Security Alert: {incident.get_incident_type_display()} from {incident.ip_address}"
             
-            # Create email content
             context = {
                 'incident': incident,
                 'site_url': self.site_url,
@@ -136,7 +128,6 @@ This is an automated security alert from your application.
                 fail_silently=False,
             )
             
-            # Record that alert was sent
             SecurityAlert.objects.create(
                 alert_type='INCIDENT',
                 recipient=self.admin_email,
@@ -156,11 +147,9 @@ This is an automated security alert from your application.
         """
         Check if IP should be auto-blocked based on incident count
         """
-        # Don't auto-block if already blocked
         if BlockedIP.objects.filter(ip_address=ip_address).exists():
             return
         
-        # Count incidents in the last hour
         recent_incidents = SecurityIncident.objects.filter(
             ip_address=ip_address,
             timestamp__gte=timezone.now() - timedelta(hours=1)
@@ -181,12 +170,10 @@ This is an automated security alert from your application.
         Block an IP address
         """
         try:
-            # Calculate block expiry
             blocked_until = None
             if not is_permanent and duration_hours:
                 blocked_until = timezone.now() + timedelta(hours=duration_hours)
             
-            # Get incident count for this IP
             incident_count = SecurityIncident.objects.filter(ip_address=ip_address).count()
             
             blocked_ip, created = BlockedIP.objects.get_or_create(
@@ -204,10 +191,8 @@ This is an automated security alert from your application.
             if created:
                 logger.warning(f"IP {ip_address} blocked by {blocked_by}: {description}")
                 
-                # Send email notification
                 self._send_block_notification(blocked_ip)
                 
-                # Send WhatsApp notification
                 try:
                     whatsapp_service.send_ip_block_alert(blocked_ip)
                 except Exception as e:
@@ -251,7 +236,6 @@ This is an automated notification from your security system.
                 fail_silently=False,
             )
             
-            # Record alert
             SecurityAlert.objects.create(
                 alert_type='BLOCK',
                 recipient=self.admin_email,
@@ -288,5 +272,4 @@ This is an automated notification from your security system.
             return False
 
 
-# Global instance
 security_service = SecurityAlertService()

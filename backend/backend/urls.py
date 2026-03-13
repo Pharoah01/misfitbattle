@@ -17,7 +17,6 @@ def robots_txt(request):
             content = f.read()
         return HttpResponse(content, content_type='text/plain')
     except FileNotFoundError:
-        # Fallback robots.txt if file doesn't exist
         content = """# Misfits Battle Backend - Block All Bots
 User-agent: *
 Disallow: /
@@ -32,7 +31,6 @@ urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
 ]
 
-# Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

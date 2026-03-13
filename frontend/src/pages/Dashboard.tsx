@@ -25,8 +25,6 @@ export const Dashboard: React.FC = () => {
     ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
   });
 
-  // Get user submissions to mark completed challenges
-  // Backend filtering ensures only current user's submissions are returned
   const { data: userSubmissions } = useSubmissions();
 
   const isCompleted = (challengeId: number): boolean => {
@@ -50,10 +48,8 @@ export const Dashboard: React.FC = () => {
     const slug = challenge.slug || createSlug(challenge.title);
     const route = `/play/${slug}`;
     
-    // Check if user has completed this challenge
     const userSubmission = getUserSubmission(challenge.id);
     if (userSubmission) {
-      // Navigate with the user's submission data to pre-populate the editor
       navigate(route, { 
         state: { 
           viewSolution: true,
@@ -65,17 +61,14 @@ export const Dashboard: React.FC = () => {
         } 
       });
     } else {
-      // Regular navigation for new challenges
       navigate(route);
     }
   };
 
-  // Show success message when redirected after submission
   useEffect(() => {
     const state = location.state as any;
     if (state?.submissionSuccess) {
       toast.success(`🎉 Challenge "${state.challengeTitle}" completed!`);
-      // Clear the state to prevent showing the message again on refresh
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);

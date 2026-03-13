@@ -48,7 +48,6 @@ class ToastManager {
     const id = `toast-${Date.now()}-${Math.random()}`;
     const duration = options.duration || 5000;
 
-    // Create toast element
     const toast = document.createElement('div');
     toast.id = id;
     toast.style.cssText = `
@@ -69,7 +68,6 @@ class ToastManager {
       position: relative;
     `;
 
-    // Create message container
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
     messageSpan.style.cssText = `
@@ -77,7 +75,6 @@ class ToastManager {
       word-wrap: break-word;
     `;
 
-    // Create close button
     const closeButton = document.createElement('button');
     closeButton.innerHTML = '×';
     closeButton.style.cssText = `
@@ -99,7 +96,6 @@ class ToastManager {
       flex-shrink: 0;
     `;
 
-    // Add hover effect to close button
     closeButton.addEventListener('mouseenter', () => {
       closeButton.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
     });
@@ -108,14 +104,12 @@ class ToastManager {
       closeButton.style.backgroundColor = 'transparent';
     });
 
-    // Add click handler to close button
     closeButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       this.remove(id);
     });
 
-    // Add keyboard accessibility
     closeButton.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -124,24 +118,19 @@ class ToastManager {
       }
     });
 
-    // Make button focusable
     closeButton.setAttribute('tabindex', '0');
     closeButton.setAttribute('aria-label', 'Close notification');
 
-    // Append elements to toast
     toast.appendChild(messageSpan);
     toast.appendChild(closeButton);
 
-    // Add to container
     this.container.appendChild(toast);
     this.toasts.set(id, toast);
 
-    // Auto-remove after duration
     const timeoutId = setTimeout(() => {
       this.remove(id);
     }, duration);
 
-    // Store timeout ID so we can clear it if manually closed
     (toast as any).timeoutId = timeoutId;
   }
 
@@ -152,7 +141,6 @@ class ToastManager {
     const toast = this.toasts.get(id);
     if (!toast) return;
 
-    // Clear auto-remove timeout if it exists
     if ((toast as any).timeoutId) {
       clearTimeout((toast as any).timeoutId);
     }
@@ -211,7 +199,6 @@ class ToastManager {
   }
 }
 
-// Add CSS animations
 const style = document.createElement('style');
 style.textContent = `
   @keyframes slideIn {
@@ -252,5 +239,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Export singleton instance
 export const toast = new ToastManager();

@@ -43,11 +43,9 @@ class SessionSecurityService:
         ip_address = SessionSecurityService.get_client_ip(request)
         user_agent = SessionSecurityService.get_user_agent(request)
         
-        # Delete any existing session for this user (using delete instead of invalidate)
         UserSession.objects.filter(user=user).delete()
         logger.info(f"Deleted any existing sessions for user {user.register_number}")
         
-        # Create new session
         session = UserSession.objects.create(
             user=user,
             session_id=uuid.uuid4(),
@@ -56,17 +54,13 @@ class SessionSecurityService:
             is_active=True
         )
         
-        # Get location info
         session.get_location_info()
         session.save()
         
-        # Update IP monitoring
         SessionSecurityService.update_ip_monitoring(ip_address, user)
         
-        # Check for suspicious login
         SessionSecurityService.check_suspicious_login(user, ip_address, session.country)
         
-        # Log successful login attempt
         SessionSecurityService.log_login_attempt(
             user=user,
             register_number=user.register_number,
@@ -90,13 +84,11 @@ class SessionSecurityService:
                 is_active=True
             )
             
-            # Check if session has expired
             if session.is_session_expired():
                 session.invalidate()
                 logger.info(f"Session expired for user {user.register_number}")
                 return False
             
-            # Update last activity
             session.last_activity = timezone.now()
             session.save(update_fields=['last_activity'])
             
@@ -132,7 +124,6 @@ class SessionSecurityService:
             success=success
         )
         
-        # Get location info
         attempt.get_location_info()
         attempt.save()
         
@@ -160,7 +151,6 @@ class SessionSecurityService:
         """
         Check for suspicious login patterns
         """
-        # Check for rapid location changes
         recent_attempts = LoginAttempt.objects.filter(
             user=user,
             success=True,
@@ -169,7 +159,6 @@ class SessionSecurityService:
         
         for attempt in recent_attempts:
             if attempt.country and country and attempt.country != country:
-                # Different country within 5 minutes - suspicious
                 SecurityAlert.objects.create(
                     alert_type='suspicious_login',
                     user=user,

@@ -13,25 +13,18 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { data: challenges, isLoading } = useChallenges();
 
-  // Security: Prevent screenshots, right-click, and drag-drop
   useEffect(() => {
-    // Prevent right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       return false;
     };
 
-    // Prevent drag and drop
     const handleDragStart = (e: DragEvent) => {
       e.preventDefault();
       return false;
     };
 
-    // Prevent all screenshot shortcuts (cross-platform)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Windows: PrtScn, Alt+PrtScn, Win+Shift+S, Shift+Win+S
-      // Mac: Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5
-      // Linux: PrtScn, Shift+PrtScn, Ctrl+PrtScn
       
       const isPrintScreen = e.key === 'PrintScreen';
       const isWindowsSnip = (e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S');
@@ -47,13 +40,11 @@ export const Home: React.FC = () => {
       }
     };
 
-    // Add event listeners
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('dragstart', handleDragStart);
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyDown); // Also prevent on keyup
 
-    // Cleanup
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('dragstart', handleDragStart);
@@ -62,7 +53,6 @@ export const Home: React.FC = () => {
     };
   }, []);
 
-  // Redirect authenticated users to dashboard
   React.useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });

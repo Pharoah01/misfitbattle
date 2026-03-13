@@ -18,7 +18,6 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ htmlCode, cssCode, cla
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    // Construct complete HTML document
     const previewHTML = `
       <!DOCTYPE html>
       <html>
@@ -45,7 +44,6 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ htmlCode, cssCode, cla
       </html>
     `;
 
-    // Write to iframe
     try {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       if (iframeDoc) {
@@ -54,7 +52,6 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ htmlCode, cssCode, cla
         iframeDoc.close();
       }
     } catch (error) {
-      // Failed to render preview
     }
   }, [htmlCode, cssCode]);
 

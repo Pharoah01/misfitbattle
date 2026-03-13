@@ -64,7 +64,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     );
   }
 
-  // rectangle
   return (
     <>
       {skeletons.map((i) => (

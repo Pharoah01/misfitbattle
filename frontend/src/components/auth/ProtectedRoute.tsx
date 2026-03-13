@@ -29,8 +29,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isAuthenticated, isAdmin, user, loading } = useAuth();
   const location = useLocation();
 
-  // Show loading state while checking authentication
-  // This prevents route flashing
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-dark-bg">
@@ -42,27 +40,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Check authentication
   if (!isAuthenticated) {
-    // Redirect to login, preserving the attempted location
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // Check profile completion (skip for profile and edit-profile pages)
   if (requireProfileCompletion && user && !user.profile_completed) {
     const currentPath = location.pathname;
-    // Allow access to profile and edit-profile pages for profile completion
     if (currentPath !== '/profile' && currentPath !== '/edit-profile') {
       return <Navigate to="/profile" replace />;
     }
   }
 
-  // Check admin requirement
   if (requireAdmin && !isAdmin) {
-    // Redirect to dashboard if user is not admin
     return <Navigate to="/dashboard" replace />;
   }
 
-  // User is authenticated (and admin if required, profile completed if required)
   return <>{children}</>;
 };

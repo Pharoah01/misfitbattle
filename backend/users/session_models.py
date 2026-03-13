@@ -9,16 +9,12 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 import logging
 
-# Initialize logger first
 logger = logging.getLogger(__name__)
 
-# Try to import GeoIP2, make it optional for development
 try:
     from django.contrib.gis.geoip2 import GeoIP2
     GEOIP_AVAILABLE = True
 except (ImportError, Exception) as e:
-    # GeoIP2 requires additional setup and dependencies
-    # For development, we'll skip geolocation features
     GEOIP_AVAILABLE = False
     GeoIP2 = None
     logger.info(f"GeoIP2 not available: {e}. Geolocation features disabled.")
@@ -232,12 +228,10 @@ class IPMonitoring(models.Model):
             self.user_count = self.users.count()
             self.save(update_fields=['user_count'])
             
-            # Flag if multiple accounts from same IP
             if self.user_count > 1:
                 self.is_flagged = True
                 self.save(update_fields=['is_flagged'])
                 
-                # Create security alert
                 SecurityAlert.objects.create(
                     alert_type='multiple_accounts',
                     ip_address=self.ip_address,

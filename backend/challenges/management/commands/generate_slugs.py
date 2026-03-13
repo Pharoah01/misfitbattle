@@ -28,7 +28,6 @@ class Command(BaseCommand):
             slug = base_slug
             counter = 1
             
-            # Ensure slug is unique
             while Challenge.objects.filter(slug=slug).exclude(id=challenge.id).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1

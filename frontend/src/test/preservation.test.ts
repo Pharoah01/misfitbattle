@@ -14,7 +14,6 @@ import fc from 'fast-check';
 import { submitSolution, fetchSubmission } from '@/api/submissions';
 import type { Submission, SubmissionFormData } from '@/types';
 
-// Mock the API client instead of axios directly
 vi.mock('@/api/client', () => ({
   default: {
     post: vi.fn(),
@@ -23,10 +22,8 @@ vi.mock('@/api/client', () => ({
   }
 }));
 
-// Import the mocked client
 import apiClient from '@/api/client';
 
-// Type the mocked client properly
 const mockedApiClient = {
   post: apiClient.post as Mock,
   get: apiClient.get as Mock,
@@ -46,7 +43,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
     it('should preserve submitSolution behavior for valid submission data', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate valid submission form data
           fc.record({
             challenge: fc.integer({ min: 1, max: 1000 }),
             html_code: fc.string({ minLength: 1, maxLength: 5000 }),
@@ -54,7 +50,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
             is_auto_save: fc.boolean()
           }),
           async (submissionData: SubmissionFormData) => {
-            // Mock successful API response
             const mockSubmission: Submission = {
               id: 123,
               user: 1,
@@ -72,13 +67,10 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
 
             mockedApiClient.post.mockResolvedValueOnce({ data: mockSubmission });
 
-            // Test that submitSolution works correctly
             const result = await submitSolution(submissionData);
 
-            // Verify the API was called correctly
             expect(mockedApiClient.post).toHaveBeenCalledWith('/api/submissions/', submissionData);
             
-            // Verify the result matches expected structure
             expect(result).toEqual(mockSubmission);
             expect(result.challenge).toBe(submissionData.challenge);
             expect(result.html_code).toBe(submissionData.html_code);
@@ -94,7 +86,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
         fc.asyncProperty(
           fc.integer({ min: 1, max: 10000 }),
           async (submissionId: number) => {
-            // Mock successful API response
             const mockSubmission: Submission = {
               id: submissionId,
               user: 1,
@@ -111,13 +102,10 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
 
             mockedApiClient.get.mockResolvedValueOnce({ data: mockSubmission });
 
-            // Test that fetchSubmission works correctly
             const result = await fetchSubmission(submissionId);
 
-            // Verify the API was called correctly
             expect(mockedApiClient.get).toHaveBeenCalledWith(`/api/submissions/${submissionId}/`);
             
-            // Verify the result matches expected structure
             expect(result).toEqual(mockSubmission);
             expect(result.id).toBe(submissionId);
           }
@@ -131,7 +119,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
     it('should preserve backend user filtering for authenticated requests', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate different user scenarios
           fc.record({
             userId: fc.integer({ min: 1, max: 1000 }),
             isAdmin: fc.boolean(),
@@ -142,8 +129,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
             isAdmin: boolean;
             challengeId?: number;
           }) => {
-            // Mock API response that simulates proper backend filtering
-            // The backend should only return submissions for the authenticated user
             const mockUserSubmissions: Submission[] = [
               {
                 id: 1,
@@ -160,28 +145,22 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
               }
             ];
 
-            // Mock the API response - backend should return paginated structure
             mockedApiClient.get.mockResolvedValueOnce({ 
               data: { results: mockUserSubmissions } 
             });
 
-            // Import fetchSubmissions here to avoid hoisting issues
             const { fetchSubmissions } = await import('@/api/submissions');
             
-            // Test that fetchSubmissions handles the response correctly
             const result = await fetchSubmissions(userScenario.challengeId);
 
-            // Verify the API was called correctly
             const expectedParams = userScenario.challengeId 
               ? { challenge: userScenario.challengeId } 
               : {};
             expect(mockedApiClient.get).toHaveBeenCalledWith('/api/submissions/', { params: expectedParams });
             
-            // Verify that the result contains only the user's submissions
             expect(Array.isArray(result)).toBe(true);
             expect(result).toEqual(mockUserSubmissions);
             
-            // Verify that all returned submissions belong to the correct user
             result.forEach(submission => {
               expect(submission.user).toBe(userScenario.userId);
             });
@@ -196,7 +175,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
     it('should preserve handling of direct array responses (if any exist)', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate array of submissions
           fc.array(
             fc.record({
               id: fc.integer({ min: 1, max: 10000 }),
@@ -214,7 +192,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
             html_code: string;
             css_code: string;
           }>) => {
-            // Create full submission objects
             const mockSubmissions: Submission[] = submissionsArray.map((sub) => ({
               ...sub,
               user_name: `User ${sub.user}`,
@@ -225,15 +202,12 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
               submitted_at: new Date().toISOString()
             }));
 
-            // Mock direct array response (if this format still exists)
             mockedApiClient.get.mockResolvedValueOnce({ data: mockSubmissions });
 
             const { fetchSubmissions } = await import('@/api/submissions');
             
-            // Test that fetchSubmissions handles direct array responses
             const result = await fetchSubmissions();
 
-            // Verify the result is the same array
             expect(Array.isArray(result)).toBe(true);
             expect(result).toEqual(mockSubmissions);
           }
@@ -245,7 +219,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
     it('should preserve handling of paginated responses with results array', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate paginated response structure
           fc.record({
             results: fc.array(
               fc.record({
@@ -273,7 +246,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
             next: string | null;
             previous: string | null;
           }) => {
-            // Create full submission objects
             const mockSubmissions: Submission[] = paginatedResponse.results.map((sub) => ({
               ...sub,
               user_name: `User ${sub.user}`,
@@ -289,15 +261,12 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
               results: mockSubmissions
             };
 
-            // Mock paginated response
             mockedApiClient.get.mockResolvedValueOnce({ data: fullPaginatedResponse });
 
             const { fetchSubmissions } = await import('@/api/submissions');
             
-            // Test that fetchSubmissions extracts the results array correctly
             const result = await fetchSubmissions();
 
-            // Verify the result is the results array from the paginated response
             expect(Array.isArray(result)).toBe(true);
             expect(result).toEqual(mockSubmissions);
           }
@@ -311,7 +280,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
     it('should preserve error handling for malformed API responses', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate various malformed response types
           fc.oneof(
             fc.constant(null),
             fc.constant(undefined),
@@ -320,15 +288,12 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
             fc.record({}) // Empty object without results
           ),
           async (malformedData: null | undefined | string | number | Record<string, never>) => {
-            // Mock malformed API response
             mockedApiClient.get.mockResolvedValueOnce({ data: malformedData });
 
             const { fetchSubmissions } = await import('@/api/submissions');
             
-            // Test that fetchSubmissions handles malformed responses gracefully
             const result = await fetchSubmissions();
 
-            // Should return empty array for malformed responses
             expect(Array.isArray(result)).toBe(true);
             expect(result).toEqual([]);
           }
@@ -348,7 +313,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
             errorCode: number;
             errorMessage: string;
           }) => {
-            // Mock network error
             const error = new Error(errorScenario.errorMessage);
             (error as any).response = {
               status: errorScenario.errorCode,
@@ -358,8 +322,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
 
             const { fetchSubmissions } = await import('@/api/submissions');
             
-            // Test that fetchSubmissions handles network failures gracefully
-            // Updated behavior: returns empty array instead of throwing for better UX
             const result = await fetchSubmissions();
             expect(Array.isArray(result)).toBe(true);
             expect(result).toEqual([]);
@@ -376,7 +338,6 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
         fc.asyncProperty(
           fc.integer({ min: 1, max: 1000 }),
           async (challengeId: number) => {
-            // Mock API response with submissions for specific challenge
             const mockSubmissions: Submission[] = [
               {
                 id: 1,
@@ -399,15 +360,12 @@ describe('Preservation Property Tests - Backend Filtering and Non-Submission Fun
 
             const { fetchSubmissions } = await import('@/api/submissions');
             
-            // Test that fetchSubmissions passes challenge ID parameter correctly
             const result = await fetchSubmissions(challengeId);
 
-            // Verify the API was called with correct parameters
             expect(mockedApiClient.get).toHaveBeenCalledWith('/api/submissions/', { 
               params: { challenge: challengeId } 
             });
             
-            // Verify the result contains submissions for the correct challenge
             expect(Array.isArray(result)).toBe(true);
             result.forEach(submission => {
               expect(submission.challenge).toBe(challengeId);

@@ -86,7 +86,6 @@ class HeatmapComparisonClient:
             if similarity_score is None:
                 raise HeatmapAPIError("Response missing similarity_score field")
             
-            # Validate score is in valid range
             if not (0.0 <= similarity_score <= 1.0):
                 raise HeatmapAPIError(
                     f"Invalid similarity score: {similarity_score} (must be between 0.0 and 1.0)"

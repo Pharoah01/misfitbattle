@@ -22,32 +22,25 @@ export const fetchSubmissions = async (challengeId?: number): Promise<Submission
     const params = challengeId ? { challenge: challengeId } : {};
     const response = await apiClient.get<SubmissionsResponse>('/api/submissions/', { params });
 
-    // Enhanced response type detection with robust validation
     if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
-      // Check if it's a paginated response structure
       if ('results' in response.data && Array.isArray(response.data.results)) {
         return response.data.results;
       }
 
-      // Handle case where response.data is an object but not paginated
       return [];
     }
 
-    // Handle direct array response
     if (Array.isArray(response.data)) {
       return response.data;
     }
 
-    // Handle null/undefined response
     if (response.data === null || response.data === undefined) {
       return [];
     }
 
-    // Fallback for unexpected response types
     return [];
 
   } catch (error) {
-    // Return empty array on error to prevent client-side filtering fallback
     return [];
   }
 };

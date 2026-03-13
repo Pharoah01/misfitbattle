@@ -24,7 +24,6 @@ export const Register: React.FC = () => {
   
   const [errors, setErrors] = useState<Partial<RegisterFormData>>({});
 
-  // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
       navigate('/profile', { replace: true });
@@ -37,35 +36,30 @@ export const Register: React.FC = () => {
   const validate = (): boolean => {
     const newErrors: Partial<RegisterFormData> = {};
 
-    // Register number validation
     if (!formData.register_number.trim()) {
       newErrors.register_number = 'Register number is required';
     } else if (!VALIDATION.REGISTER_NUMBER_PATTERN.test(formData.register_number)) {
       newErrors.register_number = 'Register number must be 3-20 alphanumeric characters';
     }
 
-    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
     }
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < VALIDATION.PASSWORD_MIN_LENGTH) {
       newErrors.password = `Password must be at least ${VALIDATION.PASSWORD_MIN_LENGTH} characters`;
     }
 
-    // Confirm password validation
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
@@ -103,16 +97,13 @@ export const Register: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
-    // For register_number, only allow numeric characters
     if (name === 'register_number') {
-      // Remove any non-numeric characters
       const numericValue = value.replace(/[^0-9]/g, '');
       setFormData(prev => ({ ...prev, [name]: numericValue }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     
-    // Clear error for this field
     if (errors[name as keyof RegisterFormData]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }

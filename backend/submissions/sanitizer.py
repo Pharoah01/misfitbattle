@@ -31,7 +31,6 @@ def sanitize_html(html_code):
         strip=True
     )
     
-    # Additional filtering for event handlers
     cleaned = remove_event_handlers(cleaned)
     
     return cleaned
@@ -41,7 +40,6 @@ def remove_event_handlers(html_code):
     """
     Remove all on* event handler attributes.
     """
-    # Remove on* attributes
     pattern = r'\s+on\w+\s*=\s*["\'][^"\']*["\']'
     cleaned = re.sub(pattern, '', html_code, flags=re.IGNORECASE)
     return cleaned
@@ -51,7 +49,6 @@ def sanitize_css(css_code):
     """
     Basic CSS sanitization to remove javascript: URLs.
     """
-    # Remove javascript: URLs from CSS
     cleaned = re.sub(
         r'javascript\s*:',
         '',

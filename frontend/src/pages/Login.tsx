@@ -22,7 +22,6 @@ export const Login: React.FC = () => {
   
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
 
-  // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated && !loading) {
       const from = (location.state as any)?.from?.pathname || '/dashboard';
@@ -66,9 +65,7 @@ export const Login: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
-    // For register_number, only allow numeric characters
     if (name === 'register_number') {
-      // Remove any non-numeric characters
       const numericValue = value.replace(/[^0-9]/g, '');
       setFormData(prev => ({ ...prev, [name]: numericValue }));
     } else {

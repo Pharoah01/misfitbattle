@@ -20,7 +20,6 @@ export const useSubmissions = (challengeId?: number) => {
     queryFn: () => fetchSubmissions(challengeId),
     staleTime: CACHE_TIME.SUBMISSIONS,
     enabled: !!user, // Only fetch when user is available
-    // Ensure fresh data for each user by making queries user-specific
     gcTime: 0, // Don't cache data after component unmounts
   });
 };
@@ -47,7 +46,6 @@ export const useSubmitSolution = () => {
     mutationFn: (data: SubmissionFormData) => submitSolution(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBMISSIONS, user?.id] });
-      // Toast is handled by the component for better context-specific messages
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.detail || 

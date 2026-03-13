@@ -28,10 +28,8 @@ class SignUpView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Create token for the new user
         token, created = Token.objects.get_or_create(user=user)
         
-        # Create secure session
         session = SessionSecurityService.create_session(user, request)
         
         return Response({
@@ -67,7 +65,6 @@ class SignInView(generics.GenericAPIView):
         password = request.data.get('password')
         
         if not register_number or not password:
-            # Log failed attempt
             SessionSecurityService.log_login_attempt(
                 register_number=register_number or '',
                 ip_address=SessionSecurityService.get_client_ip(request),
@@ -81,7 +78,6 @@ class SignInView(generics.GenericAPIView):
         user = authenticate(request, username=register_number, password=password)
         
         if user is None:
-            # Log failed attempt
             SessionSecurityService.log_login_attempt(
                 register_number=register_number,
                 ip_address=SessionSecurityService.get_client_ip(request),
@@ -92,10 +88,8 @@ class SignInView(generics.GenericAPIView):
                 'error': 'Invalid credentials'
             }, status=status.HTTP_401_UNAUTHORIZED)
         
-        # Get or create token
         token, created = Token.objects.get_or_create(user=user)
         
-        # Create secure session (this will invalidate any existing sessions)
         session = SessionSecurityService.create_session(user, request)
         
         return Response({
@@ -128,10 +122,8 @@ class SignOutView(generics.GenericAPIView):
     
     def post(self, request):
         try:
-            # Invalidate user session
             SessionSecurityService.invalidate_session(request.user)
             
-            # Delete the user's token
             request.user.auth_token.delete()
             return Response({'message': 'Successfully signed out'}, status=status.HTTP_200_OK)
         except Exception:
@@ -160,18 +152,15 @@ class CompleteProfileView(generics.GenericAPIView):
     def post(self, request):
         user = request.user
         
-        # Get profile data from request
         name = request.data.get('name', '').strip()
         register_number = request.data.get('register_number', '').strip()
         college_name = request.data.get('college_name', '').strip()
         
-        # Validate all fields are provided
         if not name or not register_number or not college_name:
             return Response({
                 'error': 'All fields are required: name, register_number, college_name'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Update user profile
         user.name = name
         user.register_number = register_number
         user.college_name = college_name
@@ -202,12 +191,10 @@ class UpdateProfileView(generics.GenericAPIView):
     def put(self, request):
         user = request.user
         
-        # Get profile data from request
         name = request.data.get('name', '').strip()
         college_name = request.data.get('college_name', '').strip()
         email = request.data.get('email', '').strip()
         
-        # Validate required fields
         if not name:
             return Response({
                 'error': 'Name is required'
@@ -223,7 +210,6 @@ class UpdateProfileView(generics.GenericAPIView):
                 'error': 'Email is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Validate email format
         import re
         email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
         if not re.match(email_pattern, email):
@@ -231,18 +217,15 @@ class UpdateProfileView(generics.GenericAPIView):
                 'error': 'Invalid email format'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Check if email is already taken by another user
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             return Response({
                 'error': 'This email is already in use'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Update user profile
         user.name = name
         user.college_name = college_name
         user.email = email
         
-        # Mark profile as completed if all required fields are present
         if name and college_name and email and user.register_number:
             user.profile_completed = True
         
@@ -262,7 +245,6 @@ class UpdateProfileView(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-# Backward compatibility aliases
 RegisterView = SignUpView
 LoginView = SignInView
 LogoutView = SignOutView

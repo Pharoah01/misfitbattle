@@ -69,7 +69,6 @@ describe('Property Test: Bug Condition Exploration - Paginated Response Parsing'
   it('Property 1: Fault Condition - fetchSubmissions correctly parses paginated responses', async () => {
     await fc.assert(
       fc.asyncProperty(paginatedResponseArbitrary, async (paginatedResponse) => {
-        // Mock the API client to return paginated response structure
         const mockGet = vi.spyOn(apiClient, 'get').mockResolvedValue({
           data: paginatedResponse,
           status: 200,
@@ -78,16 +77,12 @@ describe('Property Test: Bug Condition Exploration - Paginated Response Parsing'
           config: {}
         });
 
-        // Call fetchSubmissions - this should correctly parse the paginated response
         const result = await fetchSubmissions();
 
-        // CRITICAL ASSERTION: The function should return the submissions array from results
-        // If this fails, it proves the bug exists - the parsing logic is not working correctly
         expect(Array.isArray(result)).toBe(true);
         expect(result).toEqual(paginatedResponse.results);
         expect(result.length).toBe(paginatedResponse.results.length);
 
-        // Verify each submission in the result matches the original
         result.forEach((submission, index) => {
           expect(submission).toEqual(paginatedResponse.results[index]);
         });
@@ -126,7 +121,6 @@ describe('Property Test: Bug Condition Exploration - Paginated Response Parsing'
 
     const result = await fetchSubmissions();
 
-    // Should return empty array, not undefined or null
     expect(Array.isArray(result)).toBe(true);
     expect(result).toEqual([]);
     expect(result.length).toBe(0);
@@ -147,7 +141,6 @@ describe('Property Test: Bug Condition Exploration - Paginated Response Parsing'
       fc.asyncProperty(
         fc.array(submissionArbitrary, { minLength: 2, maxLength: 10 }),
         async (submissions) => {
-          // Ensure we have submissions from different users to test the scenario
           const multiUserSubmissions = submissions.map((sub, index) => ({
             ...sub,
             user: index % 3 + 1, // Distribute across 3 different users
@@ -172,14 +165,10 @@ describe('Property Test: Bug Condition Exploration - Paginated Response Parsing'
 
           const result = await fetchSubmissions();
 
-          // CRITICAL: The function should return ALL submissions from the API response
-          // Backend filtering should handle user-specific filtering, not the frontend
           expect(Array.isArray(result)).toBe(true);
           expect(result).toEqual(multiUserSubmissions);
           expect(result.length).toBe(multiUserSubmissions.length);
 
-          // Verify that submissions from different users are all present
-          // (This proves backend filtering is expected to handle user isolation)
           const userIds = new Set(result.map(sub => sub.user));
           expect(userIds.size).toBeGreaterThan(1);
 

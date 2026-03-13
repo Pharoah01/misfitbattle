@@ -84,7 +84,6 @@ class SecurityDashboardView(generics.GenericAPIView):
         """Get security dashboard data"""
         stats = SessionSecurityService.get_security_stats()
         
-        # Get recent security alerts
         recent_alerts = SecurityAlert.objects.filter(
             resolved=False
         ).order_by('-created_at')[:10]
@@ -104,7 +103,6 @@ class SecurityDashboardView(generics.GenericAPIView):
                 'created_at': alert.created_at
             })
         
-        # Get flagged IPs
         flagged_ips = IPMonitoring.objects.filter(
             is_flagged=True
         ).order_by('-user_count')[:10]
@@ -157,7 +155,6 @@ class LoginAttemptsView(generics.GenericAPIView):
     
     def get(self, request):
         """Get recent login attempts"""
-        # Get query parameters
         limit = int(request.GET.get('limit', 50))
         failed_only = request.GET.get('failed_only', 'false').lower() == 'true'
         

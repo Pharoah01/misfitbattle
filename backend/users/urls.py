@@ -3,7 +3,6 @@ from .views import SignUpView, SignInView, SignOutView, CurrentUserView, Complet
 from . import admin_views
 
 urlpatterns = [
-    # Primary endpoints
     path('signup/', SignUpView.as_view(), name='signup'),
     path('signin/', SignInView.as_view(), name='signin'),
     path('signout/', SignOutView.as_view(), name='signout'),
@@ -11,12 +10,10 @@ urlpatterns = [
     path('complete-profile/', CompleteProfileView.as_view(), name='complete-profile'),
     path('update-profile/', UpdateProfileView.as_view(), name='update-profile'),
     
-    # Backward compatibility aliases
     path('register/', SignUpView.as_view(), name='register'),
     path('login/', SignInView.as_view(), name='login'),
     path('logout/', SignOutView.as_view(), name='logout'),
     
-    # Admin session management endpoints
     path('admin/sessions/', admin_views.SessionManagementView.as_view(), name='admin-sessions'),
     path('admin/security-dashboard/', admin_views.SecurityDashboardView.as_view(), name='admin-security-dashboard'),
     path('admin/login-attempts/', admin_views.LoginAttemptsView.as_view(), name='admin-login-attempts'),

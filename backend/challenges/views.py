@@ -1,4 +1,3 @@
-# Challenge Views - Difficulty Levels Feature
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend

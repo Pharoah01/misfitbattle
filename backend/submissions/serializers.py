@@ -43,7 +43,6 @@ class SubmissionCreateSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
-        # Sanitize before saving
         html_code, css_code = sanitize_submission(
             validated_data['html_code'],
             validated_data['css_code']

@@ -26,16 +26,13 @@ export const CompleteProfile: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
-    // For register_number, only allow numeric characters
     if (name === 'register_number') {
-      // Remove any non-numeric characters
       const numericValue = value.replace(/[^0-9]/g, '');
       setFormData(prev => ({ ...prev, [name]: numericValue }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -72,7 +69,6 @@ export const CompleteProfile: React.FC = () => {
     try {
       await apiClient.post('/api/auth/complete-profile/', formData);
       
-      // Refresh user data to get updated profile_completed status
       await refreshUser();
       
       toast.success('Profile completed successfully!');

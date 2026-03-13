@@ -12,7 +12,6 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '@/config/constants';
 
-// Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
 const SESSION_ID_KEY = 'session_id';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -128,7 +127,6 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     
-    // Add Authorization header if token exists
     if (token && config.headers) {
       config.headers.Authorization = `Token ${token}`;
     }
@@ -149,21 +147,16 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    // Check if error is 401 Unauthorized or session-related
     if (error.response?.status === 401) {
       const errorData = error.response.data as any;
       
-      // Handle session expiration or no active session
       if (errorData?.code === 'SESSION_EXPIRED' || errorData?.code === 'NO_ACTIVE_SESSION') {
-        // Clear all session data
         clearAllTokens();
         
-        // Redirect to login page
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }
       } else {
-        // Regular 401 - clear tokens but let AuthContext handle navigation
         clearAllTokens();
       }
     }

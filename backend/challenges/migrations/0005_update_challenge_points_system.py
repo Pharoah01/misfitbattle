@@ -1,4 +1,3 @@
-# Generated migration for updating challenge points system
 
 from django.db import migrations
 
@@ -6,7 +5,6 @@ def update_challenge_points(apps, schema_editor):
     """Update challenge points based on difficulty levels"""
     Challenge = apps.get_model('challenges', 'Challenge')
     
-    # Define the new point system
     DIFFICULTY_POINTS = {
         'easy': 10,
         'medium': 20,

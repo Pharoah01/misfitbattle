@@ -18,27 +18,21 @@ class WhatsAppSecurityService:
     """
     
     def __init__(self):
-        # WhatsApp API Configuration
         self.api_provider = getattr(settings, 'WHATSAPP_API_PROVIDER', 'twilio')  # 'twilio', 'whatsapp_business', 'ultramsg'
         self.enabled = getattr(settings, 'WHATSAPP_ALERTS_ENABLED', False)
         
-        # Twilio Configuration
         self.twilio_account_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
         self.twilio_auth_token = getattr(settings, 'TWILIO_AUTH_TOKEN', '')
         self.twilio_whatsapp_number = getattr(settings, 'TWILIO_WHATSAPP_NUMBER', '')
         
-        # WhatsApp Business API Configuration
         self.whatsapp_token = getattr(settings, 'WHATSAPP_ACCESS_TOKEN', '')
         self.whatsapp_phone_id = getattr(settings, 'WHATSAPP_PHONE_NUMBER_ID', '')
         
-        # UltraMsg Configuration (Alternative provider)
         self.ultramsg_token = getattr(settings, 'ULTRAMSG_TOKEN', '')
         self.ultramsg_instance_id = getattr(settings, 'ULTRAMSG_INSTANCE_ID', '')
         
-        # Recipient phone numbers (with country code, e.g., +1234567890)
         self.admin_numbers = getattr(settings, 'WHATSAPP_ADMIN_NUMBERS', [])
         
-        # Alert settings
         self.alert_threshold = getattr(settings, 'WHATSAPP_ALERT_THRESHOLD', 3)
         self.critical_incidents = ['SQL_INJECTION', 'PATH_TRAVERSAL', 'AUTOMATED_TOOL']
     
@@ -49,14 +43,11 @@ class WhatsAppSecurityService:
         if not self.enabled or not self.admin_numbers:
             return False
         
-        # Check if this incident warrants a WhatsApp alert
         if not self._should_send_alert(incident):
             return False
         
-        # Create alert message
         message = self._format_incident_message(incident)
         
-        # Send to all admin numbers
         success = True
         for phone_number in self.admin_numbers:
             if not self._send_message(phone_number, message):
@@ -71,10 +62,8 @@ class WhatsAppSecurityService:
         if not self.enabled or not self.admin_numbers:
             return False
         
-        # Create block alert message
         message = self._format_block_message(blocked_ip)
         
-        # Send to all admin numbers
         success = True
         for phone_number in self.admin_numbers:
             if not self._send_message(phone_number, message):
@@ -91,7 +80,6 @@ class WhatsAppSecurityService:
         
         message = self._format_daily_summary(summary_data)
         
-        # Send to all admin numbers
         success = True
         for phone_number in self.admin_numbers:
             if not self._send_message(phone_number, message):
@@ -103,15 +91,12 @@ class WhatsAppSecurityService:
         """
         Determine if incident should trigger WhatsApp alert
         """
-        # Always alert for critical incidents
         if incident.incident_type in self.critical_incidents:
             return True
         
-        # Alert for high severity incidents
         if incident.severity in ['HIGH', 'CRITICAL']:
             return True
         
-        # Check recent incident count from same IP
         from .models import SecurityIncident
         from datetime import timedelta
         from django.utils import timezone
@@ -168,7 +153,6 @@ class WhatsAppSecurityService:
         else:
             duration = f"Until {blocked_ip.blocked_until.strftime('%Y-%m-%d %H:%M')}"
         
-        # Handle blocked_at timestamp safely
         blocked_at_str = "Unknown"
         if hasattr(blocked_ip, 'blocked_at') and blocked_ip.blocked_at:
             blocked_at_str = blocked_ip.blocked_at.strftime('%Y-%m-%d %H:%M:%S')
@@ -313,5 +297,4 @@ class WhatsAppSecurityService:
         logger.error(f"Failed to send WhatsApp message: {response.text}")
         return False
 
-# Global instance
 whatsapp_service = WhatsAppSecurityService()

@@ -14,25 +14,21 @@ export default {
           dark: '#5B1FEF',
           light: '#9B6CFF',
         },
-        // Primary Red - Accent color
         primary: {
           DEFAULT: '#C00000',
           dark: '#A00000',
           light: '#E00000',
         },
-        // Orange Accent
         orange: {
           DEFAULT: '#f97316',
           dark: '#ea580c',
           light: '#fb923c',
         },
-        // Dark backgrounds
         dark: {
           bg: '#0B0B0B',
           surface: '#111111',
           border: '#2A2A2A',
         },
-        // Text colors
         text: {
           primary: '#FFFFFF',
           secondary: '#B0B0B0',

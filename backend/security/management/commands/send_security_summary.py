@@ -21,7 +21,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        # Get date for summary
         if options['date']:
             try:
                 summary_date = datetime.strptime(options['date'], '%Y-%m-%d').date()
@@ -33,23 +32,19 @@ class Command(BaseCommand):
         else:
             summary_date = timezone.now().date()
 
-        # Calculate date range
         start_date = datetime.combine(summary_date, datetime.min.time())
         end_date = start_date + timedelta(days=1)
 
-        # Get security incidents for the day
         incidents = SecurityIncident.objects.filter(
             timestamp__gte=start_date,
             timestamp__lt=end_date
         )
 
-        # Get blocked IPs for the day
         blocked_ips = BlockedIP.objects.filter(
             blocked_at__gte=start_date,
             blocked_at__lt=end_date
         )
 
-        # Calculate summary statistics
         summary_data = {
             'total_incidents': incidents.count(),
             'critical_incidents': incidents.filter(severity='CRITICAL').count(),
@@ -60,7 +55,6 @@ class Command(BaseCommand):
             'sql_injections': incidents.filter(incident_type='SQL_INJECTION').count(),
         }
 
-        # Send WhatsApp summary
         try:
             success = whatsapp_service.send_daily_summary(summary_data)
             if success:
@@ -80,7 +74,6 @@ class Command(BaseCommand):
                 self.style.ERROR(f'Error sending WhatsApp summary: {e}')
             )
 
-        # Display summary to console
         self.stdout.write(f'\n📊 Security Summary for {summary_date}:')
         self.stdout.write(f'Total Incidents: {summary_data["total_incidents"]}')
         self.stdout.write(f'Critical: {summary_data["critical_incidents"]}')

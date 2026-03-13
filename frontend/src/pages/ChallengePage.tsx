@@ -21,7 +21,6 @@ export const ChallengePage: React.FC = () => {
   const { data: challenge, isLoading, error } = useChallenge(slug || '');
   const submitMutation = useSubmitSolution();
   
-  // Fetch existing submissions for this challenge to get submission count
   const { data: existingSubmissions } = useSubmissions(challenge?.id);
 
   const [code, setCode] = useState('');
@@ -35,11 +34,9 @@ export const ChallengePage: React.FC = () => {
 
   const autoSaveKey = useMemo(() => `user_session_${slug}`, [slug]);
   
-  // Calculate submission count from existing submissions (exclude auto-saves)
   const submissionCount = useMemo(() => {
     if (!existingSubmissions || !Array.isArray(existingSubmissions)) return 0;
     
-    // Filter to only count manual submissions (is_auto_save = false)
     const manualSubmissions = existingSubmissions.filter(
       (sub: any) => sub.is_auto_save === false
     );
@@ -47,26 +44,19 @@ export const ChallengePage: React.FC = () => {
     return manualSubmissions.length;
   }, [existingSubmissions]);
 
-  // Security: Prevent screenshots, right-click, and drag-drop
   useEffect(() => {
-    // Prevent right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       toast.error('Right-click is disabled during the challenge');
       return false;
     };
 
-    // Prevent drag and drop
     const handleDragStart = (e: DragEvent) => {
       e.preventDefault();
       return false;
     };
 
-    // Prevent all screenshot shortcuts (cross-platform)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Windows: PrtScn, Alt+PrtScn, Win+Shift+S, Shift+Win+S
-      // Mac: Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5
-      // Linux: PrtScn, Shift+PrtScn, Ctrl+PrtScn
       
       const isPrintScreen = e.key === 'PrintScreen';
       const isWindowsSnip = (e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S');
@@ -82,13 +72,11 @@ export const ChallengePage: React.FC = () => {
       }
     };
 
-    // Add event listeners
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('dragstart', handleDragStart);
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyDown); // Also prevent on keyup
 
-    // Cleanup
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('dragstart', handleDragStart);
@@ -97,7 +85,6 @@ export const ChallengePage: React.FC = () => {
     };
   }, []);
 
-  // Calculate scaled canvas size - Prevent overflow
   const canvasSize = useMemo(() => {
     if (!previewContainerRef.current) {
       return { width: 300, height: 169 }; // Default 16:9 ratio, smaller
@@ -107,12 +94,10 @@ export const ChallengePage: React.FC = () => {
     const containerWidth = container.clientWidth - 32; // Account for padding
     const containerHeight = container.clientHeight - 32;
     
-    // Ensure minimum container size
     const availableWidth = Math.max(200, containerWidth);
     const availableHeight = Math.max(150, containerHeight);
     
     if (scaleToFit) {
-      // Scale to fit container while maintaining aspect ratio
       const aspectRatio = 16 / 9;
       let width = availableWidth;
       let height = width / aspectRatio;
@@ -127,7 +112,6 @@ export const ChallengePage: React.FC = () => {
         height: Math.floor(Math.min(height, availableHeight))
       };
     } else {
-      // Fixed size that fits well in most containers
       const maxWidth = Math.min(350, availableWidth);
       
       return {
@@ -137,10 +121,8 @@ export const ChallengePage: React.FC = () => {
     }
   }, [scaleToFit, previewContainerRef.current?.clientWidth, previewContainerRef.current?.clientHeight]);
 
-  // Load challenge boilerplate or auto-saved code
   useEffect(() => {
     if (challenge) {
-      // Check if we're viewing a solution
       const state = location.state as any;
       if (state?.viewSolution && state?.submissionData) {
         setIsViewingSolution(true);
@@ -148,18 +130,15 @@ export const ChallengePage: React.FC = () => {
         const submittedCode = `${html_code}\n<style>\n${css_code}\n</style>`;
         setCode(submittedCode);
         
-        // Show a toast to indicate they're viewing their solution (only once)
         if (!sessionStorage.getItem(`solution_toast_${slug}`)) {
           toast.success('Viewing your submitted solution');
           sessionStorage.setItem(`solution_toast_${slug}`, 'true');
         }
         
-        // Clear the navigation state
         navigate(location.pathname, { replace: true, state: {} });
         return;
       }
 
-      // Show rules popup when challenge loads (only once per session) - but not for solution viewing
       if (!isViewingSolution) {
         const rulesShownKey = `rules_shown_${slug}`;
         const rulesShown = sessionStorage.getItem(rulesShownKey);
@@ -169,7 +148,6 @@ export const ChallengePage: React.FC = () => {
         }
       }
 
-      // Load auto-saved code or boilerplate
       const saved = localStorage.getItem(autoSaveKey);
       if (saved && !isViewingSolution) {
         try {
@@ -177,7 +155,6 @@ export const ChallengePage: React.FC = () => {
           setCode(savedCode);
           return;
         } catch (e) {
-          // Failed to load auto-saved code, continue with boilerplate
         }
       }
       
@@ -187,7 +164,6 @@ export const ChallengePage: React.FC = () => {
       }
     }
 
-    // Cleanup function to clear solution toast when component unmounts
     return () => {
       if (slug) {
         sessionStorage.removeItem(`solution_toast_${slug}`);
@@ -195,7 +171,6 @@ export const ChallengePage: React.FC = () => {
     };
   }, [challenge, autoSaveKey, slug, location.state, location.pathname, navigate, isViewingSolution]);
 
-  // Auto-save to localStorage
   useEffect(() => {
     if (!code || isViewingSolution) return; // Don't auto-save when viewing solution
 
@@ -206,14 +181,12 @@ export const ChallengePage: React.FC = () => {
           timestamp: Date.now(),
         }));
       } catch (e) {
-        // Failed to auto-save
       }
     }, 1000);
 
     return () => clearTimeout(timeoutId);
   }, [code, autoSaveKey]);
 
-  // Sanitize and debounce preview updates (300ms)
   useEffect(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -230,7 +203,6 @@ export const ChallengePage: React.FC = () => {
       if (iframeRef.current && iframeRef.current.contentWindow) {
         const doc = iframeRef.current.contentWindow.document;
         
-        // Use innerHTML instead of doc.write to avoid security issues
         const htmlContent = `
           <!DOCTYPE html>
           <html>
@@ -247,13 +219,11 @@ export const ChallengePage: React.FC = () => {
           </html>
         `;
         
-        // Clear and set new content safely
         try {
           doc.open();
           doc.write(htmlContent);
           doc.close();
         } catch (error) {
-          // Fallback: set innerHTML directly
           if (doc.documentElement) {
             doc.documentElement.innerHTML = htmlContent.replace(/<!DOCTYPE html>\s*<html[^>]*>|<\/html>/gi, '');
           }
@@ -271,7 +241,6 @@ export const ChallengePage: React.FC = () => {
   const codeLength = useMemo(() => code.length, [code]);
   const exceedsLimit = codeLength > VALIDATION.MAX_CODE_LENGTH;
 
-  // Auto-submit function for session timeout
   const handleAutoSubmit = useCallback(async () => {
     if (!code.trim() || !challenge || exceedsLimit) return;
 
@@ -287,11 +256,9 @@ export const ChallengePage: React.FC = () => {
         is_auto_save: true,
       });
     } catch (error) {
-      // Auto-submit failed
     }
   }, [code, challenge, exceedsLimit, submitMutation]);
 
-  // Register auto-submit callback with AuthContext
   useEffect(() => {
     registerAutoSubmit(handleAutoSubmit);
     return () => registerAutoSubmit(null);
@@ -310,7 +277,6 @@ export const ChallengePage: React.FC = () => {
 
     if (!challenge) return;
 
-    // Check submission limit (max 1 manual submission)
     if (submissionCount >= 1) {
       toast.error('You have already submitted for this challenge');
       return;
@@ -330,15 +296,12 @@ export const ChallengePage: React.FC = () => {
 
       localStorage.removeItem(autoSaveKey);
       
-      // Show success modal instead of toast
       setShowSubmissionSuccess(true);
       
     } catch (error: any) {
-      // Error toast is already handled by the mutation hook
     }
   }, [code, challenge, exceedsLimit, submitMutation, autoSaveKey, submissionCount]);
 
-  // Handle CTRL+ENTER shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {

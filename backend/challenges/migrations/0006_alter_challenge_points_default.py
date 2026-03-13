@@ -1,4 +1,3 @@
-# Generated migration for updating challenge points default value
 
 from django.db import migrations, models
 

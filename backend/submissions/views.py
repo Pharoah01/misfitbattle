@@ -55,8 +55,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     ordering = ['-submitted_at']
     
     def get_queryset(self):
-        # SECURITY FIX: Personal profile should ALWAYS show only user's own submissions
-        # Admin functionality is handled by separate endpoints (/all/, /challenge/{id}/, /user/{id}/)
         return Submission.objects.select_related('user', 'challenge').filter(user=self.request.user)
     
     def get_serializer_class(self):
@@ -81,21 +79,17 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         challenge_id = serializer.validated_data['challenge'].id
         is_auto_save = request.data.get('is_auto_save', False)
         
-        # Check existing submissions for this user+challenge
         existing_submissions = Submission.objects.filter(
             user=request.user,
             challenge_id=challenge_id
         ).order_by('-submitted_at')
         
-        # Count manual submissions only (exclude auto-saves)
         manual_submission_count = existing_submissions.filter(is_auto_save=False).count()
         
-        # Auto-save: Always allowed, create new or update latest auto-save
         if is_auto_save:
             latest_auto_save = existing_submissions.filter(is_auto_save=True).first()
             
             if latest_auto_save:
-                # Update existing auto-save
                 latest_auto_save.html_code = serializer.validated_data['html_code']
                 latest_auto_save.css_code = serializer.validated_data['css_code']
                 latest_auto_save.status = 'pending'
@@ -103,7 +97,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 latest_auto_save.save()
                 submission = latest_auto_save
             else:
-                # Create new auto-save
                 submission = serializer.save(
                     user=request.user,
                     status='pending',
@@ -111,7 +104,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                     submission_count=0
                 )
             
-            # Queue background processing
             if getattr(settings, 'USE_CELERY', True):
                 process_submission_task.delay(submission.id)
             else:
@@ -127,13 +119,11 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 'is_auto_save': True
             }, status=status.HTTP_200_OK if latest_auto_save else status.HTTP_201_CREATED)
         
-        # Manual submission: Check limit (max 1)
         if manual_submission_count >= 1:
             return Response({
                 'error': 'You have already submitted for this challenge. Only one submission is allowed.'
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # First and only manual submission: Create new
         submission = serializer.save(
             user=request.user,
             status='pending',
@@ -142,12 +132,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         )
         message = 'Submission received and queued for processing. This is your only submission.'
         
-        # Process submission (async with Celery in production, sync in development)
         if getattr(settings, 'USE_CELERY', True):
-            # Production: Queue background task
             process_submission_task.delay(submission.id)
         else:
-            # Development: Process synchronously
             self._process_submission_sync(submission)
         
         return Response({
@@ -171,7 +158,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             submission.status = 'processing'
             submission.save(update_fields=['status'])
             
-            # Render HTML/CSS to image
             renderer = HTMLRenderer()
             image_path = asyncio.run(
                 renderer.render_submission(

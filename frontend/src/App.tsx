@@ -14,7 +14,6 @@ import { useEffect } from 'react';
 import './App.css';
 
 function App() {
-  // Initialize security measures on app start
   useEffect(() => {
     initializeSecurity();
   }, []);

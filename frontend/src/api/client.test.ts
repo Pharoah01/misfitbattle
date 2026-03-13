@@ -46,27 +46,22 @@ describe('API Client Configuration', () => {
 
 describe('Request Interceptor for Authentication', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
     localStorage.clear();
   });
 
   afterEach(() => {
-    // Clean up after each test
     localStorage.clear();
   });
 
   it('should add Authorization header when token exists in localStorage', async () => {
-    // Set up token in localStorage
     const testToken = 'test-access-token-123';
     localStorage.setItem('access_token', testToken);
 
-    // Create a mock adapter to intercept the request
     const mockAdapter = vi.fn((config) => {
       expect(config.headers.Authorization).toBe(`Bearer ${testToken}`);
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config });
     });
 
-    // Temporarily replace the adapter
     const originalAdapter = apiClient.defaults.adapter;
     apiClient.defaults.adapter = mockAdapter;
 
@@ -74,22 +69,18 @@ describe('Request Interceptor for Authentication', () => {
       await apiClient.get('/test');
       expect(mockAdapter).toHaveBeenCalled();
     } finally {
-      // Restore original adapter
       apiClient.defaults.adapter = originalAdapter;
     }
   });
 
   it('should not add Authorization header when token does not exist', async () => {
-    // Ensure no token in localStorage
     localStorage.removeItem('access_token');
 
-    // Create a mock adapter to intercept the request
     const mockAdapter = vi.fn((config) => {
       expect(config.headers.Authorization).toBeUndefined();
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config });
     });
 
-    // Temporarily replace the adapter
     const originalAdapter = apiClient.defaults.adapter;
     apiClient.defaults.adapter = mockAdapter;
 
@@ -97,40 +88,32 @@ describe('Request Interceptor for Authentication', () => {
       await apiClient.get('/test');
       expect(mockAdapter).toHaveBeenCalled();
     } finally {
-      // Restore original adapter
       apiClient.defaults.adapter = originalAdapter;
     }
   });
 
   it('should handle missing token gracefully without throwing errors', async () => {
-    // Ensure no token in localStorage
     localStorage.removeItem('access_token');
 
-    // Create a mock adapter
     const mockAdapter = vi.fn((config) => {
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config });
     });
 
-    // Temporarily replace the adapter
     const originalAdapter = apiClient.defaults.adapter;
     apiClient.defaults.adapter = mockAdapter;
 
     try {
-      // Should not throw an error
       await expect(apiClient.get('/test')).resolves.toBeDefined();
       expect(mockAdapter).toHaveBeenCalled();
     } finally {
-      // Restore original adapter
       apiClient.defaults.adapter = originalAdapter;
     }
   });
 
   it('should update Authorization header when token changes', async () => {
-    // Set initial token
     const firstToken = 'first-token';
     localStorage.setItem('access_token', firstToken);
 
-    // Create a mock adapter for first request
     const mockAdapter1 = vi.fn((config) => {
       expect(config.headers.Authorization).toBe(`Bearer ${firstToken}`);
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config });
@@ -146,11 +129,9 @@ describe('Request Interceptor for Authentication', () => {
       apiClient.defaults.adapter = originalAdapter;
     }
 
-    // Change token
     const secondToken = 'second-token';
     localStorage.setItem('access_token', secondToken);
 
-    // Create a mock adapter for second request
     const mockAdapter2 = vi.fn((config) => {
       expect(config.headers.Authorization).toBe(`Bearer ${secondToken}`);
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config });
@@ -169,17 +150,13 @@ describe('Request Interceptor for Authentication', () => {
 
 describe('Response Interceptor for Token Refresh', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
     localStorage.clear();
-    // Clear any mocks
     vi.clearAllMocks();
-    // Reset window.location
     delete (window as any).location;
     (window as any).location = { href: '' };
   });
 
   afterEach(() => {
-    // Clean up after each test
     localStorage.clear();
     vi.restoreAllMocks();
   });
@@ -214,7 +191,6 @@ describe('Response Interceptor for Token Refresh', () => {
     localStorage.setItem('access_token', 'expired-token');
     localStorage.setItem('refresh_token', refreshToken);
 
-    // Mock axios.post for refresh token request
     const axiosPostSpy = vi.spyOn(axios, 'post').mockResolvedValueOnce({
       data: { access: newAccessToken },
       status: 200,
@@ -227,13 +203,11 @@ describe('Response Interceptor for Token Refresh', () => {
     const mockAdapter = vi.fn((config) => {
       callCount++;
       if (callCount === 1) {
-        // First call returns 401
         return Promise.reject({
           response: { status: 401 },
           config,
         });
       } else {
-        // Second call (retry) succeeds
         expect(config.headers.Authorization).toBe(`Bearer ${newAccessToken}`);
         return Promise.resolve({ 
           data: { success: true }, 
@@ -251,16 +225,13 @@ describe('Response Interceptor for Token Refresh', () => {
     try {
       const response = await apiClient.get('/test');
       
-      // Verify refresh token was called
       expect(axiosPostSpy).toHaveBeenCalledWith(
         `${API_BASE_URL}/api/auth/token/refresh/`,
         { refresh: refreshToken }
       );
       
-      // Verify new token was stored
       expect(localStorage.getItem('access_token')).toBe(newAccessToken);
       
-      // Verify original request was retried and succeeded
       expect(response.data).toEqual({ success: true });
       expect(mockAdapter).toHaveBeenCalledTimes(2);
     } finally {
@@ -271,7 +242,6 @@ describe('Response Interceptor for Token Refresh', () => {
 
   it('should redirect to sign in when refresh token is missing', async () => {
     localStorage.setItem('access_token', 'expired-token');
-    // No refresh token in localStorage
 
     const mockAdapter = vi.fn((config) => {
       return Promise.reject({
@@ -286,10 +256,8 @@ describe('Response Interceptor for Token Refresh', () => {
     try {
       await apiClient.get('/test');
     } catch (error) {
-      // Verify tokens were cleared
       expect(localStorage.getItem('access_token')).toBeNull();
       
-      // Verify redirect to sign in
       expect(window.location.href).toBe('/signin');
     } finally {
       apiClient.defaults.adapter = originalAdapter;
@@ -301,7 +269,6 @@ describe('Response Interceptor for Token Refresh', () => {
     localStorage.setItem('access_token', 'expired-token');
     localStorage.setItem('refresh_token', refreshToken);
 
-    // Mock axios.post to reject (refresh fails)
     const axiosPostSpy = vi.spyOn(axios, 'post').mockRejectedValueOnce({
       response: { status: 401 },
     });
@@ -319,11 +286,9 @@ describe('Response Interceptor for Token Refresh', () => {
     try {
       await apiClient.get('/test');
     } catch (error) {
-      // Verify tokens were cleared
       expect(localStorage.getItem('access_token')).toBeNull();
       expect(localStorage.getItem('refresh_token')).toBeNull();
       
-      // Verify redirect to sign in
       expect(window.location.href).toBe('/signin');
     } finally {
       apiClient.defaults.adapter = originalAdapter;
@@ -336,7 +301,6 @@ describe('Response Interceptor for Token Refresh', () => {
     localStorage.setItem('access_token', 'expired-token');
     localStorage.setItem('refresh_token', refreshToken);
 
-    // Mock axios.post to always return 401 (simulating persistent auth failure)
     const axiosPostSpy = vi.spyOn(axios, 'post').mockRejectedValue({
       response: { status: 401 },
     });
@@ -344,7 +308,6 @@ describe('Response Interceptor for Token Refresh', () => {
     let callCount = 0;
     const mockAdapter = vi.fn((config) => {
       callCount++;
-      // Always return 401
       return Promise.reject({
         response: { status: 401 },
         config,
@@ -357,11 +320,8 @@ describe('Response Interceptor for Token Refresh', () => {
     try {
       await apiClient.get('/test');
     } catch (error) {
-      // Should only attempt once (original request)
-      // The retry should fail during refresh and not retry again
       expect(callCount).toBe(1);
       
-      // Verify redirect happened
       expect(window.location.href).toBe('/signin');
     } finally {
       apiClient.defaults.adapter = originalAdapter;
@@ -388,13 +348,10 @@ describe('Response Interceptor for Token Refresh', () => {
     try {
       await apiClient.get('/test');
     } catch (error: any) {
-      // Verify refresh was NOT attempted
       expect(axiosPostSpy).not.toHaveBeenCalled();
       
-      // Verify error was passed through
       expect(error.response.status).toBe(404);
       
-      // Verify tokens were NOT cleared
       expect(localStorage.getItem('access_token')).toBe('valid-token');
       expect(localStorage.getItem('refresh_token')).toBe('valid-refresh-token');
     } finally {
@@ -413,7 +370,6 @@ describe('Response Interceptor for Token Refresh', () => {
       return Promise.reject({
         message: 'Network Error',
         config,
-        // No response object for network errors
       });
     });
 
@@ -423,13 +379,10 @@ describe('Response Interceptor for Token Refresh', () => {
     try {
       await apiClient.get('/test');
     } catch (error: any) {
-      // Verify refresh was NOT attempted
       expect(axiosPostSpy).not.toHaveBeenCalled();
       
-      // Verify error was passed through
       expect(error.message).toBe('Network Error');
       
-      // Verify tokens were NOT cleared
       expect(localStorage.getItem('access_token')).toBe('valid-token');
       expect(localStorage.getItem('refresh_token')).toBe('valid-refresh-token');
     } finally {

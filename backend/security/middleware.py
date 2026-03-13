@@ -19,15 +19,12 @@ class APISecurityMiddleware(MiddlewareMixin):
     Middleware to detect and block suspicious API requests with admin alerts
     """
     
-    # Suspicious patterns to detect
     SUSPICIOUS_PATTERNS = [
-        # Direct API endpoint enumeration
         '/api/admin/',
         '/api/debug/',
         '/api/test/',
         '/api/internal/',
         
-        # Common attack patterns
         '../',
         '..\\',
         '<script',
@@ -35,13 +32,11 @@ class APISecurityMiddleware(MiddlewareMixin):
         'eval(',
         'exec(',
         
-        # SQL injection attempts
         "' OR '1'='1",
         '" OR "1"="1',
         'UNION SELECT',
         'DROP TABLE',
         
-        # Path traversal
         '/etc/passwd',
         '/proc/version',
         'C:\\Windows\\',
@@ -51,18 +46,14 @@ class APISecurityMiddleware(MiddlewareMixin):
         """
         Process incoming request for security threats
         """
-        # Skip security checks for admin and static files
         if request.path.startswith('/admin/') or request.path.startswith('/static/'):
             return None
             
-        # Skip if marked as admin access by AdminAccessMiddleware
         if request.META.get('ADMIN_ACCESS'):
             return None
             
-        # Get client IP
         client_ip = self.get_client_ip(request)
         
-        # Check if IP is blocked
         if security_service.is_ip_blocked(client_ip):
             logger.warning(f"Blocked request from {client_ip}")
             return JsonResponse({
@@ -70,11 +61,9 @@ class APISecurityMiddleware(MiddlewareMixin):
                 'code': 'IP_BLOCKED'
             }, status=403)
         
-        # Check for suspicious patterns
         if self.is_suspicious_request(request):
             incident_type, severity = self.classify_threat(request)
             
-            # Create security incident (this will handle alerting and auto-blocking)
             security_service.create_incident(
                 ip_address=client_ip,
                 incident_type=incident_type,
@@ -93,7 +82,6 @@ class APISecurityMiddleware(MiddlewareMixin):
                 'code': 'SECURITY_VIOLATION'
             }, status=429)
         
-        # Check for API endpoint enumeration
         if self.is_endpoint_enumeration(request):
             security_service.create_incident(
                 ip_address=client_ip,
@@ -129,25 +117,21 @@ class APISecurityMiddleware(MiddlewareMixin):
         path = request.path.lower()
         query_string = request.META.get('QUERY_STRING', '').lower()
         
-        # Check for SQL injection
         sql_patterns = ["' OR '1'='1", '" OR "1"="1', 'UNION SELECT', 'DROP TABLE']
         for pattern in sql_patterns:
             if pattern.lower() in path or pattern.lower() in query_string:
                 return 'SQL_INJECTION', 'CRITICAL'
         
-        # Check for path traversal
         path_patterns = ['../', '..\\', '/etc/passwd', '/proc/version']
         for pattern in path_patterns:
             if pattern.lower() in path:
                 return 'PATH_TRAVERSAL', 'HIGH'
         
-        # Check for script injection
         script_patterns = ['<script', 'javascript:', 'eval(', 'exec(']
         for pattern in script_patterns:
             if pattern.lower() in path or pattern.lower() in query_string:
                 return 'SCRIPT_INJECTION', 'HIGH'
         
-        # Check User-Agent for automated tools
         user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
         suspicious_agents = ['sqlmap', 'nikto', 'nmap', 'burp', 'owasp']
         for agent in suspicious_agents:
@@ -160,19 +144,16 @@ class APISecurityMiddleware(MiddlewareMixin):
         """
         Check if request contains suspicious patterns
         """
-        # Check URL path
         path = request.path.lower()
         for pattern in self.SUSPICIOUS_PATTERNS:
             if pattern.lower() in path:
                 return True
         
-        # Check query parameters
         query_string = request.META.get('QUERY_STRING', '').lower()
         for pattern in self.SUSPICIOUS_PATTERNS:
             if pattern.lower() in query_string:
                 return True
         
-        # Check request body for POST requests
         if request.method == 'POST':
             try:
                 body = request.body.decode('utf-8').lower()
@@ -182,7 +163,6 @@ class APISecurityMiddleware(MiddlewareMixin):
             except:
                 pass
         
-        # Check User-Agent for automated tools
         user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
         suspicious_agents = ['sqlmap', 'nikto', 'nmap', 'burp', 'owasp']
         for agent in suspicious_agents:
@@ -197,7 +177,6 @@ class APISecurityMiddleware(MiddlewareMixin):
         """
         path = request.path
         
-        # Check for common enumeration patterns
         enumeration_patterns = [
             '/api/v1/',
             '/api/v2/',
@@ -226,11 +205,9 @@ class RequestFingerprintMiddleware(MiddlewareMixin):
         """
         Validate request fingerprint if present
         """
-        # Skip for non-API requests
         if not request.path.startswith('/api/'):
             return None
         
-        # Check for fingerprint header
         fingerprint = request.META.get('HTTP_X_REQUEST_FINGERPRINT')
         if fingerprint:
             if not self.validate_fingerprint(fingerprint):
@@ -246,11 +223,9 @@ class RequestFingerprintMiddleware(MiddlewareMixin):
         """
         Validate request fingerprint format
         """
-        # Basic validation - can be enhanced
         if not fingerprint or len(fingerprint) != 16:
             return False
         
-        # Check if fingerprint is base64-like
         try:
             import base64
             base64.b64decode(fingerprint + '==')  # Add padding
