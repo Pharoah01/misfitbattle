@@ -5,12 +5,31 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
+from django.views.generic import TemplateView
+import os
+
+def robots_txt(request):
+    """Serve robots.txt file"""
+    robots_path = os.path.join(settings.BASE_DIR, 'static', 'robots.txt')
+    try:
+        with open(robots_path, 'r') as f:
+            content = f.read()
+        return HttpResponse(content, content_type='text/plain')
+    except FileNotFoundError:
+        # Fallback robots.txt if file doesn't exist
+        content = """# Misfits Battle Backend - Block All Bots
+User-agent: *
+Disallow: /
+"""
+        return HttpResponse(content, content_type='text/plain')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/challenges/', include('challenges.urls')),
     path('api/submissions/', include('submissions.urls')),
+    path('robots.txt', robots_txt, name='robots_txt'),
 ]
 
 # Serve media files in development
