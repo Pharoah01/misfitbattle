@@ -1,0 +1,45 @@
+# Robots.txt for Misfits Battle Backend API - Complete Bot Blocking
+# Last updated: 2026-03-13
+
+# Block ALL bots from accessing the backend API
+User-agent: *
+Disallow: /
+
+# Specifically block all API endpoints
+Disallow: /api/
+Disallow: /admin/
+Disallow: /static/
+Disallow: /media/
+
+# Block common attack paths
+Disallow: /index.php
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /xmlrpc.php
+Disallow: /wp-config.php
+Disallow: /.env
+Disallow: /config.php
+Disallow: /admin.php
+Disallow: /login.php
+Disallow: /phpmyadmin/
+Disallow: /pma/
+Disallow: /mysql/
+Disallow: /database/
+
+# Block directory traversal attempts
+Disallow: /../
+Disallow: /./
+Disallow: /etc/
+Disallow: /proc/
+Disallow: /var/
+Disallow: /tmp/
+Disallow: /home/
+Disallow: /root/
+
+# No crawl delay - we don't want any crawling
+Crawl-delay: 86400
+
+# No sitemap for backend
+# Backend APIs should not be indexed

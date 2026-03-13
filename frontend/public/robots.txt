@@ -1,0 +1,187 @@
+# Robots.txt for Misfits Battle - Security-focused bot blocking
+# Last updated: 2026-03-13
+
+# Allow legitimate search engines
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /play/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /play/
+
+User-agent: Slurp
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /play/
+
+# Block all scanning and attack tools
+User-agent: sqlmap
+Disallow: /
+
+User-agent: nikto
+Disallow: /
+
+User-agent: nmap
+Disallow: /
+
+User-agent: masscan
+Disallow: /
+
+User-agent: zmap
+Disallow: /
+
+User-agent: gobuster
+Disallow: /
+
+User-agent: dirb
+Disallow: /
+
+User-agent: dirbuster
+Disallow: /
+
+User-agent: wpscan
+Disallow: /
+
+User-agent: nuclei
+Disallow: /
+
+User-agent: acunetix
+Disallow: /
+
+User-agent: nessus
+Disallow: /
+
+User-agent: openvas
+Disallow: /
+
+User-agent: w3af
+Disallow: /
+
+User-agent: havij
+Disallow: /
+
+User-agent: pangolin
+Disallow: /
+
+User-agent: sqlninja
+Disallow: /
+
+User-agent: burp
+Disallow: /
+
+User-agent: owasp
+Disallow: /
+
+User-agent: libwww-http
+Disallow: /
+
+User-agent: libredtail-http
+Disallow: /
+
+User-agent: python-requests
+Disallow: /
+
+User-agent: curl
+Disallow: /
+
+User-agent: wget
+Disallow: /
+
+User-agent: HTTPie
+Disallow: /
+
+User-agent: Postman
+Disallow: /
+
+User-agent: Insomnia
+Disallow: /
+
+# Block common scraping tools
+User-agent: scrapy
+Disallow: /
+
+User-agent: BeautifulSoup
+Disallow: /
+
+User-agent: selenium
+Disallow: /
+
+User-agent: phantomjs
+Disallow: /
+
+User-agent: headless
+Disallow: /
+
+# Block vulnerability scanners
+User-agent: *scanner*
+Disallow: /
+
+User-agent: *exploit*
+Disallow: /
+
+User-agent: *hack*
+Disallow: /
+
+User-agent: *attack*
+Disallow: /
+
+User-agent: *pentest*
+Disallow: /
+
+User-agent: *security*
+Disallow: /
+
+User-agent: *vuln*
+Disallow: /
+
+# Block bots with suspicious patterns
+User-agent: *bot*
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /play/
+
+User-agent: *crawler*
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /play/
+
+User-agent: *spider*
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /play/
+
+# Default rule for all other bots
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /play/
+Disallow: /edit-profile/
+Disallow: /complete-profile/
+Disallow: /rules/
+Allow: /
+
+# Crawl delay for all bots (seconds)
+Crawl-delay: 10
+
+# Sitemap location (optional - create if needed)
+# Sitemap: https://binarymisfits.info/sitemap.xml
