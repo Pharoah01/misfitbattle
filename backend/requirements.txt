@@ -13,7 +13,7 @@ gunicorn==21.2.0
 h11==0.16.0
 hypothesis==6.92.1
 packaging==26.0
-Pillow==10.1.0
+Pillow>=10.3.0
 psycopg2-binary==2.9.11
 python-dotenv==1.0.0
 pytz==2025.2
