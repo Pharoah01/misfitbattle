@@ -24,6 +24,7 @@ class SessionSecurityMiddleware:
         '/api/dashboard/',
         '/api/challenges/',
         '/api/submissions/',
+        '/api/teams/',
         '/api/users/profile/',
         '/api/users/current/',
         '/api/users/complete-profile/',

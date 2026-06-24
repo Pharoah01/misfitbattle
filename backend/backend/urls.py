@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),
     path('api/challenges/', include('challenges.urls')),
     path('api/submissions/', include('submissions.urls')),
+    path('api/teams/', include('teams.urls')),
     path('robots.txt', robots_txt, name='robots_txt'),
 ]
 

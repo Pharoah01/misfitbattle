@@ -128,7 +128,7 @@ apiClient.interceptors.request.use(
     const token = getAccessToken();
     
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Token ${token}`;
     }
     
     return config;

@@ -180,6 +180,11 @@ export const Profile: React.FC = () => {
                 <label className="text-xs text-text-secondary uppercase tracking-wider block mb-2 font-rajdhani font-semibold">College/Institution</label>
                 <p className="text-lg text-text-primary font-rajdhani">{user?.college_name || 'Not set'}</p>
               </div>
+
+              <div className="bg-dark-bg rounded-lg p-4 border border-purple-primary/10">
+                <label className="text-xs text-text-secondary uppercase tracking-wider block mb-2 font-rajdhani font-semibold">Department</label>
+                <p className="text-lg text-text-primary font-rajdhani">{user?.department || 'Not set'}</p>
+              </div>
             </div>
           </div>
 
