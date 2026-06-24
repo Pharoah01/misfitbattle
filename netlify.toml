@@ -8,8 +8,8 @@
   # Build command
   command = "npm run build"
   
-  # Output directory (Vite default)
-  publish = "frontend/dist"
+  # Output directory (Vite default, relative to base)
+  publish = "dist"
   
   # Base directory for build
   base = "frontend"
