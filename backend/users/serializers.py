@@ -24,7 +24,7 @@ class UserRegistrationSerializer(serializers.Serializer):
         value = value.strip().upper()
         if not value:
             raise serializers.ValidationError("HTPID is required")
-        if User.objects.filter(register_number=value).exists():
+        if User.objects.filter(htp_id=value).exists():
             raise serializers.ValidationError(
                 "An account with this HTPID already exists. Please sign in instead."
             )
@@ -32,17 +32,15 @@ class UserRegistrationSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    htp_id = serializers.CharField(source='register_number', read_only=True)
-    
     class Meta:
         model = User
-        fields = ['id', 'htp_id', 'register_number', 'name', 'email', 'college_name', 
+        fields = ['id', 'htp_id', 'name', 'email', 'college_name',
                   'department', 'profile_completed', 'is_admin', 'created_at']
         read_only_fields = ['id', 'is_admin', 'created_at', 'profile_completed']
 
 
 class LoginSerializer(serializers.Serializer):
-    """Serializer for login endpoint — uses HTPID instead of register number."""
+    """Serializer for login endpoint."""
     htp_id = serializers.CharField(
         required=True,
         help_text="Hack The Planet ID (e.g., HTP-2026-X7K2)"

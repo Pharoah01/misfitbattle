@@ -5,7 +5,6 @@
 export interface User {
   id: number;
   htp_id: string;
-  register_number: string;
   name: string;
   email?: string;
   college_name?: string;

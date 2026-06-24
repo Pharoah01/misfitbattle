@@ -68,7 +68,7 @@ class UserSession(models.Model):
         ordering = ['-last_activity']
 
     def __str__(self):
-        return f"{self.user.register_number} - {self.ip_address} ({self.country})"
+        return f"{self.user.htp_id} - {self.ip_address} ({self.country})"
 
     def get_location_info(self):
         """Disabled - only IP logging is needed"""

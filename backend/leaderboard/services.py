@@ -48,7 +48,7 @@ def calculate_leaderboard():
         user = user_map[user_id]
         leaderboard.append({
             'user_id': user_id,
-            'register_number': user.register_number,
+            'htp_id': user.htp_id,
             'name': user.name,
             'total_points': stats['total_points'],
             'solved_count': stats['solved_count'],

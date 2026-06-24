@@ -5,10 +5,10 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
 from .serializers import UserRegistrationSerializer, UserSerializer, LoginSerializer
 from .htp_service import (
-    verify_htpid, 
-    HTPParticipantNotFound, 
-    HTPAuthenticationError, 
-    HTPServiceUnavailable, 
+    verify_htpid,
+    HTPParticipantNotFound,
+    HTPAuthenticationError,
+    HTPServiceUnavailable,
     HTPServiceError,
 )
 from utils.throttling import AuthRateThrottle, LoginRateThrottle
@@ -30,8 +30,6 @@ class SignUpView(generics.CreateAPIView):
     3. Fetches participant details (name, email, college, department)
     4. Creates local user with those details
     5. Returns auth token + user data
-    
-    Rate limit: 10 requests per hour per IP
     """
     serializer_class = UserRegistrationSerializer
     permission_classes = [AllowAny]
@@ -77,13 +75,13 @@ class SignUpView(generics.CreateAPIView):
         
         # Create user with details from HTP
         user = User.objects.create_user(
-            register_number=participant.htp_id,
+            htp_id=participant.htp_id,
             name=participant.name,
             email=participant.email,
             password=password,
             college_name=participant.college,
             department=participant.department,
-            profile_completed=True,  # Auto-completed from HTP data
+            profile_completed=True,
         )
         
         token, created = Token.objects.get_or_create(user=user)
@@ -94,8 +92,7 @@ class SignUpView(generics.CreateAPIView):
             'session_id': str(session.session_id),
             'user': {
                 'id': user.id,
-                'htp_id': user.register_number,
-                'register_number': user.register_number,
+                'htp_id': user.htp_id,
                 'name': user.name,
                 'email': user.email,
                 'college_name': user.college_name,
@@ -111,9 +108,6 @@ class SignInView(generics.GenericAPIView):
     """
     User login endpoint.
     Authenticates user with HTPID and password.
-    Returns authentication token upon successful login.
-    
-    Rate limit: 4 attempts per minute per IP
     """
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
@@ -134,7 +128,7 @@ class SignInView(generics.GenericAPIView):
                 'error': 'Please provide both HTPID and password'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Authenticate using register_number field (which stores HTPID)
+        # Authenticate using htp_id field (USERNAME_FIELD)
         user = authenticate(request, username=htp_id, password=password)
         
         if user is None:
@@ -156,8 +150,7 @@ class SignInView(generics.GenericAPIView):
             'session_id': str(session.session_id),
             'user': {
                 'id': user.id,
-                'htp_id': user.register_number,
-                'register_number': user.register_number,
+                'htp_id': user.htp_id,
                 'name': user.name,
                 'email': user.email,
                 'college_name': user.college_name,
@@ -175,10 +168,7 @@ class SignInView(generics.GenericAPIView):
 
 
 class SignOutView(generics.GenericAPIView):
-    """
-    User logout endpoint.
-    Deletes the user's authentication token.
-    """
+    """User logout endpoint."""
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -191,9 +181,7 @@ class SignOutView(generics.GenericAPIView):
 
 
 class CurrentUserView(generics.RetrieveAPIView):
-    """
-    Get current authenticated user details.
-    """
+    """Get current authenticated user details."""
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     
@@ -202,11 +190,7 @@ class CurrentUserView(generics.RetrieveAPIView):
 
 
 class CompleteProfileView(generics.GenericAPIView):
-    """
-    Profile completion endpoint.
-    With HTP integration, profiles are auto-completed on registration.
-    This endpoint allows manual updates if needed.
-    """
+    """Profile completion endpoint."""
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -230,8 +214,7 @@ class CompleteProfileView(generics.GenericAPIView):
             'message': 'Profile completed successfully',
             'user': {
                 'id': user.id,
-                'htp_id': user.register_number,
-                'register_number': user.register_number,
+                'htp_id': user.htp_id,
                 'name': user.name,
                 'college_name': user.college_name,
                 'department': user.department,
@@ -243,10 +226,7 @@ class CompleteProfileView(generics.GenericAPIView):
 
 
 class UpdateProfileView(generics.GenericAPIView):
-    """
-    Profile update endpoint.
-    Allows users to update their name (other fields are from HTP).
-    """
+    """Profile update endpoint."""
     permission_classes = [IsAuthenticated]
     
     def put(self, request):
@@ -266,8 +246,7 @@ class UpdateProfileView(generics.GenericAPIView):
             'message': 'Profile updated successfully',
             'user': {
                 'id': user.id,
-                'htp_id': user.register_number,
-                'register_number': user.register_number,
+                'htp_id': user.htp_id,
                 'name': user.name,
                 'college_name': user.college_name,
                 'department': user.department,

@@ -17,13 +17,9 @@ User = get_user_model()
 
 
 class SessionManagementView(generics.GenericAPIView):
-    """
-    Admin view for managing user sessions
-    """
     permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
-        """Get all active sessions"""
         sessions = UserSession.objects.filter(is_active=True).select_related('user')
         
         session_data = []
@@ -32,7 +28,7 @@ class SessionManagementView(generics.GenericAPIView):
                 'session_id': str(session.session_id),
                 'user': {
                     'id': session.user.id,
-                    'register_number': session.user.register_number,
+                    'htp_id': session.user.htp_id,
                     'name': session.user.name,
                 },
                 'ip_address': session.ip_address,
@@ -52,36 +48,28 @@ class SessionManagementView(generics.GenericAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def force_logout_user(request, user_id):
-    """
-    Force logout a specific user
-    """
     user = get_object_or_404(User, id=user_id)
-    
     success = SessionSecurityService.force_logout_user(user, request.user)
     
     if success:
         return Response({
-            'message': f'User {user.register_number} has been logged out',
+            'message': f'User {user.htp_id} has been logged out',
             'user': {
                 'id': user.id,
-                'register_number': user.register_number,
+                'htp_id': user.htp_id,
                 'name': user.name
             }
         })
     else:
         return Response({
-            'message': f'User {user.register_number} had no active session'
+            'message': f'User {user.htp_id} had no active session'
         }, status=status.HTTP_404_NOT_FOUND)
 
 
 class SecurityDashboardView(generics.GenericAPIView):
-    """
-    Security dashboard with statistics and alerts
-    """
     permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
-        """Get security dashboard data"""
         stats = SessionSecurityService.get_security_stats()
         
         recent_alerts = SecurityAlert.objects.filter(
@@ -97,7 +85,7 @@ class SecurityDashboardView(generics.GenericAPIView):
                 'severity': alert.severity,
                 'ip_address': alert.ip_address,
                 'user': {
-                    'register_number': alert.user.register_number,
+                    'htp_id': alert.user.htp_id,
                     'name': alert.user.name
                 } if alert.user else None,
                 'created_at': alert.created_at
@@ -109,7 +97,7 @@ class SecurityDashboardView(generics.GenericAPIView):
         
         ip_data = []
         for ip_monitor in flagged_ips:
-            users = list(ip_monitor.users.values('register_number', 'name'))
+            users = list(ip_monitor.users.values('htp_id', 'name'))
             ip_data.append({
                 'ip_address': ip_monitor.ip_address,
                 'user_count': ip_monitor.user_count,
@@ -130,9 +118,6 @@ class SecurityDashboardView(generics.GenericAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def resolve_security_alert(request, alert_id):
-    """
-    Resolve a security alert
-    """
     alert = get_object_or_404(SecurityAlert, id=alert_id)
     alert.resolve(resolved_by=request.user)
     
@@ -142,19 +127,15 @@ def resolve_security_alert(request, alert_id):
             'id': alert.id,
             'type': alert.get_alert_type_display(),
             'resolved_at': alert.resolved_at,
-            'resolved_by': request.user.register_number
+            'resolved_by': request.user.htp_id
         }
     })
 
 
 class LoginAttemptsView(generics.GenericAPIView):
-    """
-    View login attempts for security monitoring
-    """
     permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
-        """Get recent login attempts"""
         limit = int(request.GET.get('limit', 50))
         failed_only = request.GET.get('failed_only', 'false').lower() == 'true'
         
@@ -191,11 +172,7 @@ class LoginAttemptsView(generics.GenericAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def cleanup_expired_sessions(request):
-    """
-    Manually trigger cleanup of expired sessions
-    """
     count = SessionSecurityService.cleanup_expired_sessions()
-    
     return Response({
         'message': f'Cleaned up {count} expired sessions',
         'cleaned_count': count

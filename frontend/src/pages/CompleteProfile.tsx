@@ -86,7 +86,7 @@ export const CompleteProfile: React.FC = () => {
               HTPID
             </label>
             <p className="text-lg text-text-primary font-mono">
-              {user?.htp_id || user?.register_number}
+              {user?.htp_id}
             </p>
           </div>
 

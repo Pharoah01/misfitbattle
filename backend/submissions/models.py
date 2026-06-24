@@ -80,4 +80,4 @@ class Submission(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.user.register_number} - {self.challenge.title}"
+        return f"{self.user.htp_id} - {self.challenge.title}"

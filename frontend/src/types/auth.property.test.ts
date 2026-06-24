@@ -44,9 +44,6 @@ describe('Property Test: Authentication State Consistency', () => {
     htp_id: fc.string({ minLength: 5, maxLength: 20 })
         .filter((s) => /^[A-Za-z0-9\-]+$/.test(s)),
 
-    register_number: fc.string({ minLength: 5, maxLength: 20 })
-        .filter((s) => /^[A-Za-z0-9\-]+$/.test(s)),
-
     name: fc.string({ minLength: 2, maxLength: 100 })
         .filter((s) => s.trim().length >= 2),
 
@@ -168,7 +165,7 @@ describe('Property Test: Authentication State Consistency', () => {
         const storedUser: User = JSON.parse(storedUserStr!);
 
         expect(storedUser.id).toBe(authResponse.user.id);
-        expect(storedUser.register_number).toBe(authResponse.user.register_number);
+        expect(storedUser.htp_id).toBe(authResponse.user.htp_id);
         expect(storedUser.name).toBe(authResponse.user.name);
         expect(storedUser.email).toBe(authResponse.user.email);
         expect(storedUser.college_name).toBe(authResponse.user.college_name);

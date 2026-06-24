@@ -143,7 +143,7 @@ export const EditProfile: React.FC = () => {
                 <input
                   type="text"
                   id="htp_id"
-                  value={user?.htp_id || user?.register_number || ''}
+                  value={user?.htp_id || ''}
                   disabled
                   className="w-full px-4 py-3 bg-dark-bg/50 border border-purple-primary/10 rounded-lg text-text-secondary cursor-not-allowed font-mono"
                 />

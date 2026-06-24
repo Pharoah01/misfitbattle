@@ -3,13 +3,10 @@ from django.db import models
 
 
 class UserManager(BaseUserManager):
-    """Custom user manager for User model with register_number (HTPID) as username."""
+    """Custom user manager for User model with htp_id as username."""
     
-    def create_user(self, register_number, name, email=None, password=None, **extra_fields):
-        """
-        Create a user. register_number stores the HTPID (e.g., HTP-2026-X7K2).
-        """
-        if not register_number:
+    def create_user(self, htp_id, name, email=None, password=None, **extra_fields):
+        if not htp_id:
             raise ValueError('The HTPID field must be set')
         if not name:
             raise ValueError('The Name field must be set')
@@ -17,20 +14,20 @@ class UserManager(BaseUserManager):
         if email:
             email = self.normalize_email(email)
         else:
-            email = f"{register_number}@local.user"
+            email = f"{htp_id}@local.user"
         
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         extra_fields.setdefault('is_admin', False)
         
-        user = self.model(register_number=register_number, name=name, email=email, **extra_fields)
+        user = self.model(htp_id=htp_id, name=name, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
     
-    def create_superuser(self, register_number, name, email=None, password=None, **extra_fields):
+    def create_superuser(self, htp_id, name, email=None, password=None, **extra_fields):
         if not email:
-            email = f"{register_number}@admin.local"
+            email = f"{htp_id}@admin.local"
         
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -41,23 +38,20 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
         
-        return self.create_user(register_number, name, email, password, **extra_fields)
+        return self.create_user(htp_id, name, email, password, **extra_fields)
 
 
 class User(AbstractUser):
     """
     Custom user model for competition participants.
-    Uses register_number field to store HTPID (Hack The Planet ID) as the unique identifier.
-    
-    The register_number field is repurposed to store HTPID (e.g., HTP-2026-X7K2).
-    User details (name, email, college, department) are fetched from HTP API on registration.
+    Uses htp_id (Hack The Planet ID) as the unique identifier.
     
     Access Levels:
     - Regular users: Can access API endpoints only (is_staff=False, is_superuser=False)
     - Superusers: Can access Django admin panel (is_staff=True, is_superuser=True)
     """
     username = None
-    register_number = models.CharField(
+    htp_id = models.CharField(
         max_length=50,
         unique=True,
         db_index=True,
@@ -91,7 +85,7 @@ class User(AbstractUser):
     
     objects = UserManager()
     
-    USERNAME_FIELD = 'register_number'
+    USERNAME_FIELD = 'htp_id'
     REQUIRED_FIELDS = ['name']
     
     class Meta:
@@ -99,19 +93,13 @@ class User(AbstractUser):
         verbose_name_plural = 'Users'
         db_table = 'users'
         indexes = [
-            models.Index(fields=['register_number']),
+            models.Index(fields=['htp_id']),
             models.Index(fields=['email']),
         ]
     
     def __str__(self):
-        return f"{self.register_number} - {self.name}"
-    
-    @property
-    def htpid(self):
-        """Alias for register_number — this stores the HTPID."""
-        return self.register_number
+        return f"{self.htp_id} - {self.name}"
     
     def has_admin_access(self):
         """Check if user has admin access to Django admin panel."""
         return self.is_superuser and self.is_staff
-

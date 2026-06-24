@@ -44,7 +44,7 @@ class SessionSecurityService:
         user_agent = SessionSecurityService.get_user_agent(request)
         
         UserSession.objects.filter(user=user).delete()
-        logger.info(f"Deleted any existing sessions for user {user.register_number}")
+        logger.info(f"Deleted any existing sessions for user {user.htp_id}")
         
         session = UserSession.objects.create(
             user=user,
@@ -63,13 +63,13 @@ class SessionSecurityService:
         
         SessionSecurityService.log_login_attempt(
             user=user,
-            register_number=user.register_number,
+            register_number=user.htp_id,
             ip_address=ip_address,
             user_agent=user_agent,
             success=True
         )
         
-        logger.info(f"Created new session for user {user.register_number} from {ip_address}")
+        logger.info(f"Created new session for user {user.htp_id} from {ip_address}")
         return session
 
     @staticmethod
@@ -86,7 +86,7 @@ class SessionSecurityService:
             
             if session.is_session_expired():
                 session.invalidate()
-                logger.info(f"Session expired for user {user.register_number}")
+                logger.info(f"Session expired for user {user.htp_id}")
                 return False
             
             session.last_activity = timezone.now()
@@ -95,7 +95,7 @@ class SessionSecurityService:
             return True
             
         except UserSession.DoesNotExist:
-            logger.warning(f"Invalid session attempt for user {user.register_number}")
+            logger.warning(f"Invalid session attempt for user {user.htp_id}")
             return False
 
     @staticmethod
@@ -106,7 +106,7 @@ class SessionSecurityService:
         try:
             session = UserSession.objects.get(user=user, is_active=True)
             session.invalidate()
-            logger.info(f"Session invalidated for user {user.register_number}")
+            logger.info(f"Session invalidated for user {user.htp_id}")
             return True
         except UserSession.DoesNotExist:
             return False
@@ -118,7 +118,7 @@ class SessionSecurityService:
         """
         attempt = LoginAttempt.objects.create(
             user=user,
-            register_number=register_number or (user.register_number if user else ''),
+            register_number=register_number or (user.htp_id if user else ''),
             ip_address=ip_address,
             user_agent=user_agent,
             success=success
@@ -163,10 +163,10 @@ class SessionSecurityService:
                     alert_type='suspicious_login',
                     user=user,
                     ip_address=ip_address,
-                    description=f"User {user.register_number} logged in from {country} within 5 minutes of login from {attempt.country}",
+                    description=f"User {user.htp_id} logged in from {country} within 5 minutes of login from {attempt.country}",
                     severity='high'
                 )
-                logger.warning(f"Suspicious login detected for user {user.register_number}: {attempt.country} -> {country}")
+                logger.warning(f"Suspicious login detected for user {user.htp_id}: {attempt.country} -> {country}")
                 break
 
     @staticmethod
@@ -195,7 +195,7 @@ class SessionSecurityService:
         """
         success = SessionSecurityService.invalidate_session(user)
         if success and admin_user:
-            logger.info(f"Admin {admin_user.register_number} forced logout of user {user.register_number}")
+            logger.info(f"Admin {admin_user.htp_id} forced logout of user {user.htp_id}")
         return success
 
     @staticmethod

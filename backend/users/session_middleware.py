@@ -75,7 +75,7 @@ class SessionSecurityMiddleware:
                 
                 if session.is_session_expired():
                     session.invalidate()
-                    logger.info(f"Session expired for user {user.register_number}")
+                    logger.info(f"Session expired for user {user.htp_id}")
                     return JsonResponse({
                         'error': 'Session expired. Please login again.',
                         'code': 'SESSION_EXPIRED'
@@ -87,7 +87,7 @@ class SessionSecurityMiddleware:
                 request.user_session = session
                 
             except UserSession.DoesNotExist:
-                logger.warning(f"No active session for authenticated user {user.register_number}")
+                logger.warning(f"No active session for authenticated user {user.htp_id}")
                 return JsonResponse({
                     'error': 'No active session. Please login again.',
                     'code': 'NO_ACTIVE_SESSION'
