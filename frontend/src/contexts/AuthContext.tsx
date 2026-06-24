@@ -213,14 +213,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      await authAPI.register(data);
+      const response = await authAPI.register(data);
       
-      await login({
-        register_number: data.register_number,
-        password: data.password,
-      });
+      // Registration now returns token + user directly (HTP flow)
+      setUser(response.user);
+      if (response.session_id) {
+        setSessionId(response.session_id);
+      }
+      
+      navigate('/profile');
     } catch (err: any) {
-      const errorMessage = err.response?.data?.register_number?.[0] ||
+      const errorMessage = err.response?.data?.htp_id?.[0] ||
+                          err.response?.data?.error ||
                           err.response?.data?.detail ||
                           'Registration failed. Please try again.';
       setError(errorMessage);
@@ -228,7 +232,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [login]);
+  }, [navigate]);
 
   /**
    * Logout user

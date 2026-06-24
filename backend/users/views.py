@@ -4,18 +4,32 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
 from .serializers import UserRegistrationSerializer, UserSerializer, LoginSerializer
+from .htp_service import (
+    verify_htpid, 
+    HTPParticipantNotFound, 
+    HTPAuthenticationError, 
+    HTPServiceUnavailable, 
+    HTPServiceError,
+)
 from utils.throttling import AuthRateThrottle, LoginRateThrottle
 from .session_service import SessionSecurityService
 from .session_models import UserSession
+import logging
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class SignUpView(generics.CreateAPIView):
     """
     User registration endpoint.
-    Creates a new user with register_number, name, email, and password.
-    Returns authentication token upon successful registration.
+    
+    Flow:
+    1. User provides HTPID + password
+    2. Backend verifies HTPID against HTP API
+    3. Fetches participant details (name, email, college, department)
+    4. Creates local user with those details
+    5. Returns auth token + user data
     
     Rate limit: 10 requests per hour per IP
     """
@@ -26,10 +40,53 @@ class SignUpView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        
+        htp_id = serializer.validated_data['htp_id']
+        password = serializer.validated_data['password']
+        
+        # Verify HTPID against HTP API
+        try:
+            participant = verify_htpid(htp_id)
+        except HTPParticipantNotFound as e:
+            return Response({
+                'error': str(e),
+                'code': 'HTP_NOT_FOUND'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except HTPAuthenticationError:
+            logger.critical("HTP API key misconfigured")
+            return Response({
+                'error': 'Service configuration error. Please contact admin.',
+                'code': 'HTP_AUTH_ERROR'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except HTPServiceUnavailable as e:
+            return Response({
+                'error': str(e),
+                'code': 'HTP_UNAVAILABLE'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except HTPServiceError as e:
+            return Response({
+                'error': 'Unable to verify HTPID. Please try again.',
+                'code': 'HTP_ERROR'
+            }, status=status.HTTP_502_BAD_GATEWAY)
+        
+        if not participant.is_active:
+            return Response({
+                'error': 'Your HTP account is inactive. Please complete your HTP profile first.',
+                'code': 'HTP_INACTIVE'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Create user with details from HTP
+        user = User.objects.create_user(
+            register_number=participant.htp_id,
+            name=participant.name,
+            email=participant.email,
+            password=password,
+            college_name=participant.college,
+            department=participant.department,
+            profile_completed=True,  # Auto-completed from HTP data
+        )
         
         token, created = Token.objects.get_or_create(user=user)
-        
         session = SessionSecurityService.create_session(user, request)
         
         return Response({
@@ -37,10 +94,12 @@ class SignUpView(generics.CreateAPIView):
             'session_id': str(session.session_id),
             'user': {
                 'id': user.id,
+                'htp_id': user.register_number,
                 'register_number': user.register_number,
                 'name': user.name,
                 'email': user.email,
                 'college_name': user.college_name,
+                'department': user.department,
                 'profile_completed': user.profile_completed,
                 'is_admin': user.is_admin,
                 'created_at': user.created_at
@@ -51,7 +110,7 @@ class SignUpView(generics.CreateAPIView):
 class SignInView(generics.GenericAPIView):
     """
     User login endpoint.
-    Authenticates user with register_number and password.
+    Authenticates user with HTPID and password.
     Returns authentication token upon successful login.
     
     Rate limit: 4 attempts per minute per IP
@@ -61,35 +120,35 @@ class SignInView(generics.GenericAPIView):
     throttle_classes = [LoginRateThrottle]
     
     def post(self, request):
-        register_number = request.data.get('register_number')
+        htp_id = request.data.get('htp_id', '').strip().upper()
         password = request.data.get('password')
         
-        if not register_number or not password:
+        if not htp_id or not password:
             SessionSecurityService.log_login_attempt(
-                register_number=register_number or '',
+                register_number=htp_id or '',
                 ip_address=SessionSecurityService.get_client_ip(request),
                 user_agent=SessionSecurityService.get_user_agent(request),
                 success=False
             )
             return Response({
-                'error': 'Please provide both register_number and password'
+                'error': 'Please provide both HTPID and password'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        user = authenticate(request, username=register_number, password=password)
+        # Authenticate using register_number field (which stores HTPID)
+        user = authenticate(request, username=htp_id, password=password)
         
         if user is None:
             SessionSecurityService.log_login_attempt(
-                register_number=register_number,
+                register_number=htp_id,
                 ip_address=SessionSecurityService.get_client_ip(request),
                 user_agent=SessionSecurityService.get_user_agent(request),
                 success=False
             )
             return Response({
-                'error': 'Invalid credentials'
+                'error': 'Invalid HTPID or password'
             }, status=status.HTTP_401_UNAUTHORIZED)
         
         token, created = Token.objects.get_or_create(user=user)
-        
         session = SessionSecurityService.create_session(user, request)
         
         return Response({
@@ -97,10 +156,12 @@ class SignInView(generics.GenericAPIView):
             'session_id': str(session.session_id),
             'user': {
                 'id': user.id,
+                'htp_id': user.register_number,
                 'register_number': user.register_number,
                 'name': user.name,
                 'email': user.email,
                 'college_name': user.college_name,
+                'department': user.department,
                 'profile_completed': user.profile_completed,
                 'is_admin': user.is_admin
             },
@@ -123,7 +184,6 @@ class SignOutView(generics.GenericAPIView):
     def post(self, request):
         try:
             SessionSecurityService.invalidate_session(request.user)
-            
             request.user.auth_token.delete()
             return Response({'message': 'Successfully signed out'}, status=status.HTTP_200_OK)
         except Exception:
@@ -144,8 +204,8 @@ class CurrentUserView(generics.RetrieveAPIView):
 class CompleteProfileView(generics.GenericAPIView):
     """
     Profile completion endpoint.
-    Updates user profile with name, register_number, and college_name.
-    Sets profile_completed to True upon successful update.
+    With HTP integration, profiles are auto-completed on registration.
+    This endpoint allows manual updates if needed.
     """
     permission_classes = [IsAuthenticated]
     
@@ -153,17 +213,16 @@ class CompleteProfileView(generics.GenericAPIView):
         user = request.user
         
         name = request.data.get('name', '').strip()
-        register_number = request.data.get('register_number', '').strip()
         college_name = request.data.get('college_name', '').strip()
         
-        if not name or not register_number or not college_name:
+        if not name:
             return Response({
-                'error': 'All fields are required: name, register_number, college_name'
+                'error': 'Name is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         user.name = name
-        user.register_number = register_number
-        user.college_name = college_name
+        if college_name:
+            user.college_name = college_name
         user.profile_completed = True
         user.save()
         
@@ -171,9 +230,11 @@ class CompleteProfileView(generics.GenericAPIView):
             'message': 'Profile completed successfully',
             'user': {
                 'id': user.id,
+                'htp_id': user.register_number,
                 'register_number': user.register_number,
                 'name': user.name,
                 'college_name': user.college_name,
+                'department': user.department,
                 'email': user.email,
                 'profile_completed': user.profile_completed,
                 'is_admin': user.is_admin
@@ -184,7 +245,7 @@ class CompleteProfileView(generics.GenericAPIView):
 class UpdateProfileView(generics.GenericAPIView):
     """
     Profile update endpoint.
-    Allows users to update their profile information.
+    Allows users to update their name (other fields are from HTP).
     """
     permission_classes = [IsAuthenticated]
     
@@ -192,52 +253,24 @@ class UpdateProfileView(generics.GenericAPIView):
         user = request.user
         
         name = request.data.get('name', '').strip()
-        college_name = request.data.get('college_name', '').strip()
-        email = request.data.get('email', '').strip()
         
         if not name:
             return Response({
                 'error': 'Name is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        if not college_name:
-            return Response({
-                'error': 'College name is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not email:
-            return Response({
-                'error': 'Email is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        import re
-        email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-        if not re.match(email_pattern, email):
-            return Response({
-                'error': 'Invalid email format'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        if User.objects.filter(email=email).exclude(id=user.id).exists():
-            return Response({
-                'error': 'This email is already in use'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
         user.name = name
-        user.college_name = college_name
-        user.email = email
-        
-        if name and college_name and email and user.register_number:
-            user.profile_completed = True
-        
         user.save()
         
         return Response({
             'message': 'Profile updated successfully',
             'user': {
                 'id': user.id,
+                'htp_id': user.register_number,
                 'register_number': user.register_number,
                 'name': user.name,
                 'college_name': user.college_name,
+                'department': user.department,
                 'email': user.email,
                 'profile_completed': user.profile_completed,
                 'is_admin': user.is_admin
@@ -245,7 +278,7 @@ class UpdateProfileView(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+# Aliases for backwards compatibility with URL patterns
 RegisterView = SignUpView
 LoginView = SignInView
 LogoutView = SignOutView
-

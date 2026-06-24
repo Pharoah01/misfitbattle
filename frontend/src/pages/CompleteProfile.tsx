@@ -1,6 +1,7 @@
 /**
  * Complete Profile Page
- * Collects required profile information after signup
+ * With HTP integration, profiles are auto-completed on registration.
+ * This page handles edge cases where profile completion is still needed.
  */
 
 import React, { useState } from 'react';
@@ -8,30 +9,22 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/utils/toast';
-import { COLLEGES } from '@/config/colleges';
 
 export const CompleteProfile: React.FC = () => {
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   
   const [formData, setFormData] = useState({
-    name: '',
-    register_number: '',
-    college_name: ''
+    name: user?.name || '',
+    college_name: user?.college_name || '',
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'register_number') {
-      const numericValue = value.replace(/[^0-9]/g, '');
-      setFormData(prev => ({ ...prev, [name]: numericValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
     
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -43,14 +36,6 @@ export const CompleteProfile: React.FC = () => {
     
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
-    }
-    
-    if (!formData.register_number.trim()) {
-      newErrors.register_number = 'Register number is required';
-    }
-    
-    if (!formData.college_name.trim()) {
-      newErrors.college_name = 'College name is required';
     }
     
     setErrors(newErrors);
@@ -87,18 +72,28 @@ export const CompleteProfile: React.FC = () => {
   return (
     <div className="min-h-screen bg-dark-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-dark-surface border border-dark-border rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-text-primary mb-2">
+        <div className="bg-dark-surface border border-purple-primary/20 rounded-lg p-8 shadow-xl shadow-purple-primary/10">
+          <h1 className="text-2xl font-bold text-text-primary mb-2 font-orbitron">
             Complete Your Profile
           </h1>
-          <p className="text-text-secondary mb-6">
-            Please provide the following information to continue
+          <p className="text-text-secondary mb-6 font-rajdhani">
+            Please verify your information to continue
           </p>
+
+          {/* HTPID display (read-only) */}
+          <div className="bg-dark-bg rounded-lg p-4 border border-purple-primary/10 mb-6">
+            <label className="text-xs text-text-secondary uppercase tracking-wider block mb-1 font-rajdhani font-semibold">
+              HTPID
+            </label>
+            <p className="text-lg text-text-primary font-mono">
+              {user?.htp_id || user?.register_number}
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2 font-rajdhani">
                 Full Name
               </label>
               <input
@@ -107,65 +102,37 @@ export const CompleteProfile: React.FC = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
+                className="w-full px-4 py-3 bg-dark-bg border border-purple-primary/30 rounded-lg text-text-primary focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/20 transition-all font-rajdhani"
                 placeholder="Enter your full name"
                 disabled={isSubmitting}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-primary">{errors.name}</p>
-              )}
-            </div>
-
-            {/* Register Number Field */}
-            <div>
-              <label htmlFor="register_number" className="block text-sm font-medium text-text-primary mb-2">
-                Register Number
-              </label>
-              <input
-                type="number"
-                id="register_number"
-                name="register_number"
-                value={formData.register_number}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
-                placeholder="Enter your register number (numbers only)"
-                disabled={isSubmitting}
-              />
-              {errors.register_number && (
-                <p className="mt-1 text-sm text-primary">{errors.register_number}</p>
+                <p className="mt-1 text-sm text-red-500 font-rajdhani">{errors.name}</p>
               )}
             </div>
 
             {/* College Name Field */}
             <div>
-              <label htmlFor="college_name" className="block text-sm font-medium text-text-primary mb-2">
+              <label htmlFor="college_name" className="block text-sm font-medium text-text-primary mb-2 font-rajdhani">
                 College/Institution
               </label>
-              <select
+              <input
+                type="text"
                 id="college_name"
                 name="college_name"
                 value={formData.college_name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded text-text-primary focus:outline-none focus:border-primary"
+                className="w-full px-4 py-3 bg-dark-bg border border-purple-primary/30 rounded-lg text-text-primary focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/20 transition-all font-rajdhani"
+                placeholder="Your college (pre-filled from HTP)"
                 disabled={isSubmitting}
-              >
-                <option value="">Select your college</option>
-                {COLLEGES.map((college) => (
-                  <option key={college} value={college}>
-                    {college}
-                  </option>
-                ))}
-              </select>
-              {errors.college_name && (
-                <p className="mt-1 text-sm text-primary">{errors.college_name}</p>
-              )}
+              />
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-3 bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded transition-colors"
+              className="w-full px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all font-rajdhani shadow-lg shadow-purple-primary/30"
             >
               {isSubmitting ? 'Completing Profile...' : 'Complete Profile'}
             </button>

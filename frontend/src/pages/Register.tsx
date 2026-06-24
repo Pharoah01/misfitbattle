@@ -1,6 +1,7 @@
 /**
  * Register Page
- * Allows new users to create an account
+ * Allows new users to create an account using their HTPID.
+ * Name, email, and college are fetched automatically from the Hack The Planet API.
  */
 
 import React, { useState } from 'react';
@@ -15,9 +16,7 @@ export const Register: React.FC = () => {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState<RegisterFormData>({
-    register_number: '',
-    name: '',
-    email: '',
+    htp_id: '',
     password: '',
     confirmPassword: '',
   });
@@ -26,7 +25,7 @@ export const Register: React.FC = () => {
 
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/profile', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -36,22 +35,10 @@ export const Register: React.FC = () => {
   const validate = (): boolean => {
     const newErrors: Partial<RegisterFormData> = {};
 
-    if (!formData.register_number.trim()) {
-      newErrors.register_number = 'Register number is required';
-    } else if (!VALIDATION.REGISTER_NUMBER_PATTERN.test(formData.register_number)) {
-      newErrors.register_number = 'Register number must be 3-20 alphanumeric characters';
-    }
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+    if (!formData.htp_id.trim()) {
+      newErrors.htp_id = 'HTPID is required';
+    } else if (formData.htp_id.trim().length < 5) {
+      newErrors.htp_id = 'Please enter a valid HTPID (e.g., HTP-2026-X7K2)';
     }
 
     if (!formData.password) {
@@ -82,9 +69,10 @@ export const Register: React.FC = () => {
 
     try {
       await register(formData);
-      toast.success('Registration successful! Redirecting...');
+      toast.success('Registration successful! Welcome to Misfits Battle.');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.register_number?.[0] ||
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.htp_id?.[0] ||
                           error.response?.data?.detail ||
                           'Registration failed. Please try again.';
       toast.error(errorMessage);
@@ -96,13 +84,7 @@ export const Register: React.FC = () => {
    */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'register_number') {
-      const numericValue = value.replace(/[^0-9]/g, '');
-      setFormData(prev => ({ ...prev, [name]: numericValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
     
     if (errors[name as keyof RegisterFormData]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -118,96 +100,49 @@ export const Register: React.FC = () => {
             <span className="text-purple-primary">MISFITS</span>-BATTLE
           </h1>
           <p className="text-text-secondary font-rajdhani text-lg">
-            Create your account to start competing
+            Register with your Hack The Planet ID
           </p>
         </div>
 
         {/* Register Form */}
         <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-8 shadow-xl shadow-purple-primary/10">
-          <h2 className="text-2xl font-bold text-text-primary mb-6 font-rajdhani">
+          <h2 className="text-2xl font-bold text-text-primary mb-2 font-rajdhani">
             Sign Up
           </h2>
+          <p className="text-text-secondary text-sm mb-6 font-rajdhani">
+            Your name, email, and college will be fetched automatically from your HTP profile.
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Register Number */}
+            {/* HTPID */}
             <div>
               <label 
-                htmlFor="register_number" 
+                htmlFor="htp_id" 
                 className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
               >
-                Register Number
-              </label>
-              <input
-                type="number"
-                id="register_number"
-                name="register_number"
-                value={formData.register_number}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-dark-bg border ${
-                  errors.register_number ? 'border-red-500' : 'border-purple-primary/30'
-                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
-                placeholder="e.g., 43614014 (numbers only)"
-                disabled={loading}
-              />
-              {errors.register_number && (
-                <p className="mt-1 text-sm text-red-500 font-rajdhani">
-                  {errors.register_number}
-                </p>
-              )}
-            </div>
-
-            {/* Name */}
-            <div>
-              <label 
-                htmlFor="name" 
-                className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
-              >
-                Full Name
+                HTPID (Hack The Planet ID)
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+                id="htp_id"
+                name="htp_id"
+                value={formData.htp_id}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 bg-dark-bg border ${
-                  errors.name ? 'border-red-500' : 'border-purple-primary/30'
-                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
-                placeholder="Enter your full name"
+                  errors.htp_id ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani uppercase`}
+                placeholder="e.g., HTP-2026-X7K2"
                 disabled={loading}
+                autoComplete="username"
               />
-              {errors.name && (
+              {errors.htp_id && (
                 <p className="mt-1 text-sm text-red-500 font-rajdhani">
-                  {errors.name}
+                  {errors.htp_id}
                 </p>
               )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label 
-                htmlFor="email" 
-                className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-dark-bg border ${
-                  errors.email ? 'border-red-500' : 'border-purple-primary/30'
-                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
-                placeholder="your.email@example.com"
-                disabled={loading}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-500 font-rajdhani">
-                  {errors.email}
-                </p>
-              )}
+              <p className="mt-1 text-xs text-text-secondary font-rajdhani">
+                Find your HTPID on your Hack The Planet dashboard
+              </p>
             </div>
 
             {/* Password */}
@@ -216,7 +151,7 @@ export const Register: React.FC = () => {
                 htmlFor="password" 
                 className="block text-sm font-medium text-text-secondary mb-2 font-rajdhani"
               >
-                Password
+                Create Password
               </label>
               <input
                 type="password"
@@ -229,6 +164,7 @@ export const Register: React.FC = () => {
                 } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
                 placeholder="At least 8 characters"
                 disabled={loading}
+                autoComplete="new-password"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-500 font-rajdhani">
@@ -256,12 +192,20 @@ export const Register: React.FC = () => {
                 } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-purple-primary/20 focus:border-purple-primary transition-all font-rajdhani`}
                 placeholder="Re-enter your password"
                 disabled={loading}
+                autoComplete="new-password"
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-500 font-rajdhani">
                   {errors.confirmPassword}
                 </p>
               )}
+            </div>
+
+            {/* Info box */}
+            <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-lg p-4">
+              <p className="text-text-secondary text-xs font-rajdhani">
+                <span className="text-purple-primary font-semibold">How it works:</span> We'll verify your HTPID with Hack The Planet and automatically pull your profile details (name, email, college, department). No manual entry needed.
+              </p>
             </div>
 
             {/* Submit Button */}
@@ -276,7 +220,7 @@ export const Register: React.FC = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Creating account...
+                  Verifying HTPID...
                 </>
               ) : (
                 'Create Account'

@@ -96,7 +96,7 @@ export const Profile: React.FC = () => {
                       {user?.name}
                     </span>
                   </h2>
-                  <p className="text-text-secondary font-rajdhani text-lg">{user?.register_number}</p>
+                  <p className="text-text-secondary font-rajdhani text-lg">{user?.htp_id || user?.register_number}</p>
                 </div>
                 <button
                   onClick={() => navigate('/edit-profile')}
@@ -162,8 +162,8 @@ export const Profile: React.FC = () => {
             
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-dark-bg rounded-lg p-4 border border-purple-primary/10">
-                <label className="text-xs text-text-secondary uppercase tracking-wider block mb-2 font-rajdhani font-semibold">Register Number</label>
-                <p className="text-lg text-text-primary font-mono">{user?.register_number}</p>
+                <label className="text-xs text-text-secondary uppercase tracking-wider block mb-2 font-rajdhani font-semibold">HTPID</label>
+                <p className="text-lg text-text-primary font-mono">{user?.htp_id || user?.register_number}</p>
               </div>
               
               <div className="bg-dark-bg rounded-lg p-4 border border-purple-primary/10">

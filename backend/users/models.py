@@ -3,11 +3,14 @@ from django.db import models
 
 
 class UserManager(BaseUserManager):
-    """Custom user manager for User model with register_number as username."""
+    """Custom user manager for User model with register_number (HTPID) as username."""
     
     def create_user(self, register_number, name, email=None, password=None, **extra_fields):
+        """
+        Create a user. register_number stores the HTPID (e.g., HTP-2026-X7K2).
+        """
         if not register_number:
-            raise ValueError('The Register Number field must be set')
+            raise ValueError('The HTPID field must be set')
         if not name:
             raise ValueError('The Name field must be set')
         
@@ -44,7 +47,10 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     """
     Custom user model for competition participants.
-    Uses register_number as username field.
+    Uses register_number field to store HTPID (Hack The Planet ID) as the unique identifier.
+    
+    The register_number field is repurposed to store HTPID (e.g., HTP-2026-X7K2).
+    User details (name, email, college, department) are fetched from HTP API on registration.
     
     Access Levels:
     - Regular users: Can access API endpoints only (is_staff=False, is_superuser=False)
@@ -55,18 +61,23 @@ class User(AbstractUser):
         max_length=50,
         unique=True,
         db_index=True,
-        help_text="Unique identifier (e.g., student ID)"
+        help_text="HTPID from Hack The Planet (e.g., HTP-2026-X7K2)"
     )
     email = models.EmailField(
         blank=True,
         null=True,
-        help_text="User's email address (optional for superusers)"
+        help_text="User's email address (fetched from HTP)"
     )
     name = models.CharField(max_length=255)
     college_name = models.CharField(
         max_length=255,
         blank=True,
-        help_text="User's college or institution"
+        help_text="User's college or institution (fetched from HTP)"
+    )
+    department = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="User's department (fetched from HTP)"
     )
     profile_completed = models.BooleanField(
         default=False,
@@ -94,6 +105,11 @@ class User(AbstractUser):
     
     def __str__(self):
         return f"{self.register_number} - {self.name}"
+    
+    @property
+    def htpid(self):
+        """Alias for register_number — this stores the HTPID."""
+        return self.register_number
     
     def has_admin_access(self):
         """Check if user has admin access to Django admin panel."""

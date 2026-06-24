@@ -253,6 +253,14 @@ LOGGING = {
 }
 
 
+# =============================================================================
+# HACK THE PLANET (HTP) INTEGRATION
+# =============================================================================
+# API key for verifying HTPIDs against the HTP platform.
+# Generate with: openssl rand -hex 32
+# Set in .env as EXTERNAL_API_KEY=<value>
+HTP_EXTERNAL_API_KEY = os.getenv('EXTERNAL_API_KEY', '')
+
 HEATMAP_API_URL = os.getenv('HEATMAP_API_URL', 'http://localhost:5000')
 HEATMAP_API_TIMEOUT = 30  # seconds
 

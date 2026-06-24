@@ -1,6 +1,8 @@
 /**
  * Authentication API Service
  * Handles all authentication-related API calls
+ * 
+ * Uses HTPID (Hack The Planet ID) for identification instead of register numbers.
  */
 
 import apiClient, { setAccessToken, clearAccessToken } from './client';
@@ -14,26 +16,30 @@ import type {
 } from '@/types';
 
 /**
- * Register a new user
- * @param data - Registration form data
- * @returns Registered user data
+ * Register a new user using HTPID
+ * Backend verifies HTPID against HTP API and fetches participant details automatically.
+ * 
+ * @param data - Registration form data (htp_id + password)
+ * @returns Registered user data with token
  */
 export const register = async (data: RegisterFormData): Promise<RegisterResponse> => {
   const response = await apiClient.post<RegisterResponse>(
     API_ENDPOINTS.AUTH.REGISTER,
     {
-      register_number: data.register_number,
-      name: data.name,
-      email: data.email,
+      htp_id: data.htp_id.trim().toUpperCase(),
       password: data.password,
     }
   );
+  
+  // Set token on successful registration
+  setAccessToken(response.data.token);
+  
   return response.data;
 };
 
 /**
- * Login user and store access token
- * @param data - Login credentials
+ * Login user with HTPID and password
+ * @param data - Login credentials (htp_id + password)
  * @returns Login response with token and user data
  */
 export const login = async (data: LoginFormData): Promise<LoginResponse> => {
@@ -50,7 +56,7 @@ export const login = async (data: LoginFormData): Promise<LoginResponse> => {
   }>(
     API_ENDPOINTS.AUTH.LOGIN,
     {
-      register_number: data.register_number,
+      htp_id: data.htp_id.trim().toUpperCase(),
       password: data.password,
     }
   );
@@ -59,7 +65,7 @@ export const login = async (data: LoginFormData): Promise<LoginResponse> => {
   
   return {
     access: response.data.token,
-    refresh: '', // Backend uses DRF Token Auth (no refresh token)
+    refresh: '',
     user: response.data.user,
     session_id: response.data.session_id,
     session_info: response.data.session_info,
@@ -68,7 +74,7 @@ export const login = async (data: LoginFormData): Promise<LoginResponse> => {
 
 /**
  * Logout user and clear tokens
- * Backend invalidates refresh token
+ * Backend invalidates session and token
  */
 export const logout = async (): Promise<void> => {
   try {
@@ -90,13 +96,12 @@ export const getCurrentUser = async (): Promise<User> => {
 /**
  * Refresh access token
  * Note: Backend uses simple token auth without refresh mechanism
- * This function is kept for compatibility but doesn't actually refresh
  * @returns Current access token
  */
 export const refreshToken = async (): Promise<string> => {
   try {
     await getCurrentUser();
-    return ''; // Token is already set in client
+    return '';
   } catch (error) {
     clearAccessToken();
     throw error;

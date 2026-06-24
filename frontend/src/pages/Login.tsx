@@ -1,6 +1,6 @@
 /**
  * Login Page
- * Allows users to authenticate with register_number and password
+ * Allows users to authenticate with HTPID and password
  */
 
 import React, { useState } from 'react';
@@ -16,7 +16,7 @@ export const Login: React.FC = () => {
   const location = useLocation();
   
   const [formData, setFormData] = useState<LoginFormData>({
-    register_number: '',
+    htp_id: '',
     password: '',
   });
   
@@ -32,8 +32,8 @@ export const Login: React.FC = () => {
   const validate = (): boolean => {
     const newErrors: Partial<LoginFormData> = {};
 
-    if (!formData.register_number.trim()) {
-      newErrors.register_number = 'Register number is required';
+    if (!formData.htp_id.trim()) {
+      newErrors.htp_id = 'HTPID is required';
     }
 
     if (!formData.password) {
@@ -55,7 +55,8 @@ export const Login: React.FC = () => {
       await login(formData);
       toast.success('Login successful!');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.detail || 
                           error.response?.data?.non_field_errors?.[0] ||
                           'Login failed. Please check your credentials.';
       toast.error(errorMessage);
@@ -64,13 +65,7 @@ export const Login: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'register_number') {
-      const numericValue = value.replace(/[^0-9]/g, '');
-      setFormData(prev => ({ ...prev, [name]: numericValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
     
     if (errors[name as keyof LoginFormData]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -86,7 +81,7 @@ export const Login: React.FC = () => {
             <span className="text-purple-primary">MISFITS</span>-BATTLE
           </h1>
           <p className="text-text-secondary font-rajdhani text-lg">
-            Sign in to start competing
+            Sign in with your Hack The Planet ID
           </p>
         </div>
 
@@ -97,29 +92,30 @@ export const Login: React.FC = () => {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Register Number */}
+            {/* HTPID */}
             <div>
               <label 
-                htmlFor="register_number" 
+                htmlFor="htp_id" 
                 className="block text-sm font-medium text-text-primary mb-2 font-rajdhani"
               >
-                Register Number
+                HTPID
               </label>
               <input
-                type="number"
-                id="register_number"
-                name="register_number"
-                value={formData.register_number}
+                type="text"
+                id="htp_id"
+                name="htp_id"
+                value={formData.htp_id}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 bg-dark-bg border ${
-                  errors.register_number ? 'border-red-500' : 'border-purple-primary/30'
-                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/20 transition-all font-rajdhani`}
-                placeholder="Enter your register number (numbers only)"
+                  errors.htp_id ? 'border-red-500' : 'border-purple-primary/30'
+                } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/20 transition-all font-rajdhani uppercase`}
+                placeholder="e.g., HTP-2026-X7K2"
                 disabled={loading}
+                autoComplete="username"
               />
-              {errors.register_number && (
+              {errors.htp_id && (
                 <p className="mt-1 text-sm text-red-500 font-rajdhani">
-                  {errors.register_number}
+                  {errors.htp_id}
                 </p>
               )}
             </div>
@@ -143,6 +139,7 @@ export const Login: React.FC = () => {
                 } rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-purple-primary focus:ring-2 focus:ring-purple-primary/20 transition-all font-rajdhani`}
                 placeholder="Enter your password"
                 disabled={loading}
+                autoComplete="current-password"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-500 font-rajdhani">
@@ -169,7 +166,7 @@ export const Login: React.FC = () => {
                 to="/register" 
                 className="text-purple-primary hover:text-purple-secondary font-semibold"
               >
-                Sign up
+                Sign up with HTPID
               </Link>
             </p>
           </div>

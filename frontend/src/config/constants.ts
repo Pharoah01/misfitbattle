@@ -50,14 +50,14 @@ export const QUERY_KEYS = {
 
 export const VALIDATION = {
   MAX_CODE_LENGTH: 10000,
-  REGISTER_NUMBER_PATTERN: /^[a-zA-Z0-9]{3,20}$/,
+  HTPID_PATTERN: /^[A-Z0-9\-]{5,50}$/,
   PASSWORD_MIN_LENGTH: 8,
 } as const;
 
 export const MAX_CODE_LENGTH = VALIDATION.MAX_CODE_LENGTH;
 
 export const VALIDATION_PATTERNS = {
-  REGISTER_NUMBER: VALIDATION.REGISTER_NUMBER_PATTERN,
+  HTPID: VALIDATION.HTPID_PATTERN,
   EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   PASSWORD: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
 } as const;

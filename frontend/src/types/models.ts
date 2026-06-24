@@ -4,10 +4,12 @@
 
 export interface User {
   id: number;
+  htp_id: string;
   register_number: string;
   name: string;
   email?: string;
   college_name?: string;
+  department?: string;
   profile_completed: boolean;
   is_admin: boolean;
   created_at: string;
@@ -75,11 +77,9 @@ export interface AuthResponse {
 }
 
 export interface RegisterResponse {
-  id: number;
-  register_number: string;
-  name: string;
-  is_admin: boolean;
-  created_at: string;
+  token: string;
+  session_id: string;
+  user: User;
 }
 
 export interface APIError {
@@ -88,14 +88,12 @@ export interface APIError {
 }
 
 export interface LoginFormData {
-  register_number: string;
+  htp_id: string;
   password: string;
 }
 
 export interface RegisterFormData {
-  register_number: string;
-  name: string;
-  email: string;
+  htp_id: string;
   password: string;
   confirmPassword?: string;
 }

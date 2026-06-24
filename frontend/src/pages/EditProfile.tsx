@@ -135,19 +135,19 @@ export const EditProfile: React.FC = () => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Register Number (Read-only) */}
+              {/* HTPID (Read-only) */}
               <div>
-                <label htmlFor="register_number" className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">
-                  Register Number
+                <label htmlFor="htp_id" className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">
+                  HTPID
                 </label>
                 <input
                   type="text"
-                  id="register_number"
-                  value={user?.register_number || ''}
+                  id="htp_id"
+                  value={user?.htp_id || user?.register_number || ''}
                   disabled
                   className="w-full px-4 py-3 bg-dark-bg/50 border border-purple-primary/10 rounded-lg text-text-secondary cursor-not-allowed font-mono"
                 />
-                <p className="mt-2 text-xs text-text-secondary font-rajdhani">Register number cannot be changed</p>
+                <p className="mt-2 text-xs text-text-secondary font-rajdhani">HTPID is linked to your Hack The Planet account and cannot be changed</p>
               </div>
 
               {/* Name Field */}
