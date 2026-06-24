@@ -1,8 +1,3 @@
-/**
- * Basic verification tests for configuration constants
- * These tests ensure the configuration is properly set up
- */
-
 import { describe, it, expect } from 'vitest';
 import {
   API_BASE_URL,
@@ -33,22 +28,21 @@ describe('Configuration Constants', () => {
   });
 
   it('should have validation patterns defined', () => {
-    expect(VALIDATION_PATTERNS.REGISTER_NUMBER).toBeInstanceOf(RegExp);
+    expect(VALIDATION_PATTERNS.HTPID).toBeInstanceOf(RegExp);
     expect(VALIDATION_PATTERNS.EMAIL).toBeInstanceOf(RegExp);
     expect(VALIDATION_PATTERNS.PASSWORD).toBeInstanceOf(RegExp);
   });
 
-  it('should validate register_number pattern correctly', () => {
-    const pattern = VALIDATION_PATTERNS.REGISTER_NUMBER;
+  it('should validate HTPID pattern correctly', () => {
+    const pattern = VALIDATION_PATTERNS.HTPID;
     
-    expect(pattern.test('abc123')).toBe(true);
-    expect(pattern.test('user123')).toBe(true);
-    expect(pattern.test('ABC')).toBe(true);
+    expect(pattern.test('HTP-2026-X7K2')).toBe(true);
+    expect(pattern.test('HTP-2026-ABC1')).toBe(true);
+    expect(pattern.test('ABCDE')).toBe(true);
     
     expect(pattern.test('ab')).toBe(false); // Too short
-    expect(pattern.test('a'.repeat(21))).toBe(false); // Too long
-    expect(pattern.test('user@123')).toBe(false); // Special characters
-    expect(pattern.test('user 123')).toBe(false); // Space
+    expect(pattern.test('htp@id')).toBe(false); // Special characters (except dash)
+    expect(pattern.test('htp id')).toBe(false); // Space
   });
 
   it('should validate email pattern correctly', () => {

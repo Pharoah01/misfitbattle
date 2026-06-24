@@ -100,7 +100,7 @@ export const Register: React.FC = () => {
             <span className="text-purple-primary">MISFITS</span>-BATTLE
           </h1>
           <p className="text-text-secondary font-rajdhani text-lg">
-            Register with your Hack The Planet ID
+            Create your account to compete
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export const Register: React.FC = () => {
             Sign Up
           </h2>
           <p className="text-text-secondary text-sm mb-6 font-rajdhani">
-            Your name, email, and college will be fetched automatically from your HTP profile.
+            Your profile details will be fetched from your HTP account.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -141,7 +141,7 @@ export const Register: React.FC = () => {
                 </p>
               )}
               <p className="mt-1 text-xs text-text-secondary font-rajdhani">
-                Find your HTPID on your Hack The Planet dashboard
+                From your Hack The Planet dashboard
               </p>
             </div>
 
@@ -202,9 +202,9 @@ export const Register: React.FC = () => {
             </div>
 
             {/* Info box */}
-            <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-lg p-4">
-              <p className="text-text-secondary text-xs font-rajdhani">
-                <span className="text-purple-primary font-semibold">How it works:</span> We'll verify your HTPID with Hack The Planet and automatically pull your profile details (name, email, college, department). No manual entry needed.
+            <div className="bg-dark-bg/50 border border-purple-primary/10 rounded-lg p-3">
+              <p className="text-text-secondary text-xs font-rajdhani text-center">
+                Your profile details are pulled from Hack The Planet automatically.
               </p>
             </div>
 

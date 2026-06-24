@@ -41,8 +41,11 @@ describe('Property Test: Authentication State Consistency', () => {
 
     id: fc.integer({ min: 1, max: 100000 }),
 
-    register_number: fc.string({ minLength: 3, maxLength: 20 })
-        .filter((s) => /^[A-Za-z0-9]+$/.test(s)),
+    htp_id: fc.string({ minLength: 5, maxLength: 20 })
+        .filter((s) => /^[A-Za-z0-9\-]+$/.test(s)),
+
+    register_number: fc.string({ minLength: 5, maxLength: 20 })
+        .filter((s) => /^[A-Za-z0-9\-]+$/.test(s)),
 
     name: fc.string({ minLength: 2, maxLength: 100 })
         .filter((s) => s.trim().length >= 2),
@@ -50,6 +53,8 @@ describe('Property Test: Authentication State Consistency', () => {
     email: fc.option(fc.emailAddress(), { nil: undefined }),
 
     college_name: fc.option(fc.string({ minLength: 2, maxLength: 100 }), { nil: undefined }),
+
+    department: fc.option(fc.string({ minLength: 2, maxLength: 100 }), { nil: undefined }),
 
     profile_completed: fc.boolean(),
 
@@ -190,12 +195,12 @@ describe('Property Test: Authentication State Consistency', () => {
     fc.assert(
       fc.property(userArbitrary, (user) => {
         expect(user.id).toBeGreaterThan(0);
-        expect(user.register_number.length).toBeGreaterThanOrEqual(3);
-        expect(user.register_number.length).toBeLessThanOrEqual(20);
+        expect(user.htp_id.length).toBeGreaterThanOrEqual(5);
+        expect(user.htp_id.length).toBeLessThanOrEqual(20);
         expect(user.name.length).toBeGreaterThanOrEqual(2);
         expect(user.name.length).toBeLessThanOrEqual(100);
 
-        expect(/^[A-Za-z0-9]+$/.test(user.register_number)).toBe(true);
+        expect(/^[A-Za-z0-9\-]+$/.test(user.htp_id)).toBe(true);
 
         expect(typeof user.is_admin).toBe('boolean');
 

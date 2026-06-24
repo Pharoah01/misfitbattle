@@ -81,7 +81,7 @@ export const Login: React.FC = () => {
             <span className="text-purple-primary">MISFITS</span>-BATTLE
           </h1>
           <p className="text-text-secondary font-rajdhani text-lg">
-            Sign in with your Hack The Planet ID
+            Sign in to start competing
           </p>
         </div>
 
@@ -166,7 +166,7 @@ export const Login: React.FC = () => {
                 to="/register" 
                 className="text-purple-primary hover:text-purple-secondary font-semibold"
               >
-                Sign up with HTPID
+                Sign up
               </Link>
             </p>
           </div>
