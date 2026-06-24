@@ -9,6 +9,7 @@ import { AuthProvider } from '@/contexts';
 import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
 import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team } from '@/pages';
+import { AdminPanel } from '@/pages/AdminPanel';
 import { initializeSecurity } from '@/utils/security';
 import { useEffect } from 'react';
 import './App.css';
@@ -81,6 +82,15 @@ function App() {
               element={
                 <ProtectedRoute requireProfileCompletion={true}>
                   <Team />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/jaswanth" 
+              element={
+                <ProtectedRoute requireProfileCompletion={false}>
+                  <AdminPanel />
                 </ProtectedRoute>
               } 
             />
