@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/utils';
+import { validateTeamName } from '@/utils/teamNameValidation';
 
 interface TeamData {
   id: number;
@@ -46,9 +47,16 @@ export const Team: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teamName.trim()) return;
+
+    const validation = validateTeamName(teamName);
+    if (!validation.valid) {
+      toast.error(validation.reason || 'Invalid team name');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const res = await apiClient.post('/api/teams/create/', { name: teamName.trim() });
+      const res = await apiClient.post('/api/teams/create/', { name: validation.sanitized });
       setTeam(res.data.team);
       toast.success('Team created!');
     } catch (err: any) {

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Team
+from .validation import validate_team_name
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -23,9 +24,11 @@ class CreateTeamSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
 
     def validate_name(self, value):
+        is_valid, error = validate_team_name(value)
+        if not is_valid:
+            raise serializers.ValidationError(error)
+        # Return sanitized name
         value = value.strip()
-        if len(value) < 3:
-            raise serializers.ValidationError("Team name must be at least 3 characters")
         if Team.objects.filter(name__iexact=value).exists():
             raise serializers.ValidationError("A team with this name already exists")
         return value
