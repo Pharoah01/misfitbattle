@@ -30,6 +30,8 @@ class HTPParticipant:
     user_type: str
     city: str
     is_active: bool
+    team_name: Optional[str] = None
+    css_battle_status: Optional[str] = None
 
 
 class HTPServiceError(Exception):
@@ -131,4 +133,6 @@ def verify_htpid(htpid: str) -> HTPParticipant:
         user_type=participant_data.get("userType", ""),
         city=participant_data.get("city", ""),
         is_active=participant_data.get("isActive", False),
+        team_name=participant_data.get("teamName"),
+        css_battle_status=participant_data.get("cssBattleStatus"),
     )

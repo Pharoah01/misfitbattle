@@ -14,10 +14,13 @@ from .htp_service import (
 from utils.throttling import AuthRateThrottle, LoginRateThrottle
 from .session_service import SessionSecurityService
 from .session_models import UserSession
+from teams.models import Team
 import logging
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
+
+VALID_CSS_BATTLE_STATUSES = ['PRESENT', 'CONFIRMED', 'RSVP_CONFIRMED']
 
 
 class SignUpView(generics.CreateAPIView):
@@ -73,6 +76,13 @@ class SignUpView(generics.CreateAPIView):
                 'code': 'HTP_INACTIVE'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        # Check CSS Battle eligibility
+        if participant.css_battle_status not in VALID_CSS_BATTLE_STATUSES:
+            return Response({
+                'error': 'You are not eligible for CSS Battle. Please confirm your attendance on HTP.',
+                'code': 'NOT_ELIGIBLE'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         # Create user with details from HTP
         user = User.objects.create_user(
             htp_id=participant.htp_id,
@@ -84,10 +94,16 @@ class SignUpView(generics.CreateAPIView):
             profile_completed=True,
         )
         
+        # Auto-form team if participant has a team from HTP
+        team_data = None
+        if (participant.team_name and 
+            participant.css_battle_status in VALID_CSS_BATTLE_STATUSES):
+            team_data = self._auto_form_team(user, participant.team_name)
+        
         token, created = Token.objects.get_or_create(user=user)
         session = SessionSecurityService.create_session(user, request)
         
-        return Response({
+        response_data = {
             'token': token.key,
             'session_id': str(session.session_id),
             'user': {
@@ -101,7 +117,49 @@ class SignUpView(generics.CreateAPIView):
                 'is_admin': user.is_admin,
                 'created_at': user.created_at
             }
-        }, status=status.HTTP_201_CREATED)
+        }
+        
+        if team_data:
+            response_data['team'] = team_data
+        
+        return Response(response_data, status=status.HTTP_201_CREATED)
+    
+    def _auto_form_team(self, user, team_name):
+        """Auto-create or join team based on HTP team name."""
+        try:
+            # Check if team with this name already exists
+            team = Team.objects.filter(name__iexact=team_name).first()
+            
+            if team is None:
+                # First member — create the team
+                team = Team.objects.create(
+                    name=team_name,
+                    leader=user
+                )
+                logger.info(f"Auto-created team '{team_name}' for {user.htp_id}")
+                return {
+                    'name': team.name,
+                    'invite_code': team.invite_code,
+                    'is_full': False,
+                    'role': 'leader'
+                }
+            elif not team.is_full:
+                # Second member — join the team
+                team.add_member(user)
+                logger.info(f"Auto-joined {user.htp_id} to team '{team_name}'")
+                return {
+                    'name': team.name,
+                    'invite_code': team.invite_code,
+                    'is_full': True,
+                    'role': 'member'
+                }
+            else:
+                # Team is already full (shouldn't happen with teams of 2)
+                logger.warning(f"Team '{team_name}' already full when {user.htp_id} tried to join")
+                return None
+        except Exception as e:
+            logger.error(f"Error auto-forming team for {user.htp_id}: {e}")
+            return None
 
 
 class SignInView(generics.GenericAPIView):
