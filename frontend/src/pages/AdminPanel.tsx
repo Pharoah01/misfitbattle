@@ -67,8 +67,8 @@ export const AdminPanel: React.FC = () => {
   if (!user?.is_admin) return null;
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen bg-dark-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-primary"></div>
       </div>
     );
   }
@@ -84,27 +84,29 @@ export const AdminPanel: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-gray-100">
+    <div className="min-h-screen bg-dark-bg text-text-primary">
       {/* Header */}
-      <header className="bg-[#111118] border-b border-purple-900/30 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold font-mono text-purple-400">ADMIN PANEL</h1>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="text-gray-500">Last update: {lastUpdate}</span>
+      <header className="bg-dark-surface border-b border-purple-primary/20 px-6 py-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold font-orbitron tracking-wider">
+          <span className="text-purple-primary">ADMIN</span> PANEL
+        </h1>
+        <div className="flex items-center gap-4 text-sm font-rajdhani">
+          <span className="text-text-secondary">Last update: {lastUpdate}</span>
           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          <span className="text-gray-400">{user.name}</span>
+          <span className="text-text-secondary">{user.name}</span>
         </div>
       </header>
 
       {/* Tabs */}
-      <nav className="bg-[#111118] border-b border-purple-900/20 px-6 flex gap-1 overflow-x-auto">
+      <nav className="bg-dark-surface border-b border-purple-primary/10 px-6 flex gap-1 overflow-x-auto">
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+            className={`px-4 py-3 text-sm font-semibold font-rajdhani transition-all border-b-2 ${
               tab === t.key
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                ? 'border-purple-primary text-purple-primary'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
             }`}
           >
             {t.label}
@@ -114,7 +116,7 @@ export const AdminPanel: React.FC = () => {
 
       {/* Content */}
       <main className="p-6 max-w-7xl mx-auto">
-        {error && <div className="bg-red-900/20 border border-red-700 text-red-400 p-3 rounded mb-4 text-sm">{error}</div>}
+        {error && <div className="bg-red-600/10 border border-red-600/30 text-red-400 p-3 rounded-lg mb-4 text-sm font-rajdhani">{error}</div>}
 
         {tab === 'overview' && <OverviewTab data={data} />}
         {tab === 'users' && <UsersTab users={data.recent_users} />}
@@ -128,186 +130,172 @@ export const AdminPanel: React.FC = () => {
   );
 };
 
-/* --- Tab Components --- */
+/* --- Shared --- */
 
-const StatCard: React.FC<{ label: string; value: number | string; color?: string }> = ({ label, value, color = 'purple' }) => (
-  <div className="bg-[#111118] border border-gray-800 rounded-lg p-5">
-    <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{label}</p>
-    <p className={`text-3xl font-bold font-mono text-${color}-400`}>{value}</p>
+const StatCard: React.FC<{ label: string; value: number | string; accent?: string }> = ({ label, value, accent }) => (
+  <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+    <p className="text-xs text-text-secondary uppercase tracking-wider mb-1 font-rajdhani">{label}</p>
+    <p className={`text-3xl font-bold font-orbitron ${accent || 'text-purple-primary'}`}>{value}</p>
   </div>
 );
 
+const TableWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="overflow-x-auto bg-dark-surface border border-purple-primary/10 rounded-lg">
+    {children}
+  </div>
+);
+
+const Th: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <th className="text-left py-3 px-3 text-xs text-text-secondary uppercase tracking-wider font-rajdhani font-semibold">{children}</th>
+);
+
+const Td: React.FC<{ children: React.ReactNode; mono?: boolean; muted?: boolean }> = ({ children, mono, muted }) => (
+  <td className={`py-2.5 px-3 text-sm ${mono ? 'font-mono' : 'font-rajdhani'} ${muted ? 'text-text-secondary' : 'text-text-primary'}`}>{children}</td>
+);
+
+const Badge: React.FC<{ children: React.ReactNode; color: 'green' | 'yellow' | 'red' | 'blue' | 'purple' }> = ({ children, color }) => {
+  const styles = {
+    green: 'bg-green-500/10 text-green-400 border-green-500/20',
+    yellow: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+    red: 'bg-red-500/10 text-red-400 border-red-500/20',
+    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    purple: 'bg-purple-primary/10 text-purple-primary border-purple-primary/20',
+  };
+  return <span className={`px-2 py-0.5 rounded border text-xs font-rajdhani font-semibold ${styles[color]}`}>{children}</span>;
+};
+
+/* --- Tab Components --- */
+
 const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => (
-  <div className="space-y-6">
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      <StatCard label="Total Users" value={data.stats.total_users} />
-      <StatCard label="Users Today" value={data.stats.users_today} color="green" />
-      <StatCard label="Active Sessions" value={data.stats.active_sessions} color="blue" />
-      <StatCard label="Submissions" value={data.stats.total_submissions} />
-      <StatCard label="Today" value={data.stats.submissions_today} color="green" />
-      <StatCard label="Teams" value={data.stats.total_teams} />
-      <StatCard label="Full Teams" value={data.stats.full_teams} color="green" />
-      <StatCard label="Challenges" value={data.stats.total_challenges} />
-      <StatCard label="Failed Logins" value={data.stats.failed_logins_today} color="red" />
-    </div>
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <StatCard label="Total Users" value={data.stats.total_users} />
+    <StatCard label="Users Today" value={data.stats.users_today} accent="text-green-400" />
+    <StatCard label="Active Sessions" value={data.stats.active_sessions} accent="text-blue-400" />
+    <StatCard label="Submissions" value={data.stats.total_submissions} />
+    <StatCard label="Submissions Today" value={data.stats.submissions_today} accent="text-green-400" />
+    <StatCard label="Teams" value={data.stats.total_teams} />
+    <StatCard label="Full Teams" value={data.stats.full_teams} accent="text-green-400" />
+    <StatCard label="Challenges" value={data.stats.total_challenges} />
+    <StatCard label="Failed Logins Today" value={data.stats.failed_logins_today} accent="text-red-400" />
   </div>
 );
 
 const UsersTab: React.FC<{ users: any[] }> = ({ users }) => (
-  <div className="overflow-x-auto">
+  <TableWrapper>
     <table className="w-full text-sm">
-      <thead className="text-gray-500 border-b border-gray-800">
-        <tr>
-          <th className="text-left py-3 px-2">HTPID</th>
-          <th className="text-left py-3 px-2">Name</th>
-          <th className="text-left py-3 px-2">Email</th>
-          <th className="text-left py-3 px-2">College</th>
-          <th className="text-left py-3 px-2">Dept</th>
-          <th className="text-left py-3 px-2">Admin</th>
-          <th className="text-left py-3 px-2">Registered</th>
-        </tr>
+      <thead className="border-b border-purple-primary/10">
+        <tr><Th>HTPID</Th><Th>Name</Th><Th>Email</Th><Th>College</Th><Th>Dept</Th><Th>Admin</Th><Th>Registered</Th></tr>
       </thead>
       <tbody>
         {users.map(u => (
-          <tr key={u.id} className="border-b border-gray-800/50 hover:bg-gray-900/50">
-            <td className="py-2 px-2 font-mono text-purple-400">{u.htp_id}</td>
-            <td className="py-2 px-2">{u.name}</td>
-            <td className="py-2 px-2 text-gray-400">{u.email}</td>
-            <td className="py-2 px-2 text-gray-400">{u.college_name}</td>
-            <td className="py-2 px-2 text-gray-400">{u.department}</td>
-            <td className="py-2 px-2">{u.is_admin ? '✓' : ''}</td>
-            <td className="py-2 px-2 text-gray-500">{new Date(u.created_at).toLocaleString()}</td>
+          <tr key={u.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
+            <Td mono>{u.htp_id}</Td>
+            <Td>{u.name}</Td>
+            <Td muted>{u.email}</Td>
+            <Td muted>{u.college_name}</Td>
+            <Td muted>{u.department}</Td>
+            <Td>{u.is_admin ? <Badge color="purple">Admin</Badge> : ''}</Td>
+            <Td muted>{new Date(u.created_at).toLocaleString()}</Td>
           </tr>
         ))}
       </tbody>
     </table>
-  </div>
+  </TableWrapper>
 );
 
 const TeamsTab: React.FC<{ teams: any[] }> = ({ teams }) => (
-  <div className="overflow-x-auto">
+  <TableWrapper>
     <table className="w-full text-sm">
-      <thead className="text-gray-500 border-b border-gray-800">
-        <tr>
-          <th className="text-left py-3 px-2">Team Name</th>
-          <th className="text-left py-3 px-2">Code</th>
-          <th className="text-left py-3 px-2">Leader</th>
-          <th className="text-left py-3 px-2">Member</th>
-          <th className="text-left py-3 px-2">Status</th>
-          <th className="text-left py-3 px-2">Created</th>
-        </tr>
+      <thead className="border-b border-purple-primary/10">
+        <tr><Th>Team</Th><Th>Code</Th><Th>Leader</Th><Th>Member</Th><Th>Status</Th><Th>Created</Th></tr>
       </thead>
       <tbody>
         {teams.map(t => (
-          <tr key={t.id} className="border-b border-gray-800/50 hover:bg-gray-900/50">
-            <td className="py-2 px-2 font-semibold">{t.name}</td>
-            <td className="py-2 px-2 font-mono text-purple-400">{t.invite_code}</td>
-            <td className="py-2 px-2">{t.leader__name} <span className="text-gray-500">({t.leader__htp_id})</span></td>
-            <td className="py-2 px-2">{t.member__name ? `${t.member__name} (${t.member__htp_id})` : <span className="text-gray-600">—</span>}</td>
-            <td className="py-2 px-2">
-              <span className={`px-2 py-0.5 rounded text-xs ${t.is_full ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}`}>
-                {t.is_full ? 'Full' : 'Waiting'}
-              </span>
-            </td>
-            <td className="py-2 px-2 text-gray-500">{new Date(t.created_at).toLocaleString()}</td>
+          <tr key={t.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
+            <Td>{t.name}</Td>
+            <Td mono>{t.invite_code}</Td>
+            <Td>{t.leader__name} <span className="text-text-secondary text-xs">({t.leader__htp_id})</span></Td>
+            <Td>{t.member__name ? <>{t.member__name} <span className="text-text-secondary text-xs">({t.member__htp_id})</span></> : <span className="text-text-secondary">—</span>}</Td>
+            <Td>{t.is_full ? <Badge color="green">Full</Badge> : <Badge color="yellow">Waiting</Badge>}</Td>
+            <Td muted>{new Date(t.created_at).toLocaleString()}</Td>
           </tr>
         ))}
       </tbody>
     </table>
-  </div>
+  </TableWrapper>
 );
 
 const SubmissionsTab: React.FC<{ submissions: any[] }> = ({ submissions }) => (
-  <div className="overflow-x-auto">
+  <TableWrapper>
     <table className="w-full text-sm">
-      <thead className="text-gray-500 border-b border-gray-800">
-        <tr>
-          <th className="text-left py-3 px-2">User</th>
-          <th className="text-left py-3 px-2">Challenge</th>
-          <th className="text-left py-3 px-2">Difficulty</th>
-          <th className="text-left py-3 px-2">Length</th>
-          <th className="text-left py-3 px-2">Score</th>
-          <th className="text-left py-3 px-2">Status</th>
-          <th className="text-left py-3 px-2">Type</th>
-          <th className="text-left py-3 px-2">Time</th>
-        </tr>
+      <thead className="border-b border-purple-primary/10">
+        <tr><Th>User</Th><Th>Challenge</Th><Th>Difficulty</Th><Th>Length</Th><Th>Score</Th><Th>Status</Th><Th>Type</Th><Th>Time</Th></tr>
       </thead>
       <tbody>
         {submissions.map(s => (
-          <tr key={s.id} className="border-b border-gray-800/50 hover:bg-gray-900/50">
-            <td className="py-2 px-2">{s.user__name} <span className="text-gray-500 font-mono text-xs">({s.user__htp_id})</span></td>
-            <td className="py-2 px-2">{s.challenge__title}</td>
-            <td className="py-2 px-2">
-              <span className={`px-2 py-0.5 rounded text-xs ${
-                s.challenge__difficulty === 'easy' ? 'bg-green-900/30 text-green-400' :
-                s.challenge__difficulty === 'medium' ? 'bg-yellow-900/30 text-yellow-400' :
-                'bg-red-900/30 text-red-400'
-              }`}>{s.challenge__difficulty}</span>
-            </td>
-            <td className="py-2 px-2 font-mono">{s.code_length}</td>
-            <td className="py-2 px-2 font-mono">{s.similarity_score ? (s.similarity_score * 100).toFixed(1) + '%' : '—'}</td>
-            <td className="py-2 px-2">
-              <span className={`px-2 py-0.5 rounded text-xs ${
-                s.status === 'completed' ? 'bg-green-900/30 text-green-400' :
-                s.status === 'failed' ? 'bg-red-900/30 text-red-400' :
-                'bg-blue-900/30 text-blue-400'
-              }`}>{s.status}</span>
-            </td>
-            <td className="py-2 px-2">{s.is_auto_save ? <span className="text-gray-500">auto</span> : <span className="text-purple-400">manual</span>}</td>
-            <td className="py-2 px-2 text-gray-500">{new Date(s.submitted_at).toLocaleTimeString()}</td>
+          <tr key={s.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
+            <Td>{s.user__name} <span className="text-text-secondary text-xs font-mono">({s.user__htp_id})</span></Td>
+            <Td>{s.challenge__title}</Td>
+            <Td>
+              {s.challenge__difficulty === 'easy' && <Badge color="green">Easy</Badge>}
+              {s.challenge__difficulty === 'medium' && <Badge color="yellow">Medium</Badge>}
+              {s.challenge__difficulty === 'hard' && <Badge color="red">Hard</Badge>}
+            </Td>
+            <Td mono>{s.code_length}</Td>
+            <Td mono>{s.similarity_score ? (s.similarity_score * 100).toFixed(1) + '%' : '—'}</Td>
+            <Td>
+              {s.status === 'completed' && <Badge color="green">Done</Badge>}
+              {s.status === 'failed' && <Badge color="red">Failed</Badge>}
+              {s.status === 'pending' && <Badge color="blue">Pending</Badge>}
+              {s.status === 'processing' && <Badge color="blue">Processing</Badge>}
+            </Td>
+            <Td>{s.is_auto_save ? <span className="text-text-secondary">auto</span> : <Badge color="purple">manual</Badge>}</Td>
+            <Td muted>{new Date(s.submitted_at).toLocaleTimeString()}</Td>
           </tr>
         ))}
       </tbody>
     </table>
-  </div>
+  </TableWrapper>
 );
 
 const SessionsTab: React.FC<{ sessions: any[] }> = ({ sessions }) => (
-  <div className="overflow-x-auto">
+  <TableWrapper>
     <table className="w-full text-sm">
-      <thead className="text-gray-500 border-b border-gray-800">
-        <tr>
-          <th className="text-left py-3 px-2">User</th>
-          <th className="text-left py-3 px-2">IP</th>
-          <th className="text-left py-3 px-2">Location</th>
-          <th className="text-left py-3 px-2">Started</th>
-          <th className="text-left py-3 px-2">Last Activity</th>
-        </tr>
+      <thead className="border-b border-purple-primary/10">
+        <tr><Th>User</Th><Th>IP</Th><Th>Location</Th><Th>Started</Th><Th>Last Activity</Th></tr>
       </thead>
       <tbody>
         {sessions.map((s, i) => (
-          <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-900/50">
-            <td className="py-2 px-2">{s.user__name} <span className="text-gray-500 font-mono text-xs">({s.user__htp_id})</span></td>
-            <td className="py-2 px-2 font-mono text-gray-400">{s.ip_address}</td>
-            <td className="py-2 px-2 text-gray-400">{s.city || '?'}, {s.country || '?'}</td>
-            <td className="py-2 px-2 text-gray-500">{new Date(s.created_at).toLocaleString()}</td>
-            <td className="py-2 px-2 text-gray-500">{new Date(s.last_activity).toLocaleTimeString()}</td>
+          <tr key={i} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
+            <Td>{s.user__name} <span className="text-text-secondary text-xs font-mono">({s.user__htp_id})</span></Td>
+            <Td mono>{s.ip_address}</Td>
+            <Td muted>{s.city || '?'}, {s.country || '?'}</Td>
+            <Td muted>{new Date(s.created_at).toLocaleString()}</Td>
+            <Td muted>{new Date(s.last_activity).toLocaleTimeString()}</Td>
           </tr>
         ))}
       </tbody>
     </table>
-  </div>
+  </TableWrapper>
 );
 
 const SecurityTab: React.FC<{ security: { alerts: any[]; flagged_ips: any[]; recent_logins: any[] } }> = ({ security }) => (
-  <div className="space-y-6">
+  <div className="space-y-8">
     {/* Alerts */}
     <div>
-      <h3 className="text-lg font-semibold text-red-400 mb-3">Unresolved Alerts ({security.alerts.length})</h3>
+      <h3 className="text-lg font-bold text-red-400 mb-4 font-orbitron">Unresolved Alerts ({security.alerts.length})</h3>
       {security.alerts.length === 0 ? (
-        <p className="text-gray-500 text-sm">No unresolved alerts</p>
+        <p className="text-text-secondary text-sm font-rajdhani">No unresolved alerts</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {security.alerts.map(a => (
-            <div key={a.id} className="bg-red-900/10 border border-red-900/30 rounded p-3 text-sm">
-              <div className="flex justify-between">
-                <span className="font-semibold text-red-400">{a.alert_type}</span>
-                <span className={`px-2 py-0.5 rounded text-xs ${
-                  a.severity === 'high' ? 'bg-red-900/30 text-red-400' : 'bg-yellow-900/30 text-yellow-400'
-                }`}>{a.severity}</span>
+            <div key={a.id} className="bg-dark-surface border border-red-500/20 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-semibold text-red-400 font-rajdhani">{a.alert_type}</span>
+                <Badge color={a.severity === 'high' ? 'red' : 'yellow'}>{a.severity}</Badge>
               </div>
-              <p className="text-gray-400 mt-1">{a.description}</p>
-              <p className="text-gray-600 text-xs mt-1">{a.ip_address} • {a.user__htp_id || 'Unknown'} • {new Date(a.created_at).toLocaleString()}</p>
+              <p className="text-text-secondary text-sm font-rajdhani">{a.description}</p>
+              <p className="text-text-secondary text-xs mt-2 font-mono">{a.ip_address} • {a.user__htp_id || 'Unknown'} • {new Date(a.created_at).toLocaleString()}</p>
             </div>
           ))}
         </div>
@@ -316,93 +304,76 @@ const SecurityTab: React.FC<{ security: { alerts: any[]; flagged_ips: any[]; rec
 
     {/* Flagged IPs */}
     <div>
-      <h3 className="text-lg font-semibold text-yellow-400 mb-3">Flagged IPs ({security.flagged_ips.length})</h3>
+      <h3 className="text-lg font-bold text-yellow-400 mb-4 font-orbitron">Flagged IPs ({security.flagged_ips.length})</h3>
       {security.flagged_ips.length === 0 ? (
-        <p className="text-gray-500 text-sm">No flagged IPs</p>
+        <p className="text-text-secondary text-sm font-rajdhani">No flagged IPs</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead className="text-gray-500 border-b border-gray-800">
-            <tr>
-              <th className="text-left py-2">IP</th>
-              <th className="text-left py-2">Users</th>
-              <th className="text-left py-2">Location</th>
-              <th className="text-left py-2">Last Seen</th>
-            </tr>
-          </thead>
-          <tbody>
-            {security.flagged_ips.map((ip, i) => (
-              <tr key={i} className="border-b border-gray-800/50">
-                <td className="py-2 font-mono">{ip.ip_address}</td>
-                <td className="py-2 text-red-400 font-bold">{ip.user_count}</td>
-                <td className="py-2 text-gray-400">{ip.city || '?'}, {ip.country || '?'}</td>
-                <td className="py-2 text-gray-500">{new Date(ip.last_seen).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <TableWrapper>
+          <table className="w-full text-sm">
+            <thead className="border-b border-purple-primary/10">
+              <tr><Th>IP</Th><Th>Users</Th><Th>Location</Th><Th>Last Seen</Th></tr>
+            </thead>
+            <tbody>
+              {security.flagged_ips.map((ip, i) => (
+                <tr key={i} className="border-b border-dark-border/30">
+                  <Td mono>{ip.ip_address}</Td>
+                  <td className="py-2.5 px-3 text-sm font-bold text-red-400">{ip.user_count}</td>
+                  <Td muted>{ip.city || '?'}, {ip.country || '?'}</Td>
+                  <Td muted>{new Date(ip.last_seen).toLocaleString()}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableWrapper>
       )}
     </div>
 
     {/* Recent Logins */}
     <div>
-      <h3 className="text-lg font-semibold text-blue-400 mb-3">Recent Login Attempts</h3>
-      <table className="w-full text-sm">
-        <thead className="text-gray-500 border-b border-gray-800">
-          <tr>
-            <th className="text-left py-2">HTPID</th>
-            <th className="text-left py-2">IP</th>
-            <th className="text-left py-2">Country</th>
-            <th className="text-left py-2">Status</th>
-            <th className="text-left py-2">Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {security.recent_logins.map((l, i) => (
-            <tr key={i} className="border-b border-gray-800/50">
-              <td className="py-2 font-mono">{l.register_number}</td>
-              <td className="py-2 font-mono text-gray-400">{l.ip_address}</td>
-              <td className="py-2 text-gray-400">{l.country || '?'}</td>
-              <td className="py-2">
-                <span className={l.success ? 'text-green-400' : 'text-red-400'}>{l.success ? 'OK' : 'FAIL'}</span>
-              </td>
-              <td className="py-2 text-gray-500">{new Date(l.timestamp).toLocaleTimeString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h3 className="text-lg font-bold text-purple-primary mb-4 font-orbitron">Recent Logins</h3>
+      <TableWrapper>
+        <table className="w-full text-sm">
+          <thead className="border-b border-purple-primary/10">
+            <tr><Th>HTPID</Th><Th>IP</Th><Th>Country</Th><Th>Status</Th><Th>Time</Th></tr>
+          </thead>
+          <tbody>
+            {security.recent_logins.map((l, i) => (
+              <tr key={i} className="border-b border-dark-border/30">
+                <Td mono>{l.register_number}</Td>
+                <Td mono>{l.ip_address}</Td>
+                <Td muted>{l.country || '?'}</Td>
+                <Td>{l.success ? <Badge color="green">OK</Badge> : <Badge color="red">FAIL</Badge>}</Td>
+                <Td muted>{new Date(l.timestamp).toLocaleTimeString()}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TableWrapper>
     </div>
   </div>
 );
 
 const ChallengesTab: React.FC<{ challenges: any[] }> = ({ challenges }) => (
-  <div className="overflow-x-auto">
+  <TableWrapper>
     <table className="w-full text-sm">
-      <thead className="text-gray-500 border-b border-gray-800">
-        <tr>
-          <th className="text-left py-3 px-2">Challenge</th>
-          <th className="text-left py-3 px-2">Difficulty</th>
-          <th className="text-left py-3 px-2">Points</th>
-          <th className="text-left py-3 px-2">Total Submissions</th>
-          <th className="text-left py-3 px-2">Completed</th>
-        </tr>
+      <thead className="border-b border-purple-primary/10">
+        <tr><Th>Challenge</Th><Th>Difficulty</Th><Th>Points</Th><Th>Total Submissions</Th><Th>Completed</Th></tr>
       </thead>
       <tbody>
         {challenges.map(c => (
-          <tr key={c.id} className="border-b border-gray-800/50 hover:bg-gray-900/50">
-            <td className="py-2 px-2 font-semibold">{c.title}</td>
-            <td className="py-2 px-2">
-              <span className={`px-2 py-0.5 rounded text-xs ${
-                c.difficulty === 'easy' ? 'bg-green-900/30 text-green-400' :
-                c.difficulty === 'medium' ? 'bg-yellow-900/30 text-yellow-400' :
-                'bg-red-900/30 text-red-400'
-              }`}>{c.difficulty}</span>
-            </td>
-            <td className="py-2 px-2 font-mono">{c.points}</td>
-            <td className="py-2 px-2 font-mono">{c.submission_count}</td>
-            <td className="py-2 px-2 font-mono text-green-400">{c.completed_count}</td>
+          <tr key={c.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
+            <Td>{c.title}</Td>
+            <Td>
+              {c.difficulty === 'easy' && <Badge color="green">Easy</Badge>}
+              {c.difficulty === 'medium' && <Badge color="yellow">Medium</Badge>}
+              {c.difficulty === 'hard' && <Badge color="red">Hard</Badge>}
+            </Td>
+            <Td mono>{c.points}</Td>
+            <Td mono>{c.submission_count}</Td>
+            <td className="py-2.5 px-3 text-sm font-mono text-green-400">{c.completed_count}</td>
           </tr>
         ))}
       </tbody>
     </table>
-  </div>
+  </TableWrapper>
 );
