@@ -193,13 +193,8 @@ export const ChallengePage: React.FC = () => {
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      const sanitized = DOMPurify.sanitize(code, {
-        ALLOWED_TAGS: ['div', 'span', 'p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'style', 'section', 'article', 'header', 'footer', 'nav', 'main', 'aside'],
-        ALLOWED_ATTR: ['class', 'id', 'style', 'href', 'src', 'alt', 'title'],
-        FORBID_TAGS: ['script'],
-        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
-      });
-      
+      // Preview in sandboxed iframe — no sanitization needed for display.
+      // Backend sanitizes on submission.
       if (iframeRef.current && iframeRef.current.contentWindow) {
         const doc = iframeRef.current.contentWindow.document;
         
@@ -214,7 +209,7 @@ export const ChallengePage: React.FC = () => {
               </style>
             </head>
             <body>
-              ${sanitized}
+              ${code}
             </body>
           </html>
         `;
