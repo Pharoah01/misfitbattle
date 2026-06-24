@@ -140,8 +140,7 @@ AUTH_USER_MODEL = 'users.User'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',  # For browsable API
-    ],
+    ] + (['rest_framework.authentication.SessionAuthentication'] if DEBUG else []),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # Allow read for all, write for authenticated
     ],
