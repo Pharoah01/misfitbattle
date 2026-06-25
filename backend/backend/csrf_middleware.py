@@ -1,17 +1,10 @@
 """
-Custom CSRF middleware — disables CSRF only for API endpoints.
-Admin panel uses normal CSRF protection.
+Disable CSRF entirely — API uses token auth, admin is behind login + VPN/IP restriction.
 """
 
-from django.middleware.csrf import CsrfViewMiddleware
+from django.utils.deprecation import MiddlewareMixin
 
 
-class DisableCSRFMiddleware(CsrfViewMiddleware):
-    
-    def process_view(self, request, callback, callback_args, callback_kwargs):
-        # Skip CSRF for all API endpoints (they use token auth)
-        if request.path.startswith('/api/'):
-            return None
-        
-        # All other paths (including /admin/) get normal CSRF protection
-        return super().process_view(request, callback, callback_args, callback_kwargs)
+class DisableCSRFMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        setattr(request, '_dont_enforce_csrf_checks', True)
