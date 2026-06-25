@@ -16,11 +16,15 @@ from .session_service import SessionSecurityService
 from .session_models import UserSession
 from teams.models import Team
 import logging
+import os
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
 VALID_CSS_BATTLE_STATUSES = ['PRESENT', 'CONFIRMED', 'RSVP_CONFIRMED']
+
+# Skip eligibility check for testing (set SKIP_CSS_BATTLE_CHECK=True in .env)
+SKIP_ELIGIBILITY_CHECK = os.environ.get('SKIP_CSS_BATTLE_CHECK', 'False') == 'True'
 
 
 class SignUpView(generics.CreateAPIView):
@@ -77,7 +81,7 @@ class SignUpView(generics.CreateAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
         
         # Check CSS Battle eligibility
-        if participant.css_battle_status not in VALID_CSS_BATTLE_STATUSES:
+        if not SKIP_ELIGIBILITY_CHECK and participant.css_battle_status not in VALID_CSS_BATTLE_STATUSES:
             return Response({
                 'error': 'You are not eligible for CSS Battle. Please confirm your attendance on HTP.',
                 'code': 'NOT_ELIGIBLE'
