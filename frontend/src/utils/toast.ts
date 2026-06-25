@@ -1,240 +1,157 @@
 /**
  * Toast Notification System
- * Simple toast notifications for user feedback
- * 
- * Note: This is a minimal implementation for Phase 1
- * Can be replaced with a library like react-hot-toast later
+ * Styled to match the project's dark/purple theme.
  */
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface ToastOptions {
   duration?: number;
-  position?: 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center';
 }
 
 class ToastManager {
   private container: HTMLDivElement | null = null;
   private toasts: Map<string, HTMLDivElement> = new Map();
 
-  /**
-   * Initialize toast container
-   */
   private initContainer(): void {
     if (this.container) return;
-
     this.container = document.createElement('div');
     this.container.id = 'toast-container';
     this.container.style.cssText = `
       position: fixed;
-      top: 1rem;
-      right: 1rem;
+      top: 1.5rem;
+      right: 1.5rem;
       z-index: 9999;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.75rem;
       pointer-events: none;
     `;
     document.body.appendChild(this.container);
   }
 
-  /**
-   * Show a toast notification
-   */
   private show(message: string, type: ToastType, options: ToastOptions = {}): void {
     this.initContainer();
     if (!this.container) return;
 
     const id = `toast-${Date.now()}-${Math.random()}`;
-    const duration = options.duration || 5000;
+    const duration = options.duration || 4000;
+    const colors = this.getColors(type);
 
     const toast = document.createElement('div');
     toast.id = id;
     toast.style.cssText = `
-      padding: 1rem 1.5rem;
+      padding: 0.875rem 1.25rem;
       border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      max-width: 24rem;
+      max-width: 22rem;
       pointer-events: auto;
-      animation: slideIn 0.3s ease-out;
-      background-color: ${this.getBackgroundColor(type)};
-      color: white;
-      font-size: 0.875rem;
-      line-height: 1.25rem;
+      animation: toastSlideIn 0.25s ease-out;
+      background: #111111;
+      border: 1px solid ${colors.border};
+      color: #FFFFFF;
+      font-size: 0.8125rem;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 500;
+      line-height: 1.4;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 0.75rem;
-      position: relative;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(107, 45, 255, 0.05);
+    `;
+
+    // Accent bar
+    const bar = document.createElement('div');
+    bar.style.cssText = `
+      width: 3px;
+      height: 100%;
+      min-height: 1.25rem;
+      border-radius: 2px;
+      background: ${colors.accent};
+      flex-shrink: 0;
     `;
 
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
-    messageSpan.style.cssText = `
-      flex: 1;
-      word-wrap: break-word;
-    `;
+    messageSpan.style.cssText = `flex: 1; word-wrap: break-word;`;
 
-    const closeButton = document.createElement('button');
-    closeButton.innerHTML = '×';
-    closeButton.style.cssText = `
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '&#215;';
+    closeBtn.style.cssText = `
       background: none;
       border: none;
-      color: white;
-      font-size: 1.25rem;
-      font-weight: bold;
+      color: #B0B0B0;
+      font-size: 1.125rem;
       cursor: pointer;
       padding: 0;
-      margin: 0;
-      width: 1.5rem;
-      height: 1.5rem;
+      width: 1.25rem;
+      height: 1.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 0.25rem;
-      transition: background-color 0.2s ease;
+      transition: color 0.15s, background 0.15s;
       flex-shrink: 0;
     `;
-
-    closeButton.addEventListener('mouseenter', () => {
-      closeButton.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+    closeBtn.addEventListener('mouseenter', () => {
+      closeBtn.style.color = '#FFFFFF';
+      closeBtn.style.background = 'rgba(255,255,255,0.1)';
     });
-
-    closeButton.addEventListener('mouseleave', () => {
-      closeButton.style.backgroundColor = 'transparent';
+    closeBtn.addEventListener('mouseleave', () => {
+      closeBtn.style.color = '#B0B0B0';
+      closeBtn.style.background = 'none';
     });
+    closeBtn.addEventListener('click', () => this.remove(id));
+    closeBtn.setAttribute('aria-label', 'Close');
 
-    closeButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.remove(id);
-    });
-
-    closeButton.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        e.stopPropagation();
-        this.remove(id);
-      }
-    });
-
-    closeButton.setAttribute('tabindex', '0');
-    closeButton.setAttribute('aria-label', 'Close notification');
-
+    toast.appendChild(bar);
     toast.appendChild(messageSpan);
-    toast.appendChild(closeButton);
+    toast.appendChild(closeBtn);
 
     this.container.appendChild(toast);
     this.toasts.set(id, toast);
 
-    const timeoutId = setTimeout(() => {
-      this.remove(id);
-    }, duration);
-
-    (toast as any).timeoutId = timeoutId;
+    const timeout = setTimeout(() => this.remove(id), duration);
+    (toast as any)._timeout = timeout;
   }
 
-  /**
-   * Remove a toast
-   */
   private remove(id: string): void {
     const toast = this.toasts.get(id);
     if (!toast) return;
-
-    if ((toast as any).timeoutId) {
-      clearTimeout((toast as any).timeoutId);
-    }
-
-    toast.style.animation = 'slideOut 0.3s ease-in';
+    clearTimeout((toast as any)._timeout);
+    toast.style.animation = 'toastSlideOut 0.2s ease-in forwards';
     setTimeout(() => {
       toast.remove();
       this.toasts.delete(id);
-    }, 300);
+    }, 200);
   }
 
-  /**
-   * Get background color for toast type
-   */
-  private getBackgroundColor(type: ToastType): string {
+  private getColors(type: ToastType) {
     switch (type) {
-      case 'success':
-        return '#10B981'; // green-500
-      case 'error':
-        return '#EF4444'; // red-500
-      case 'warning':
-        return '#F59E0B'; // amber-500
-      case 'info':
-        return '#3B82F6'; // blue-500
-      default:
-        return '#6B7280'; // gray-500
+      case 'success': return { accent: '#10B981', border: 'rgba(16,185,129,0.25)' };
+      case 'error': return { accent: '#EF4444', border: 'rgba(239,68,68,0.25)' };
+      case 'warning': return { accent: '#F59E0B', border: 'rgba(245,158,11,0.25)' };
+      case 'info': return { accent: '#6B2DFF', border: 'rgba(107,45,255,0.25)' };
+      default: return { accent: '#6B7280', border: 'rgba(107,114,128,0.25)' };
     }
   }
 
-  /**
-   * Clear all toasts
-   */
-  clearAll(): void {
-    this.toasts.forEach((_, id) => {
-      this.remove(id);
-    });
-  }
-
-  /**
-   * Public API
-   */
-  success(message: string, options?: ToastOptions): void {
-    this.show(message, 'success', options);
-  }
-
-  error(message: string, options?: ToastOptions): void {
-    this.show(message, 'error', options);
-  }
-
-  info(message: string, options?: ToastOptions): void {
-    this.show(message, 'info', options);
-  }
-
-  warning(message: string, options?: ToastOptions): void {
-    this.show(message, 'warning', options);
-  }
+  success(message: string, options?: ToastOptions) { this.show(message, 'success', options); }
+  error(message: string, options?: ToastOptions) { this.show(message, 'error', options); }
+  info(message: string, options?: ToastOptions) { this.show(message, 'info', options); }
+  warning(message: string, options?: ToastOptions) { this.show(message, 'warning', options); }
+  clearAll() { this.toasts.forEach((_, id) => this.remove(id)); }
 }
 
+// Inject keyframes
 const style = document.createElement('style');
 style.textContent = `
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
+  @keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
-
-  @keyframes slideOut {
-    from {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-  }
-
-  /* Toast close button accessibility */
-  #toast-container button:focus {
-    outline: 2px solid rgba(255, 255, 255, 0.5);
-    outline-offset: 1px;
-  }
-
-  /* Prevent text selection on toast close button */
-  #toast-container button {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+  @keyframes toastSlideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
   }
 `;
 document.head.appendChild(style);

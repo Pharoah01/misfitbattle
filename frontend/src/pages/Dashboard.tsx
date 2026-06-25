@@ -68,7 +68,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const state = location.state as any;
     if (state?.submissionSuccess) {
-      toast.success(`🎉 Challenge "${state.challengeTitle}" completed!`);
+      toast.success(`Challenge "${state.challengeTitle}" completed!`);
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
