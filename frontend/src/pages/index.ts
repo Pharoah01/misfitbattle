@@ -13,3 +13,4 @@ export { EditProfile } from './EditProfile';
 export { Rules } from './Rules';
 export { Team } from './Team';
 export { Lobby } from './Lobby';
+export { Leaderboard } from './Leaderboard';

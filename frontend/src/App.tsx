@@ -8,7 +8,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts';
 import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
-import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby } from '@/pages';
+import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby, Leaderboard } from '@/pages';
 import { AdminPanel } from '@/pages/AdminPanel';
 import { CompetitionTimer } from '@/components/CompetitionTimer';
 import { initializeSecurity } from '@/utils/security';
@@ -19,7 +19,7 @@ import './App.css';
 /** Shows competition timer on all pages except public, lobby, and admin */
 function TimerWrapper() {
   const { pathname } = useLocation();
-  const hidden = ['/', '/login', '/register', '/complete-profile', '/lobby', '/jaswanth'].includes(pathname);
+  const hidden = ['/', '/login', '/register', '/complete-profile', '/lobby', '/jaswanth', '/leaderboard'].includes(pathname);
   if (hidden) return null;
   return <CompetitionTimer />;
 }
@@ -102,6 +102,15 @@ function App() {
               element={
                 <ProtectedRoute requireProfileCompletion={true}>
                   <Lobby />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/leaderboard" 
+              element={
+                <ProtectedRoute requireProfileCompletion={true}>
+                  <Leaderboard />
                 </ProtectedRoute>
               } 
             />

@@ -136,12 +136,20 @@ export const CompetitionTimer: React.FC = () => {
       <div className="fixed inset-0 z-[9998] bg-dark-bg/95 flex flex-col items-center justify-center backdrop-blur-sm">
         <h1 className="text-5xl font-bold font-orbitron text-text-primary mb-4">TIME'S UP</h1>
         <p className="text-text-secondary font-rajdhani text-lg mb-8">Competition has ended. No more submissions.</p>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="px-8 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-bold rounded-lg font-rajdhani shadow-lg shadow-purple-primary/30"
-        >
-          View Results
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={() => navigate('/leaderboard')}
+            className="px-8 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-bold rounded-lg font-rajdhani shadow-lg shadow-purple-primary/30"
+          >
+            View Leaderboard
+          </button>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-8 py-3 bg-dark-surface border border-purple-primary/30 text-text-primary font-bold rounded-lg font-rajdhani"
+          >
+            Dashboard
+          </button>
+        </div>
       </div>
     );
   }

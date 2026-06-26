@@ -84,6 +84,12 @@ export const Dashboard: React.FC = () => {
             </h1>
             <div className="flex items-center gap-4">
               <button
+                onClick={() => navigate('/leaderboard')}
+                className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
+              >
+                Leaderboard
+              </button>
+              <button
                 onClick={() => navigate('/team')}
                 className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
               >
