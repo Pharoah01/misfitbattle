@@ -34,7 +34,7 @@ def process_submission_task(self, submission_id: int):
         submission.save(update_fields=['status'])
         
         logger.info(
-            f"Processing submission {submission_id} for user {submission.user.register_number} "
+            f"Processing submission {submission_id} for user {submission.user.htp_id} "
             f"on challenge {submission.challenge.title}"
         )
         
