@@ -107,3 +107,34 @@ def leave_team(request):
         # Member leaves
         team.remove_member()
         return Response({'message': 'You have left the team'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def go_solo(request):
+    """Mark team as solo — renames team to user's name and marks as full (solo entry)."""
+    team = get_user_team(request.user)
+    if not team:
+        return Response({
+            'error': 'You are not in a team'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if team.is_full:
+        return Response({
+            'error': 'Your team already has 2 members'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if team.leader != request.user:
+        return Response({
+            'error': 'Only the team leader can proceed solo'
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    # Rename team to user's name and mark as full (solo)
+    team.name = request.user.name
+    team.is_full = True
+    team.save(update_fields=['name', 'is_full'])
+
+    return Response({
+        'message': 'You are now a solo participant',
+        'team': TeamSerializer(team).data
+    })

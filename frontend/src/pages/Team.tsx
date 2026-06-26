@@ -94,6 +94,21 @@ export const Team: React.FC = () => {
     }
   };
 
+  const handleGoSolo = async () => {
+    if (!user) return;
+    setSubmitting(true);
+    try {
+      // Rename team to user's name to mark as solo
+      await apiClient.post('/api/teams/go-solo/');
+      await fetchTeam();
+      toast.success('You are now a solo participant');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to proceed solo');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const copyInviteCode = () => {
     if (team?.invite_code) {
       navigator.clipboard.writeText(team.invite_code);
@@ -172,6 +187,20 @@ export const Team: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Solo Participant Option */}
+            {!team.is_full && (
+              <div className="bg-dark-bg border border-yellow-500/20 rounded-lg p-4 mb-6">
+                <p className="text-text-secondary text-sm font-rajdhani mb-3 text-center">Are you a solo participant?</p>
+                <button
+                  onClick={handleGoSolo}
+                  disabled={submitting}
+                  className="w-full px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg font-rajdhani font-semibold transition-all text-sm"
+                >
+                  {submitting ? 'Processing...' : 'Proceed Alone'}
+                </button>
+              </div>
+            )}
 
             {/* Leave/Delete */}
             <button
