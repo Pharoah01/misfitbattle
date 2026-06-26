@@ -76,7 +76,7 @@ export const Leaderboard: React.FC = () => {
             <span className="text-purple-primary">LEADER</span>BOARD
           </h1>
           <div className="flex items-center gap-4">
-            {frozen && (
+            {frozen && user?.is_admin && (
               <span className="px-3 py-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded text-xs font-rajdhani font-semibold">
                 FROZEN
               </span>
