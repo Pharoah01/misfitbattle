@@ -57,7 +57,7 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": [
         "users", "teams", "challenges", "submissions", "security", "auth", "authtoken",
     ],
-    "show_ui_builder": False,
+    "show_ui_builder": True,
 }
 
 JAZZMIN_UI_TWEAKS = {
