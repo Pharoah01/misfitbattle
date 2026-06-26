@@ -171,14 +171,17 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         
         # Manual submission — team-based limit
         team = get_user_team(request.user)
-        if not team or not team.is_full:
+        if not team:
             return Response({
-                'error': 'You must be in a full team (2 members) to submit.',
+                'error': 'You must be in a team to submit.',
                 'code': 'NO_TEAM'
             }, status=status.HTTP_403_FORBIDDEN)
         
         # Check if ANYONE on the team already submitted for this challenge
-        team_member_ids = [team.leader_id, team.member_id]
+        team_member_ids = [team.leader_id]
+        if team.member_id:
+            team_member_ids.append(team.member_id)
+        
         team_submission = Submission.objects.filter(
             user_id__in=team_member_ids,
             challenge_id=challenge_id,

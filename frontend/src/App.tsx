@@ -8,7 +8,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts';
 import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
-import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team } from '@/pages';
+import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby } from '@/pages';
 import { AdminPanel } from '@/pages/AdminPanel';
 import { initializeSecurity } from '@/utils/security';
 import { useEffect } from 'react';
@@ -82,6 +82,15 @@ function App() {
               element={
                 <ProtectedRoute requireProfileCompletion={true}>
                   <Team />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/lobby" 
+              element={
+                <ProtectedRoute requireProfileCompletion={true}>
+                  <Lobby />
                 </ProtectedRoute>
               } 
             />

@@ -192,7 +192,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSessionInfo(response.session_info);
       }
       
-      navigate('/profile');
+      // Check competition status to decide where to redirect
+      try {
+        const statusRes = await authAPI.getCurrentUser(); // just to ensure token works
+        navigate('/lobby');
+      } catch {
+        navigate('/lobby');
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 
                           err.response?.data?.non_field_errors?.[0] ||
@@ -221,7 +227,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSessionId(response.session_id);
       }
       
-      navigate('/profile');
+      navigate('/lobby');
     } catch (err: any) {
       const errorMessage = err.response?.data?.htp_id?.[0] ||
                           err.response?.data?.error ||
