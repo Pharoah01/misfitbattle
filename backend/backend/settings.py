@@ -18,6 +18,80 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.137.171,testserver,*').split(',')
 
 
+# =============================================================================
+# JAZZMIN ADMIN THEME — Hack The Planet / Misfits Battle
+# =============================================================================
+JAZZMIN_SETTINGS = {
+    "site_title": "HTP Admin",
+    "site_header": "Hack The Planet",
+    "site_brand": "HTP Admin",
+    "site_logo": None,
+    "login_logo": None,
+    "site_icon": None,
+    "welcome_sign": "Hack The Planet — Admin Panel",
+    "copyright": "Binary Misfits",
+    "search_model": ["users.User", "teams.Team", "submissions.Submission"],
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "API Docs", "url": "/api/", "new_window": True},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": False,
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "users.User": "fas fa-user-secret",
+        "users.UserSession": "fas fa-desktop",
+        "users.LoginAttempt": "fas fa-sign-in-alt",
+        "users.SecurityAlert": "fas fa-exclamation-triangle",
+        "users.IPMonitoring": "fas fa-network-wired",
+        "teams.Team": "fas fa-people-arrows",
+        "challenges.Challenge": "fas fa-code",
+        "submissions.Submission": "fas fa-paper-plane",
+        "security.SecurityIncident": "fas fa-shield-alt",
+        "security.BlockedIP": "fas fa-ban",
+        "security.SecurityAlert": "fas fa-bell",
+        "authtoken.TokenProxy": "fas fa-key",
+    },
+    "order_with_respect_to": [
+        "users", "teams", "challenges", "submissions", "security", "auth", "authtoken",
+    ],
+    "show_ui_builder": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": True,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-purple",
+    "navbar": "navbar-dark navbar-dark",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-purple",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": True,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "darkly",
+    "dark_mode_theme": "darkly",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+}
+
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
