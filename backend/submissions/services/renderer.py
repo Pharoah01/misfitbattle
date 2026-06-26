@@ -78,7 +78,9 @@ class HTMLRenderer:
             html_document = self._sanitize_html(html_code, css_code)
             
             async with async_playwright() as p:
-                browser = await p.chromium.launch()
+                browser = await p.chromium.launch(
+                    executable_path='/root/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome'
+                )
                 
                 try:
                     context = await browser.new_context(
