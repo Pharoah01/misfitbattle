@@ -64,6 +64,9 @@ def calculate_leaderboard():
         total_score = round(sum(challenge_scores.values()), 2)
         challenges_solved = len(challenge_scores)
         
+        # Total code length for tiebreaker
+        total_code_length = sum(sub.code_length for sub in team_submissions)
+        
         entry = {
             'team_name': team.name,
             'leader_name': team.leader.name,
@@ -72,13 +75,19 @@ def calculate_leaderboard():
             'member_htp_id': team.member.htp_id if team.member else None,
             'total_score': total_score,
             'challenges_solved': challenges_solved,
+            'total_code_length': total_code_length,
             'last_submission_time': last_time,
         }
         leaderboard.append(entry)
     
-    # Sort: highest score first, earliest last submission as tiebreaker
+    # Sort: highest score → earliest last submission → shortest code → alpha name
     leaderboard.sort(
-        key=lambda x: (-x['total_score'], x['last_submission_time'])
+        key=lambda x: (
+            -x['total_score'],
+            x['last_submission_time'],
+            x['total_code_length'],
+            x['team_name'].lower(),
+        )
     )
     
     # Assign ranks
