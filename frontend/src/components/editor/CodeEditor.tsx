@@ -49,6 +49,20 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       timeoutRef.current = null;
     }
 
+    // Block paste from outside (Ctrl+V / Cmd+V with external clipboard)
+    editor.onDidPaste(() => {
+      // Can't prevent Monaco's built-in paste, so we intercept at DOM level
+    });
+
+    // Block external paste at DOM level
+    const editorDom = editor.getDomNode();
+    if (editorDom) {
+      editorDom.addEventListener('paste', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+    }
+
     editor.updateOptions({
       automaticLayout: true,
       scrollBeyondLastLine: false,
