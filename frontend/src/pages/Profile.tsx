@@ -3,9 +3,54 @@
  * User profile and submission history with modern design
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useSubmissions } from '@/hooks';
+import apiClient from '@/api/client';
+
+const TeamSection: React.FC = () => {
+  const navigate = useNavigate();
+  const [team, setTeam] = useState<any>(null);
+
+  useEffect(() => {
+    apiClient.get('/api/teams/my-team/').then(res => setTeam(res.data.team)).catch(() => {});
+  }, []);
+
+  return (
+    <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-6 mb-6">
+      <h3 className="text-xl font-bold text-text-primary mb-4 font-orbitron flex items-center gap-2">
+        <span className="w-1 h-6 bg-gradient-to-b from-purple-primary to-purple-tertiary rounded"></span>
+        Team
+      </h3>
+      {team ? (
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-lg text-text-primary font-rajdhani font-semibold">{team.name}</p>
+            <p className="text-sm text-text-secondary font-rajdhani">
+              {team.leader_name}{team.member_name ? ` & ${team.member_name}` : ' (solo)'}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/team')}
+            className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold text-sm"
+          >
+            Manage
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <p className="text-text-secondary font-rajdhani">No team yet</p>
+          <button
+            onClick={() => navigate('/team')}
+            className="px-4 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary text-white rounded font-rajdhani font-semibold text-sm"
+          >
+            Join or Create
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Profile: React.FC = () => {
   const { user, logout } = useAuth();
@@ -187,6 +232,9 @@ export const Profile: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Team Section */}
+          <TeamSection />
 
           {/* Submission History */}
           <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-6 mb-6">
