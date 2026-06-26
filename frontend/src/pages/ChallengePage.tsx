@@ -380,6 +380,15 @@ export const ChallengePage: React.FC = () => {
             <div className={`text-xs font-mono px-2 py-1 rounded flex-shrink-0 ${exceedsLimit ? 'bg-red-500/10 text-red-500' : 'bg-dark-bg text-text-secondary border border-purple-primary/20'}`}>
               {codeLength} / {VALIDATION.MAX_CODE_LENGTH}
             </div>
+
+            {/* Submission count indicator */}
+            <div className={`text-xs font-rajdhani font-semibold px-2 py-1 rounded flex-shrink-0 ${
+              submissionCount >= 1 
+                ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+                : 'bg-dark-bg text-text-secondary border border-purple-primary/20'
+            }`}>
+              {submissionCount}/1 submitted
+            </div>
             
             <button
               onClick={handleReset}
@@ -405,7 +414,7 @@ export const ChallengePage: React.FC = () => {
                 : submitMutation.isPending 
                 ? 'Submitting...' 
                 : submissionCount >= 1 
-                ? 'Already Submitted' 
+                ? 'Submitted' 
                 : 'Submit'}
             </button>
           </div>

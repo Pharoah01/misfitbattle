@@ -364,3 +364,11 @@ WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID', '')
 
 ULTRAMSG_TOKEN = os.getenv('ULTRAMSG_TOKEN', '')
 ULTRAMSG_INSTANCE_ID = os.getenv('ULTRAMSG_INSTANCE_ID', '')
+
+# =============================================================================
+# COMPETITION TIMING
+# =============================================================================
+# Set these in .env before the event. Format: ISO 8601 (e.g., 2026-07-01T10:00:00+05:30)
+# When not set, competition is open (no time lock).
+COMPETITION_START = os.getenv('COMPETITION_START', '')  # e.g., 2026-07-01T10:00:00+05:30
+COMPETITION_END = os.getenv('COMPETITION_END', '')      # e.g., 2026-07-01T12:00:00+05:30

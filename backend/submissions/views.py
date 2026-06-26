@@ -5,13 +5,57 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import IntegrityError
 from django.conf import settings
+from django.utils import timezone
+from datetime import datetime
 from .models import Submission
 from .serializers import SubmissionSerializer, SubmissionCreateSerializer
 from .permissions import IsOwnerOrAdmin
 from .tasks import process_submission_task
+from teams.models import Team
 import asyncio
 from .services.renderer import HTMLRenderer
 from pathlib import Path
+
+
+def get_competition_window():
+    """Parse competition start/end from settings. Returns (start, end) or (None, None)."""
+    start_str = getattr(settings, 'COMPETITION_START', '')
+    end_str = getattr(settings, 'COMPETITION_END', '')
+    start = None
+    end = None
+    if start_str:
+        try:
+            start = datetime.fromisoformat(start_str)
+        except ValueError:
+            pass
+    if end_str:
+        try:
+            end = datetime.fromisoformat(end_str)
+        except ValueError:
+            pass
+    return start, end
+
+
+def is_competition_active():
+    """Check if the competition is currently active. Returns (active, message)."""
+    start, end = get_competition_window()
+    if not start and not end:
+        return True, None  # No time lock configured
+    
+    now = timezone.now()
+    if start and now < start:
+        return False, f'Competition has not started yet. Starts at {start.strftime("%b %d, %I:%M %p")}'
+    if end and now > end:
+        return False, 'Competition has ended. No more submissions allowed.'
+    return True, None
+
+
+def get_user_team(user):
+    """Get the team a user belongs to."""
+    team = Team.objects.filter(leader=user).first()
+    if team:
+        return team
+    return Team.objects.filter(member=user).first()
 
 
 class SubmissionViewSet(viewsets.ModelViewSet):
@@ -64,38 +108,44 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """
-        Create or update submission with single submission limit.
+        Create submission with team-based limit + competition lock.
         
         Rules:
-        - Auto-save (is_auto_save=True): Always allowed, doesn't count toward limit
-        - Manual submission: Max 1 submission allowed per user per challenge
-        - Second+ submission: Returns 403 error
-        
-        Queues background task for rendering and similarity scoring.
+        - Competition must be active (between start/end times)
+        - Auto-save: Always allowed, doesn't count toward limit
+        - Manual submission: Max 1 per TEAM per challenge
+        - If teammate already submitted for this challenge, blocked
+        - User must be in a team to submit manually
         """
+        # Check competition timing
+        active, msg = is_competition_active()
+        if not active:
+            return Response({
+                'error': msg,
+                'code': 'COMPETITION_LOCKED'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         challenge_id = serializer.validated_data['challenge'].id
         is_auto_save = request.data.get('is_auto_save', False)
         
-        existing_submissions = Submission.objects.filter(
-            user=request.user,
-            challenge_id=challenge_id
-        ).order_by('-submitted_at')
-        
-        manual_submission_count = existing_submissions.filter(is_auto_save=False).count()
-        
+        # Auto-save logic (unchanged — always allowed)
         if is_auto_save:
-            latest_auto_save = existing_submissions.filter(is_auto_save=True).first()
+            existing_auto = Submission.objects.filter(
+                user=request.user,
+                challenge_id=challenge_id,
+                is_auto_save=True
+            ).first()
             
-            if latest_auto_save:
-                latest_auto_save.html_code = serializer.validated_data['html_code']
-                latest_auto_save.css_code = serializer.validated_data['css_code']
-                latest_auto_save.status = 'pending'
-                latest_auto_save.error_message = None
-                latest_auto_save.save()
-                submission = latest_auto_save
+            if existing_auto:
+                existing_auto.html_code = serializer.validated_data['html_code']
+                existing_auto.css_code = serializer.validated_data['css_code']
+                existing_auto.status = 'pending'
+                existing_auto.error_message = None
+                existing_auto.save()
+                submission = existing_auto
             else:
                 submission = serializer.save(
                     user=request.user,
@@ -111,26 +161,45 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             
             return Response({
                 'id': submission.id,
-                'status': 'pending' if getattr(settings, 'USE_CELERY', True) else submission.status,
+                'status': 'pending',
                 'message': 'Code auto-saved',
                 'submitted_at': submission.submitted_at,
                 'challenge': submission.challenge.id,
                 'code_length': submission.code_length,
                 'is_auto_save': True
-            }, status=status.HTTP_200_OK if latest_auto_save else status.HTTP_201_CREATED)
+            }, status=status.HTTP_200_OK if existing_auto else status.HTTP_201_CREATED)
         
-        if manual_submission_count >= 1:
+        # Manual submission — team-based limit
+        team = get_user_team(request.user)
+        if not team or not team.is_full:
             return Response({
-                'error': 'You have already submitted for this challenge. Only one submission is allowed.'
+                'error': 'You must be in a full team (2 members) to submit.',
+                'code': 'NO_TEAM'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        # Check if ANYONE on the team already submitted for this challenge
+        team_member_ids = [team.leader_id, team.member_id]
+        team_submission = Submission.objects.filter(
+            user_id__in=team_member_ids,
+            challenge_id=challenge_id,
+            is_auto_save=False
+        ).first()
+        
+        if team_submission:
+            submitter_name = team_submission.user.name
+            return Response({
+                'error': f'Your team already submitted for this challenge (by {submitter_name}).',
+                'code': 'TEAM_ALREADY_SUBMITTED',
+                'submitted_by': submitter_name
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Create submission
         submission = serializer.save(
             user=request.user,
             status='pending',
             is_auto_save=False,
             submission_count=1
         )
-        message = 'Submission received and queued for processing. This is your only submission.'
         
         if getattr(settings, 'USE_CELERY', True):
             process_submission_task.delay(submission.id)
@@ -139,13 +208,13 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         
         return Response({
             'id': submission.id,
-            'status': 'pending' if getattr(settings, 'USE_CELERY', True) else submission.status,
-            'message': message,
+            'status': 'pending',
+            'message': 'Submission received. This is your team\'s only submission for this challenge.',
             'submitted_at': submission.submitted_at,
             'challenge': submission.challenge.id,
             'code_length': submission.code_length,
             'is_auto_save': False,
-            'submission_count': submission.submission_count,
+            'submission_count': 1,
             'remaining_submissions': 0
         }, status=status.HTTP_201_CREATED)
     
@@ -242,3 +311,46 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+
+from rest_framework.decorators import api_view, permission_classes as perm_classes
+from rest_framework.permissions import AllowAny
+
+
+@api_view(['GET'])
+@perm_classes([AllowAny])
+def competition_status(request):
+    """
+    Returns competition timing info and whether submissions are currently open.
+    No auth required — used by frontend to show timer.
+    """
+    start, end = get_competition_window()
+    active, msg = is_competition_active()
+    now = timezone.now()
+
+    data = {
+        'is_active': active,
+        'message': msg,
+        'server_time': now.isoformat(),
+    }
+
+    if start:
+        data['start_time'] = start.isoformat()
+    if end:
+        data['end_time'] = end.isoformat()
+
+    # If user is authenticated, include their team submission counts
+    if request.user and request.user.is_authenticated:
+        team = get_user_team(request.user)
+        if team and team.is_full:
+            team_member_ids = [team.leader_id, team.member_id]
+            challenges_submitted = Submission.objects.filter(
+                user_id__in=team_member_ids,
+                is_auto_save=False
+            ).values_list('challenge_id', flat=True).distinct()
+            data['team_submissions_count'] = len(challenges_submitted)
+            data['team_name'] = team.name
+        else:
+            data['team_submissions_count'] = 0
+            data['team_name'] = team.name if team else None
+
+    return Response(data)
