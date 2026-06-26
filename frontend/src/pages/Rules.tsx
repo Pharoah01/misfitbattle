@@ -158,9 +158,9 @@ export const Rules: React.FC = () => {
                   </div>
                   <ul className="text-text-secondary font-rajdhani space-y-1">
                     <li>• 10 challenges</li>
-                    <li>• 10 points each</li>
+                    <li>• 50 points each</li>
                     <li>• Basic shapes and layouts</li>
-                    <li>• <span className="text-green-500 font-semibold">Total: 100 points</span></li>
+                    <li>• <span className="text-green-500 font-semibold">Total: 500 points</span></li>
                   </ul>
                 </div>
 
@@ -174,9 +174,9 @@ export const Rules: React.FC = () => {
                   </div>
                   <ul className="text-text-secondary font-rajdhani space-y-1">
                     <li>• 5 challenges</li>
-                    <li>• 20 points each</li>
+                    <li>• 150 points each</li>
                     <li>• Requires creative CSS techniques</li>
-                    <li>• <span className="text-orange-500 font-semibold">Total: 100 points</span></li>
+                    <li>• <span className="text-orange-500 font-semibold">Total: 750 points</span></li>
                   </ul>
                 </div>
 
@@ -190,9 +190,9 @@ export const Rules: React.FC = () => {
                   </div>
                   <ul className="text-text-secondary font-rajdhani space-y-1">
                     <li>• 3 challenges</li>
-                    <li>• 30 points each</li>
+                    <li>• 300 points each</li>
                     <li>• Complex shapes and advanced positioning</li>
-                    <li>• <span className="text-red-500 font-semibold">Total: 90 points</span></li>
+                    <li>• <span className="text-red-500 font-semibold">Total: 900 points</span></li>
                   </ul>
                 </div>
               </div>

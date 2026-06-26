@@ -1,7 +1,3 @@
-/**
- * Code Editor Component - Monaco Editor with Fallback
- */
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';

@@ -19,7 +19,7 @@ export const RulesPopup: React.FC<RulesPopupProps> = ({ isOpen, onClose, difficu
       case 'easy':
         return {
           title: 'Easy Challenge Rules',
-          points: '10 points',
+          points: '50 points',
           description: 'Basic shapes and layouts',
           tips: [
             'Focus on simple geometric shapes',
@@ -31,7 +31,7 @@ export const RulesPopup: React.FC<RulesPopupProps> = ({ isOpen, onClose, difficu
       case 'medium':
         return {
           title: 'Medium Challenge Rules',
-          points: '20 points',
+          points: '150 points',
           description: 'Requires creative CSS techniques',
           tips: [
             'May require pseudo-elements (::before, ::after)',
@@ -43,7 +43,7 @@ export const RulesPopup: React.FC<RulesPopupProps> = ({ isOpen, onClose, difficu
       case 'hard':
         return {
           title: 'Hard Challenge Rules',
-          points: '30 points',
+          points: '300 points',
           description: 'Complex shapes and advanced positioning',
           tips: [
             'Requires advanced CSS techniques',
