@@ -334,6 +334,8 @@ def competition_status(request):
         'is_active': active,
         'message': msg,
         'server_time': now.isoformat(),
+        'registration_open': getattr(settings, 'REGISTRATION_OPEN', True),
+        'leaderboard_frozen': getattr(settings, 'LEADERBOARD_FROZEN', False),
     }
 
     if start:

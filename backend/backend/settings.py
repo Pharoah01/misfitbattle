@@ -372,3 +372,5 @@ ULTRAMSG_INSTANCE_ID = os.getenv('ULTRAMSG_INSTANCE_ID', '')
 # When not set, competition is open (no time lock).
 COMPETITION_START = os.getenv('COMPETITION_START', '')  # e.g., 2026-07-01T10:00:00+05:30
 COMPETITION_END = os.getenv('COMPETITION_END', '')      # e.g., 2026-07-01T12:00:00+05:30
+REGISTRATION_OPEN = os.getenv('REGISTRATION_OPEN', 'True') == 'True'
+LEADERBOARD_FROZEN = os.getenv('LEADERBOARD_FROZEN', 'False') == 'True'

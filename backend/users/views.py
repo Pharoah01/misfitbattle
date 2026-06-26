@@ -46,6 +46,13 @@ class SignUpView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
+        # Check if registration is open
+        if not getattr(settings, 'REGISTRATION_OPEN', True):
+            return Response({
+                'error': 'Registration is closed.',
+                'code': 'REGISTRATION_CLOSED'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         htp_id = serializer.validated_data['htp_id']
         password = serializer.validated_data['password']
         
@@ -100,8 +107,7 @@ class SignUpView(generics.CreateAPIView):
         
         # Auto-form team if participant has a team from HTP
         team_data = None
-        if (participant.team_name and 
-            participant.css_battle_status in VALID_CSS_BATTLE_STATUSES):
+        if participant.team_name:
             team_data = self._auto_form_team(user, participant.team_name)
         
         token, created = Token.objects.get_or_create(user=user)
@@ -130,37 +136,35 @@ class SignUpView(generics.CreateAPIView):
     
     def _auto_form_team(self, user, team_name):
         """Auto-create or join team based on HTP team name."""
+        from django.db import IntegrityError
         try:
-            # Check if team with this name already exists
+            # Check if team exists (case-insensitive)
             team = Team.objects.filter(name__iexact=team_name).first()
             
             if team is None:
                 # First member — create the team
-                team = Team.objects.create(
-                    name=team_name,
-                    leader=user
-                )
+                try:
+                    team = Team.objects.create(name=team_name, leader=user)
+                except IntegrityError:
+                    # Race condition — another request created it
+                    team = Team.objects.filter(name__iexact=team_name).first()
+                    if team and not team.is_full:
+                        team.add_member(user)
+                        return {'name': team.name, 'invite_code': team.invite_code, 'is_full': True, 'role': 'member'}
+                    return None
+                
                 logger.info(f"Auto-created team '{team_name}' for {user.htp_id}")
-                return {
-                    'name': team.name,
-                    'invite_code': team.invite_code,
-                    'is_full': False,
-                    'role': 'leader'
-                }
+                return {'name': team.name, 'invite_code': team.invite_code, 'is_full': False, 'role': 'leader'}
+            
             elif not team.is_full:
-                # Second member — join the team
                 team.add_member(user)
                 logger.info(f"Auto-joined {user.htp_id} to team '{team_name}'")
-                return {
-                    'name': team.name,
-                    'invite_code': team.invite_code,
-                    'is_full': True,
-                    'role': 'member'
-                }
+                return {'name': team.name, 'invite_code': team.invite_code, 'is_full': True, 'role': 'member'}
+            
             else:
-                # Team is already full (shouldn't happen with teams of 2)
                 logger.warning(f"Team '{team_name}' already full when {user.htp_id} tried to join")
                 return None
+                
         except Exception as e:
             logger.error(f"Error auto-forming team for {user.htp_id}: {e}")
             return None
