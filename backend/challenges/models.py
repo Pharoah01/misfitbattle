@@ -60,6 +60,14 @@ class Challenge(models.Model):
         default='easy',
         help_text="Challenge difficulty level"
     )
+    is_released = models.BooleanField(
+        default=True,
+        help_text="Whether challenge is visible to participants"
+    )
+    is_locked = models.BooleanField(
+        default=False,
+        help_text="When True, no new submissions accepted for this challenge"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

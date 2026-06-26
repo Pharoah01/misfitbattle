@@ -114,8 +114,8 @@ def admin_dashboard(request):
         Challenge.objects.annotate(
             submission_count=Count('submissions'),
             completed_count=Count('submissions', filter=Q(submissions__is_auto_save=False)),
-        ).values('id', 'title', 'difficulty', 'points', 'submission_count', 'completed_count')
-        .order_by('-submission_count')
+        ).values('id', 'title', 'difficulty', 'points', 'is_released', 'is_locked', 'submission_count', 'completed_count')
+        .order_by('difficulty', 'created_at')
     )
 
     return Response({

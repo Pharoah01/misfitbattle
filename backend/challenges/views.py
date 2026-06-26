@@ -1,4 +1,6 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Challenge
@@ -21,8 +23,18 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     
     def get_queryset(self):
-        """Only return challenges that have slugs (are visible)"""
-        return Challenge.objects.exclude(slug__isnull=True).exclude(slug='')
+        """
+        Non-admin users: only see released challenges with slugs.
+        Admin users: see all challenges.
+        """
+        qs = Challenge.objects.all()
+        
+        if not (self.request.user.is_authenticated and self.request.user.is_admin):
+            qs = qs.filter(
+                is_released=True
+            ).exclude(slug__isnull=True).exclude(slug='')
+        
+        return qs
     
     def get_object(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -43,6 +55,48 @@ class ChallengeViewSet(viewsets.ModelViewSet):
             raise NotFound('Challenge not found')
         
         self.check_object_permissions(self.request, obj)
-        
         return obj
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def release(self, request, slug=None):
+        """Admin: release a challenge (make visible to participants)."""
+        if not request.user.is_admin:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        challenge = self.get_object()
+        challenge.is_released = True
+        challenge.save(update_fields=['is_released'])
+        return Response({'message': f'"{challenge.title}" released', 'id': challenge.id, 'is_released': True})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def unrelease(self, request, slug=None):
+        """Admin: hide a challenge from participants."""
+        if not request.user.is_admin:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        challenge = self.get_object()
+        challenge.is_released = False
+        challenge.save(update_fields=['is_released'])
+        return Response({'message': f'"{challenge.title}" hidden', 'id': challenge.id, 'is_released': False})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def lock(self, request, slug=None):
+        """Admin: lock submissions for a challenge."""
+        if not request.user.is_admin:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        challenge = self.get_object()
+        challenge.is_locked = True
+        challenge.save(update_fields=['is_locked'])
+        return Response({'message': f'"{challenge.title}" locked', 'id': challenge.id, 'is_locked': True})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def unlock(self, request, slug=None):
+        """Admin: unlock submissions for a challenge."""
+        if not request.user.is_admin:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        challenge = self.get_object()
+        challenge.is_locked = False
+        challenge.save(update_fields=['is_locked'])
+        return Response({'message': f'"{challenge.title}" unlocked', 'id': challenge.id, 'is_locked': False})

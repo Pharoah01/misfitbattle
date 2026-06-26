@@ -381,27 +381,48 @@ const SecurityTab: React.FC<{ security: { alerts: any[]; flagged_ips: any[]; rec
   </div>
 );
 
-const ChallengesTab: React.FC<{ challenges: any[] }> = ({ challenges }) => (
-  <TableWrapper>
-    <table className="w-full text-sm">
-      <thead className="border-b border-purple-primary/10">
-        <tr><Th>Challenge</Th><Th>Difficulty</Th><Th>Points</Th><Th>Total Submissions</Th><Th>Completed</Th></tr>
-      </thead>
-      <tbody>
-        {challenges.map(c => (
-          <tr key={c.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
-            <Td>{c.title}</Td>
-            <Td>
-              {c.difficulty === 'easy' && <Badge color="green">Easy</Badge>}
-              {c.difficulty === 'medium' && <Badge color="yellow">Medium</Badge>}
-              {c.difficulty === 'hard' && <Badge color="red">Hard</Badge>}
-            </Td>
-            <Td mono>{c.points}</Td>
-            <Td mono>{c.submission_count}</Td>
-            <td className="py-2.5 px-3 text-sm font-mono text-green-400">{c.completed_count}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </TableWrapper>
-);
+const ChallengesTab: React.FC<{ challenges: any[] }> = ({ challenges }) => {
+  const handleAction = async (id: number, action: string) => {
+    try {
+      await apiClient.post(`/api/challenges/${id}/${action}/`);
+    } catch { /* admin panel will refresh on next poll */ }
+  };
+
+  return (
+    <TableWrapper>
+      <table className="w-full text-sm">
+        <thead className="border-b border-purple-primary/10">
+          <tr><Th>Challenge</Th><Th>Difficulty</Th><Th>Points</Th><Th>Released</Th><Th>Locked</Th><Th>Submissions</Th><Th>Actions</Th></tr>
+        </thead>
+        <tbody>
+          {challenges.map(c => (
+            <tr key={c.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
+              <Td>{c.title}</Td>
+              <Td>
+                {c.difficulty === 'easy' && <Badge color="green">Easy</Badge>}
+                {c.difficulty === 'medium' && <Badge color="yellow">Medium</Badge>}
+                {c.difficulty === 'hard' && <Badge color="red">Hard</Badge>}
+              </Td>
+              <Td mono>{c.points}</Td>
+              <Td>{c.is_released ? <Badge color="green">Yes</Badge> : <Badge color="yellow">No</Badge>}</Td>
+              <Td>{c.is_locked ? <Badge color="red">Locked</Badge> : <Badge color="green">Open</Badge>}</Td>
+              <Td mono>{c.completed_count}/{c.submission_count}</Td>
+              <td className="py-2.5 px-3 text-xs space-x-2">
+                {c.is_released ? (
+                  <button onClick={() => handleAction(c.id, 'unrelease')} className="px-2 py-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded hover:bg-yellow-500/20 transition-colors font-rajdhani">Hide</button>
+                ) : (
+                  <button onClick={() => handleAction(c.id, 'release')} className="px-2 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded hover:bg-green-500/20 transition-colors font-rajdhani">Release</button>
+                )}
+                {c.is_locked ? (
+                  <button onClick={() => handleAction(c.id, 'unlock')} className="px-2 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded hover:bg-green-500/20 transition-colors font-rajdhani">Unlock</button>
+                ) : (
+                  <button onClick={() => handleAction(c.id, 'lock')} className="px-2 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded hover:bg-red-500/20 transition-colors font-rajdhani">Lock</button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </TableWrapper>
+  );
+};

@@ -177,6 +177,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 'code': 'NO_TEAM'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        # Check if challenge is locked
+        from challenges.models import Challenge
+        challenge_obj = serializer.validated_data['challenge']
+        if challenge_obj.is_locked:
+            return Response({
+                'error': 'This challenge is locked. No more submissions accepted.',
+                'code': 'CHALLENGE_LOCKED'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         # Check if ANYONE on the team already submitted for this challenge
         team_member_ids = [team.leader_id]
         if team.member_id:
