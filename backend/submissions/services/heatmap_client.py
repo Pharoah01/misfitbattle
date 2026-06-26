@@ -16,6 +16,11 @@ class HeatmapAPIError(Exception):
     pass
 
 
+class HeatmapTimeoutError(HeatmapAPIError):
+    """Kept for backwards compatibility."""
+    pass
+
+
 class HeatmapComparisonClient:
     """
     Direct pixel-level image comparison.
