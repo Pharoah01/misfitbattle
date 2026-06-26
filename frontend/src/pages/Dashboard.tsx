@@ -8,6 +8,7 @@ import { useAuth, useChallenges, useSubmissions } from '@/hooks';
 import { SkeletonLoader, ErrorState } from '@/components';
 import { getDifficultyBadgeClasses } from '@/utils/difficulty';
 import { toast } from '@/utils';
+import apiClient from '@/api/client';
 import type { Challenge } from '@/types';
 
 export const Dashboard: React.FC = () => {
@@ -18,6 +19,13 @@ export const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'points' | '-points'>('points');
   const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+  const [teamName, setTeamName] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiClient.get('/api/teams/my-team/').then(res => {
+      setTeamName(res.data.team?.name || null);
+    }).catch(() => {});
+  }, []);
   
   const { data: challenges, isLoading, error, refetch } = useChallenges({
     search: searchTerm,
@@ -83,17 +91,16 @@ export const Dashboard: React.FC = () => {
               <span className="text-purple-primary">MISFITS</span>-BATTLE
             </h1>
             <div className="flex items-center gap-4">
+              {teamName && (
+                <span className="px-3 py-1 bg-purple-primary/10 border border-purple-primary/20 rounded text-purple-primary text-xs font-rajdhani font-semibold hidden sm:inline-block">
+                  {teamName}
+                </span>
+              )}
               <button
                 onClick={() => navigate('/leaderboard')}
                 className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
               >
                 Leaderboard
-              </button>
-              <button
-                onClick={() => navigate('/team')}
-                className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all font-rajdhani font-semibold"
-              >
-                Team
               </button>
               <button
                 onClick={() => navigate('/rules')}
