@@ -290,12 +290,20 @@ export const ChallengePage: React.FC = () => {
       });
 
       localStorage.removeItem(autoSaveKey);
-      
-      setShowSubmissionSuccess(true);
+      toast.success('Submitted');
+
+      // Redirect to dashboard after short delay
+      setTimeout(() => {
+        navigate('/dashboard', { 
+          state: { submissionSuccess: true, challengeTitle: challenge.title } 
+        });
+      }, 1500);
       
     } catch (error: any) {
+      const msg = error.response?.data?.error || 'Submission failed';
+      toast.error(msg);
     }
-  }, [code, challenge, exceedsLimit, submitMutation, autoSaveKey, submissionCount]);
+  }, [code, challenge, exceedsLimit, submitMutation, autoSaveKey, submissionCount, navigate]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
