@@ -10,9 +10,19 @@ import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
 import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby } from '@/pages';
 import { AdminPanel } from '@/pages/AdminPanel';
+import { CompetitionTimer } from '@/components/CompetitionTimer';
 import { initializeSecurity } from '@/utils/security';
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './App.css';
+
+/** Shows competition timer on all pages except public, lobby, and admin */
+function TimerWrapper() {
+  const { pathname } = useLocation();
+  const hidden = ['/', '/login', '/register', '/complete-profile', '/lobby', '/jaswanth'].includes(pathname);
+  if (hidden) return null;
+  return <CompetitionTimer />;
+}
 
 function App() {
   useEffect(() => {
@@ -23,6 +33,7 @@ function App() {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <TimerWrapper />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />

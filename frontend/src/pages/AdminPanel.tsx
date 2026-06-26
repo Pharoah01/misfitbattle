@@ -167,16 +167,44 @@ const Badge: React.FC<{ children: React.ReactNode; color: 'green' | 'yellow' | '
 /* --- Tab Components --- */
 
 const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => (
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-    <StatCard label="Total Users" value={data.stats.total_users} />
-    <StatCard label="Users Today" value={data.stats.users_today} accent="text-green-400" />
-    <StatCard label="Active Sessions" value={data.stats.active_sessions} accent="text-blue-400" />
-    <StatCard label="Submissions" value={data.stats.total_submissions} />
-    <StatCard label="Submissions Today" value={data.stats.submissions_today} accent="text-green-400" />
-    <StatCard label="Teams" value={data.stats.total_teams} />
-    <StatCard label="Full Teams" value={data.stats.full_teams} accent="text-green-400" />
-    <StatCard label="Challenges" value={data.stats.total_challenges} />
-    <StatCard label="Failed Logins Today" value={data.stats.failed_logins_today} accent="text-red-400" />
+  <div className="space-y-6">
+    {/* Competition Status */}
+    <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+      <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Competition Status</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-rajdhani">
+        <div>
+          <span className="text-text-secondary">State: </span>
+          <span className={data.stats.active_sessions > 0 ? 'text-green-400 font-semibold' : 'text-text-primary'}>
+            {data.stats.total_submissions > 0 ? 'Live' : 'Waiting'}
+          </span>
+        </div>
+        <div>
+          <span className="text-text-secondary">Registration: </span>
+          <span className="text-text-primary">{data.stats.total_users} registered</span>
+        </div>
+        <div>
+          <span className="text-text-secondary">Teams Ready: </span>
+          <span className="text-text-primary">{data.stats.full_teams}/{data.stats.total_teams}</span>
+        </div>
+        <div>
+          <span className="text-text-secondary">Online Now: </span>
+          <span className="text-green-400 font-semibold">{data.stats.active_sessions}</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Stats Grid */}
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <StatCard label="Total Users" value={data.stats.total_users} />
+      <StatCard label="Users Today" value={data.stats.users_today} accent="text-green-400" />
+      <StatCard label="Active Sessions" value={data.stats.active_sessions} accent="text-blue-400" />
+      <StatCard label="Submissions" value={data.stats.total_submissions} />
+      <StatCard label="Submissions Today" value={data.stats.submissions_today} accent="text-green-400" />
+      <StatCard label="Teams" value={data.stats.total_teams} />
+      <StatCard label="Full Teams" value={data.stats.full_teams} accent="text-green-400" />
+      <StatCard label="Challenges" value={data.stats.total_challenges} />
+      <StatCard label="Failed Logins Today" value={data.stats.failed_logins_today} accent="text-red-400" />
+    </div>
   </div>
 );
 
