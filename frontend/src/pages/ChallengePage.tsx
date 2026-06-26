@@ -159,7 +159,13 @@ export const ChallengePage: React.FC = () => {
       }
       
       if (!isViewingSolution) {
-        const boilerplate = `${challenge.html_boilerplate || ''}\n<style>\n${challenge.css_boilerplate || ''}\n</style>`;
+        const html = challenge.html_boilerplate || '';
+        const css = challenge.css_boilerplate || '';
+        // If CSS already contains <style> tags, use as-is. Otherwise wrap.
+        const hasStyleTag = css.trim().toLowerCase().startsWith('<style');
+        const boilerplate = hasStyleTag 
+          ? `${html}\n${css}`
+          : `${html}\n<style>\n${css}\n</style>`;
         setCode(boilerplate);
       }
     }
@@ -319,7 +325,12 @@ export const ChallengePage: React.FC = () => {
 
   const handleReset = useCallback(() => {
     if (challenge && window.confirm('Reset to boilerplate? This will discard your current code.')) {
-      const boilerplate = `${challenge.html_boilerplate || ''}\n<style>\n${challenge.css_boilerplate || ''}\n</style>`;
+      const html = challenge.html_boilerplate || '';
+      const css = challenge.css_boilerplate || '';
+      const hasStyleTag = css.trim().toLowerCase().startsWith('<style');
+      const boilerplate = hasStyleTag 
+        ? `${html}\n${css}`
+        : `${html}\n<style>\n${css}\n</style>`;
       setCode(boilerplate);
       localStorage.removeItem(autoSaveKey);
     }
