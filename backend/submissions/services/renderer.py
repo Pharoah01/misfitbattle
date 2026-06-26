@@ -79,7 +79,7 @@ class HTMLRenderer:
             
             async with async_playwright() as p:
                 browser = await p.chromium.launch(
-                    executable_path='/root/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome'
+                    executable_path='/opt/misfitbattle/playwright-browsers/chromium-1223/chrome-linux64/chrome'
                 )
                 
                 try:
