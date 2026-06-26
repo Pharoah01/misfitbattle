@@ -24,17 +24,12 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        Non-admin users: only see released challenges with slugs.
-        Admin users: see all challenges.
+        All users (including admins) only see released challenges on the API.
+        Admin panel (/jaswanth) has its own endpoint for full visibility.
         """
-        qs = Challenge.objects.all()
-        
-        if not (self.request.user.is_authenticated and self.request.user.is_admin):
-            qs = qs.filter(
-                is_released=True
-            ).exclude(slug__isnull=True).exclude(slug='')
-        
-        return qs
+        return Challenge.objects.filter(
+            is_released=True
+        ).exclude(slug__isnull=True).exclude(slug='')
     
     def get_object(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
