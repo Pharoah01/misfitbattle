@@ -1,62 +1,68 @@
 """
-Team-based leaderboard scoring.
+Team-based leaderboard with similarity-based scoring.
 
-Scoring logic:
-- Each team gets points for each challenge they submitted
-- Points = challenge's point value (10/20/30 based on difficulty)
-- Tiebreaker: team with earliest last submission wins
+Scoring:
+  score_per_challenge = similarity_score × challenge_points
+  team_total = sum of scores across all submitted challenges
 
-Team Total Score = sum of points for all challenges submitted by either member.
+Only completed submissions with a valid similarity_score count.
+Tiebreaker: team with earliest last submission wins.
 """
 
-from django.db.models import Min, Max
 from submissions.models import Submission
 from teams.models import Team
+from decimal import Decimal
 
 
 def calculate_leaderboard():
     """
-    Calculate team-based leaderboard rankings.
+    Calculate team-based leaderboard with pixel-match scoring.
     
     Returns:
-        list of dicts with: rank, team_name, leader_name, leader_htp_id,
-        member_name, member_htp_id, total_points, challenges_solved,
-        last_submission_time
+        list of dicts: rank, team_name, members, total_score,
+        challenges_solved, last_submission_time
     """
     teams = Team.objects.select_related('leader', 'member').all()
     
     leaderboard = []
     
     for team in teams:
-        # Get all team member IDs
         member_ids = [team.leader_id]
         if team.member_id:
             member_ids.append(team.member_id)
         
-        # Get all manual submissions by this team
+        # Only count completed manual submissions with a similarity score
         team_submissions = (
             Submission.objects
-            .filter(user_id__in=member_ids, is_auto_save=False)
+            .filter(
+                user_id__in=member_ids,
+                is_auto_save=False,
+                status='completed',
+                similarity_score__isnull=False,
+            )
             .select_related('challenge')
         )
         
         if not team_submissions.exists():
             continue
         
-        # Calculate points: sum of unique challenge points
-        challenges_done = {}
+        # Score per unique challenge (if somehow duplicates exist, take best)
+        challenge_scores = {}
         last_time = None
         
         for sub in team_submissions:
             cid = sub.challenge_id
-            if cid not in challenges_done:
-                challenges_done[cid] = sub.challenge.points
+            score = float(sub.similarity_score) * sub.challenge.points
+            
+            # Keep best score per challenge
+            if cid not in challenge_scores or score > challenge_scores[cid]:
+                challenge_scores[cid] = score
             
             if last_time is None or sub.submitted_at > last_time:
                 last_time = sub.submitted_at
 
-        total_points = sum(challenges_done.values())
-        challenges_solved = len(challenges_done)
+        total_score = round(sum(challenge_scores.values()), 2)
+        challenges_solved = len(challenge_scores)
         
         entry = {
             'team_name': team.name,
@@ -64,21 +70,23 @@ def calculate_leaderboard():
             'leader_htp_id': team.leader.htp_id,
             'member_name': team.member.name if team.member else None,
             'member_htp_id': team.member.htp_id if team.member else None,
-            'total_points': total_points,
+            'total_score': total_score,
             'challenges_solved': challenges_solved,
             'last_submission_time': last_time,
         }
         leaderboard.append(entry)
     
-    # Sort: highest points first, earliest last submission as tiebreaker
+    # Sort: highest score first, earliest last submission as tiebreaker
     leaderboard.sort(
-        key=lambda x: (-x['total_points'], x['last_submission_time'])
+        key=lambda x: (-x['total_score'], x['last_submission_time'])
     )
     
     # Assign ranks
     for i, entry in enumerate(leaderboard, start=1):
         entry['rank'] = i
-        # Convert datetime for JSON serialization
-        entry['last_submission_time'] = entry['last_submission_time'].isoformat() if entry['last_submission_time'] else None
+        entry['last_submission_time'] = (
+            entry['last_submission_time'].isoformat()
+            if entry['last_submission_time'] else None
+        )
     
     return leaderboard
