@@ -61,7 +61,7 @@ class Challenge(models.Model):
         help_text="Challenge difficulty level"
     )
     is_released = models.BooleanField(
-        default=True,
+        default=False,
         help_text="Whether challenge is visible to participants"
     )
     is_locked = models.BooleanField(
@@ -78,6 +78,19 @@ class Challenge(models.Model):
 
     def __str__(self):
         return self.title
+    
+    def save(self, *args, **kwargs):
+        # Auto-generate slug from title if not set
+        if not self.slug:
+            import re
+            base_slug = re.sub(r'[^a-z0-9]+', '-', self.title.lower()).strip('-')
+            slug = base_slug
+            counter = 1
+            while Challenge.objects.filter(slug=slug).exclude(id=self.id).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
     
     def clean(self):
         super().clean()

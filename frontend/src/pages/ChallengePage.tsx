@@ -351,8 +351,14 @@ export const ChallengePage: React.FC = () => {
   if (error || !challenge) {
     return (
       <div style={{ width: '100%', height: '100vh' }} className="bg-dark-bg flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-purple-primary mb-4 font-rajdhani font-semibold">Challenge not found</p>
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 bg-purple-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-purple-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H10m4-6a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-text-primary font-orbitron mb-2">Challenge Unavailable</h2>
+          <p className="text-text-secondary font-rajdhani mb-6">This challenge hasn't been released yet or doesn't exist.</p>
           <button
             onClick={() => navigate('/dashboard')}
             className="px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white rounded-lg font-rajdhani font-bold shadow-lg shadow-purple-primary/30"
