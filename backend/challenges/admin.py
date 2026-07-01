@@ -5,7 +5,7 @@ from .models import Challenge
 
 @admin.register(Challenge)
 class ChallengeAdmin(admin.ModelAdmin):
-    list_display = ['title', 'difficulty', 'points', 'slug', 'release_status', 'lock_status', 'created_at']
+    list_display = ['title', 'difficulty', 'points', 'slug', 'is_released', 'is_locked', 'created_at']
     list_filter = ['difficulty', 'is_released', 'is_locked', 'points']
     search_fields = ['title', 'description', 'slug']
     ordering = ['difficulty', 'created_at']
