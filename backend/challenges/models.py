@@ -53,7 +53,7 @@ class Challenge(models.Model):
         null=True,
         help_text="Reference image for heatmap comparison"
     )
-    points = models.IntegerField(default=50, help_text="Points Awarded (Easy: 50, Medium: 150, Hard: 300)")
+    points = models.IntegerField(default=50, help_text="Points Awarded (Easy: 50, Medium: 100, Hard: 150)")
     difficulty = models.CharField(
         max_length=10,
         choices=DIFFICULTY_CHOICES,
