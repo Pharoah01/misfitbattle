@@ -431,15 +431,15 @@ const SessionsTab: React.FC<{ sessions: any[] }> = ({ sessions }) => (
   <TableWrapper>
     <table className="w-full text-sm">
       <thead className="border-b border-purple-primary/10">
-        <tr><Th>User</Th><Th>IP</Th><Th>Location</Th><Th>Started</Th><Th>Last Activity</Th></tr>
+        <tr><Th>User</Th><Th>Activity</Th><Th>IP</Th><Th>Location</Th><Th>Last Active</Th></tr>
       </thead>
       <tbody>
         {sessions.map((s, i) => (
           <tr key={i} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
             <Td>{s.user__name} <span className="text-text-secondary text-xs font-mono">({s.user__htp_id})</span></Td>
+            <Td><span className="text-purple-primary text-xs font-rajdhani">{s.current_page || 'Unknown'}</span></Td>
             <Td mono>{s.ip_address}</Td>
             <Td muted>{s.city || '?'}, {s.country || '?'}</Td>
-            <Td muted>{new Date(s.created_at).toLocaleString()}</Td>
             <Td muted>{new Date(s.last_activity).toLocaleTimeString()}</Td>
           </tr>
         ))}
