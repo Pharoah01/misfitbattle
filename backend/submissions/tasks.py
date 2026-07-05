@@ -62,7 +62,10 @@ def process_submission_task(self, submission_id: int):
         except RenderError as e:
             raise Exception(f"Rendering failed: {str(e)}")
         
-        if submission.challenge.ground_truth_image:
+        # Use ground_truth_image, fallback to preview_image
+        ground_truth = submission.challenge.ground_truth_image or submission.challenge.preview_image
+        
+        if ground_truth:
             submission.status = 'scoring'
             submission.save(update_fields=['status'])
             
@@ -70,14 +73,21 @@ def process_submission_task(self, submission_id: int):
             
             try:
                 submission_image_path = str(Path(settings.MEDIA_ROOT) / image_path)
-                ground_truth_path = str(Path(settings.MEDIA_ROOT) / submission.challenge.ground_truth_image.name)
+                ground_truth_path = str(Path(settings.MEDIA_ROOT) / ground_truth.name)
                 
-                similarity_score = heatmap_client.compare_submission(
+                result = heatmap_client.compare_submission(
                     challenge_name=submission.challenge.title,
                     user_name=submission.user.name,
                     image_path=submission_image_path,
                     ground_truth_path=ground_truth_path
                 )
+                
+                # Result is (similarity_score, diff_image_path)
+                if isinstance(result, tuple):
+                    similarity_score, diff_path = result
+                else:
+                    similarity_score = result
+                    diff_path = None
                 
                 submission.similarity_score = similarity_score
                 submission.save(update_fields=['similarity_score'])
@@ -92,7 +102,7 @@ def process_submission_task(self, submission_id: int):
                 submission.similarity_score = None
                 submission.save(update_fields=['similarity_score'])
         else:
-            logger.info(f"No ground truth image for challenge {submission.challenge.id}, skipping comparison")
+            logger.info(f"No ground truth or preview image for challenge {submission.challenge.id}, skipping comparison")
             submission.similarity_score = None
             submission.save(update_fields=['similarity_score'])
         

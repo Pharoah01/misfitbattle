@@ -8,6 +8,7 @@ import apiClient from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/utils';
 import { validateTeamName } from '@/utils/teamNameValidation';
+import { PixelDiffViewer } from '@/components/PixelDiffViewer';
 
 interface TeamData {
   id: number;
@@ -31,6 +32,7 @@ export const Team: React.FC = () => {
   const [inviteCode, setInviteCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const [viewingSubmission, setViewingSubmission] = useState<number | null>(null);
 
   const fetchTeam = async () => {
     try {
@@ -163,6 +165,9 @@ export const Team: React.FC = () => {
 
     return (
       <div className="min-h-screen bg-dark-bg">
+        {viewingSubmission && (
+          <PixelDiffViewer submissionId={viewingSubmission} onClose={() => setViewingSubmission(null)} />
+        )}
         <header className="bg-dark-surface/50 backdrop-blur-sm border-b border-purple-primary/20">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold font-orbitron">
@@ -330,7 +335,10 @@ export const Team: React.FC = () => {
                             <button onClick={() => handleClaim(c.id)} className="text-xs text-purple-primary border border-purple-primary/30 px-2 py-0.5 rounded hover:bg-purple-primary/10 font-rajdhani">Claim</button>
                           )
                         )}
-                        {c.submitted_by && <span className="text-xs text-green-400">✓</span>}
+                        {c.status === 'completed' && c.submission_id && (
+                          <button onClick={() => setViewingSubmission(c.submission_id)} className="text-xs text-green-400 border border-green-500/30 px-2 py-0.5 rounded hover:bg-green-500/10 font-rajdhani">View</button>
+                        )}
+                        {c.submitted_by && c.status !== 'completed' && <span className="text-xs text-blue-400">...</span>}
                       </td>
                     </tr>
                     );

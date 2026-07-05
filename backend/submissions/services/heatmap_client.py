@@ -80,7 +80,37 @@ class HeatmapComparisonClient:
             # Clamp to [0, 1]
             similarity = max(0.0, min(1.0, float(similarity)))
 
-            return round(similarity, 4)
+            # Generate diff image
+            diff_image_path = self._generate_diff_image(
+                sub_arr, gt_arr, image_path, ground_truth_path
+            )
+
+            return round(similarity, 4), diff_image_path
 
         except Exception as e:
             raise HeatmapAPIError(f"Image comparison failed: {str(e)}")
+
+    def _generate_diff_image(self, sub_arr, gt_arr, image_path, ground_truth_path):
+        """Generate a visual diff image highlighting mismatched pixels."""
+        from pathlib import Path
+        
+        # Calculate per-pixel difference
+        diff = np.abs(sub_arr - gt_arr).astype(np.uint8)
+        
+        # Create highlighted diff: red where different, transparent where same
+        threshold = 10  # Pixels with diff > threshold are considered different
+        mask = np.any(diff > threshold, axis=2)
+        
+        # Create diff overlay image (red for differences)
+        diff_visual = np.zeros_like(sub_arr, dtype=np.uint8)
+        diff_visual[mask] = [255, 0, 0]  # Red for different pixels
+        diff_visual[~mask] = (sub_arr[~mask] * 0.3).astype(np.uint8)  # Dim matching pixels
+        
+        diff_img = Image.fromarray(diff_visual)
+        
+        # Save diff image
+        src_path = Path(image_path)
+        diff_path = src_path.parent / f"diff_{src_path.name}"
+        diff_img.save(str(diff_path))
+        
+        return str(diff_path)

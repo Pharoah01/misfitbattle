@@ -202,6 +202,7 @@ def team_dashboard(request):
                 'points': c.points,
                 'is_locked': c.is_locked,
                 'status': sub.status,
+                'submission_id': sub.id,
                 'submitted_by': sub.user.name,
                 'submitted_by_htp_id': sub.user.htp_id,
                 'submitted_at': sub.submitted_at.isoformat(),

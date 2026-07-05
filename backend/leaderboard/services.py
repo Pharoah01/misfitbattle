@@ -67,6 +67,10 @@ def calculate_leaderboard():
         # Total code length for tiebreaker
         total_code_length = sum(sub.code_length for sub in team_submissions)
         
+        # Average similarity
+        sims = [float(sub.similarity_score) for sub in team_submissions if sub.similarity_score]
+        avg_similarity = round(sum(sims) / max(len(sims), 1), 4)
+        
         entry = {
             'team_name': team.name,
             'leader_name': team.leader.name,
@@ -75,6 +79,7 @@ def calculate_leaderboard():
             'member_htp_id': team.member.htp_id if team.member else None,
             'total_score': total_score,
             'challenges_solved': challenges_solved,
+            'avg_similarity': avg_similarity,
             'total_code_length': total_code_length,
             'last_submission_time': last_time,
         }

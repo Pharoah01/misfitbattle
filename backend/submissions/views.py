@@ -469,3 +469,50 @@ def retry_submission(request, submission_id):
         process_submission_task.delay(sub.id)
     
     return Response({'message': f'Submission {submission_id} requeued'})
+
+
+@api_view(['GET'])
+@perm_classes([IsAuthenticated])
+def submission_comparison(request, submission_id):
+    """Get submission images for pixel diff viewer (own team only)."""
+    try:
+        sub = Submission.objects.select_related('user', 'challenge').get(id=submission_id)
+    except Submission.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Access control: own team or admin
+    if not request.user.is_admin:
+        team = get_user_team(request.user)
+        if not team:
+            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        member_ids = [team.leader_id]
+        if team.member_id:
+            member_ids.append(team.member_id)
+        if sub.user_id not in member_ids:
+            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+    
+    data = {
+        'id': sub.id,
+        'challenge_title': sub.challenge.title,
+        'challenge_difficulty': sub.challenge.difficulty,
+        'challenge_points': sub.challenge.points,
+        'submitted_by': sub.user.name,
+        'submitted_at': sub.submitted_at.isoformat(),
+        'status': sub.status,
+        'similarity_score': float(sub.similarity_score) if sub.similarity_score else None,
+        'score': round(float(sub.similarity_score) * sub.challenge.points, 2) if sub.similarity_score else None,
+        'code_length': sub.code_length,
+        'rendered_image': sub.rendered_image.url if sub.rendered_image else None,
+        'ground_truth_image': sub.challenge.ground_truth_image.url if sub.challenge.ground_truth_image else None,
+        'diff_image': None,
+    }
+    
+    # Check if diff image exists
+    if sub.rendered_image:
+        from pathlib import Path
+        rendered_path = Path(settings.MEDIA_ROOT) / sub.rendered_image.name
+        diff_path = rendered_path.parent / f"diff_{rendered_path.name}"
+        if diff_path.exists():
+            data['diff_image'] = f"{settings.MEDIA_URL}submission_renders/diff_{rendered_path.name}"
+    
+    return Response(data)
