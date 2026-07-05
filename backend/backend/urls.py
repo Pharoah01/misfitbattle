@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/leaderboard/', include('leaderboard.urls')),
     path('api/announcements/', include('announcements.urls')),
     path('api/audit/', include('auditlog.urls')),
+    path('api/practice/', include('practice.urls')),
     path('robots.txt', robots_txt, name='robots_txt'),
 ]
 

@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     'teams',
     'announcements',
     'auditlog',
+    'practice',
 ]
 
 MIDDLEWARE = [
@@ -455,3 +456,8 @@ LEADERBOARD_FROZEN = os.getenv('LEADERBOARD_FROZEN', 'False') == 'True'
 # DEFAULT PRIMARY KEY TYPE
 # =============================================================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# =============================================================================
+# PRACTICE MODE
+# =============================================================================
+PRACTICE_MODE_ENABLED = os.getenv('PRACTICE_MODE_ENABLED', 'False') == 'True'
