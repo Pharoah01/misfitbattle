@@ -8,8 +8,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts';
 import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
-import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby, Leaderboard } from '@/pages';
+import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby, Leaderboard, Practice } from '@/pages';
 import { AdminPanel } from '@/pages/AdminPanel';
+import { Practice } from '@/pages/Practice';
 import { CompetitionTimer } from '@/components/CompetitionTimer';
 import { Announcements } from '@/components/Announcements';
 import { initializeSecurity } from '@/utils/security';
@@ -117,6 +118,24 @@ function App() {
               element={
                 <ProtectedRoute requireProfileCompletion={true}>
                   <Leaderboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/practice" 
+              element={
+                <ProtectedRoute requireProfileCompletion={true}>
+                  <Practice />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/practice" 
+              element={
+                <ProtectedRoute requireProfileCompletion={true}>
+                  <Practice />
                 </ProtectedRoute>
               } 
             />
