@@ -23,8 +23,10 @@ export const CompetitionTimer: React.FC = () => {
   const [endTime, setEndTime] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [ended, setEnded] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [visible, setVisible] = useState(false);
   const offsetRef = useRef(0);
+  const totalPausedRef = useRef(0);
   const warningsShown = useRef<Set<number>>(new Set());
 
   const WARNING_THRESHOLDS = [1800, 600, 300, 60]; // 30m, 10m, 5m, 1m
@@ -34,7 +36,7 @@ export const CompetitionTimer: React.FC = () => {
       const res = await apiClient.get('/api/submissions/competition-status/');
       const data: CompetitionStatus = res.data;
 
-      if (!data.end_time || !data.is_active) {
+      if (!data.end_time) {
         setVisible(false);
         return;
       }
@@ -42,7 +44,14 @@ export const CompetitionTimer: React.FC = () => {
       const serverNow = new Date(data.server_time).getTime();
       offsetRef.current = serverNow - Date.now();
       setEndTime(new Date(data.end_time).getTime());
+      totalPausedRef.current = (data as any).total_paused_seconds || 0;
+      setPaused((data as any).is_paused || false);
       setVisible(true);
+
+      if (!data.is_active && !(data as any).is_paused) {
+        // Competition ended
+        setEnded(true);
+      }
     } catch {
       setVisible(false);
     }
@@ -68,8 +77,12 @@ export const CompetitionTimer: React.FC = () => {
     if (!endTime) return;
 
     const tick = () => {
+      if (paused) return; // Don't tick when paused
+      
       const now = Date.now() + offsetRef.current;
-      const diff = Math.max(0, Math.floor((endTime - now) / 1000));
+      // Add paused duration to end time (extends it)
+      const adjustedEnd = endTime + (totalPausedRef.current * 1000);
+      const diff = Math.max(0, Math.floor((adjustedEnd - now) / 1000));
       setSecondsLeft(diff);
 
       if (diff <= 0 && !ended) {
@@ -91,7 +104,7 @@ export const CompetitionTimer: React.FC = () => {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [endTime, ended]);
+  }, [endTime, ended, paused]);
 
   // Handle tab visibility change — recalc on focus
   useEffect(() => {
@@ -128,6 +141,19 @@ export const CompetitionTimer: React.FC = () => {
   } else if (secondsLeft <= 300) {
     barColor = 'border-yellow-500/50 bg-yellow-500/5';
     textColor = 'text-yellow-400';
+  }
+
+  // Paused overlay
+  if (paused) {
+    return (
+      <>
+        <div className="fixed top-0 left-0 right-0 z-[9990] bg-yellow-500/10 border-b border-yellow-500/30 px-4 py-3 flex items-center justify-center gap-3">
+          <span className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></span>
+          <span className="text-yellow-400 font-rajdhani font-semibold text-sm">Competition is currently paused. Please wait for further instructions.</span>
+        </div>
+        <div className="h-12"></div>
+      </>
+    );
   }
 
   // End overlay

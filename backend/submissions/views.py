@@ -125,6 +125,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 'code': 'COMPETITION_LOCKED'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        # Check if competition is paused
+        from .competition_state import CompetitionState
+        if CompetitionState.is_paused():
+            return Response({
+                'error': 'Competition is currently paused. Please wait.',
+                'code': 'COMPETITION_PAUSED'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -335,16 +343,25 @@ def competition_status(request):
     Returns competition timing info and whether submissions are currently open.
     No auth required — used by frontend to show timer.
     """
+    from .competition_state import CompetitionState
+
     start, end = get_competition_window()
     active, msg = is_competition_active()
     now = timezone.now()
+    
+    comp_state = CompetitionState.get()
+    is_paused = comp_state.state == 'paused'
+    total_paused = CompetitionState.get_total_paused_seconds()
 
     data = {
-        'is_active': active,
-        'message': msg,
+        'is_active': active and not is_paused,
+        'is_paused': is_paused,
+        'competition_state': comp_state.state,
+        'message': 'Competition is currently paused. Please wait for further instructions.' if is_paused else msg,
         'server_time': now.isoformat(),
         'registration_open': getattr(settings, 'REGISTRATION_OPEN', True),
         'leaderboard_frozen': getattr(settings, 'LEADERBOARD_FROZEN', False),
+        'total_paused_seconds': total_paused,
     }
 
     if start:
@@ -368,3 +385,29 @@ def competition_status(request):
             data['team_name'] = team.name if team else None
 
     return Response(data)
+
+
+@api_view(['POST'])
+@perm_classes([IsAuthenticated])
+def pause_competition(request):
+    """Admin: Pause the competition."""
+    if not request.user.is_admin:
+        return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    from .competition_state import CompetitionState
+    state = CompetitionState.get()
+    state.pause()
+    return Response({'message': 'Competition paused', 'state': 'paused', 'paused_at': state.paused_at})
+
+
+@api_view(['POST'])
+@perm_classes([IsAuthenticated])
+def resume_competition(request):
+    """Admin: Resume the competition."""
+    if not request.user.is_admin:
+        return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    from .competition_state import CompetitionState
+    state = CompetitionState.get()
+    state.resume()
+    return Response({'message': 'Competition resumed', 'state': 'active', 'total_paused_seconds': state.total_paused_seconds})

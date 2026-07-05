@@ -73,3 +73,41 @@ class Team(models.Model):
         if self.member:
             result.append(self.member)
         return result
+
+
+class ChallengeClaim(models.Model):
+    """Track which team member claimed/is working on a challenge."""
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='claims')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    challenge = models.ForeignKey('challenges.Challenge', on_delete=models.CASCADE)
+    claimed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'challenge_claims'
+        unique_together = ['team', 'challenge']
+
+    def __str__(self):
+        return f"{self.user.htp_id} claimed {self.challenge.title}"
+
+
+class TeamActivity(models.Model):
+    """Timeline of team events."""
+    ACTIVITY_TYPES = [
+        ('join', 'Member Joined'),
+        ('submit', 'Challenge Submitted'),
+        ('scored', 'Challenge Scored'),
+        ('claim', 'Challenge Claimed'),
+        ('release', 'Challenge Released'),
+    ]
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'team_activities'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.team.name}: {self.description}"

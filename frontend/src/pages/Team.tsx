@@ -30,11 +30,19 @@ export const Team: React.FC = () => {
   const [teamName, setTeamName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [dashboardData, setDashboardData] = useState<any>(null);
 
   const fetchTeam = async () => {
     try {
       const res = await apiClient.get('/api/teams/my-team/');
       setTeam(res.data.team);
+      if (res.data.team) {
+        // Fetch dashboard data
+        try {
+          const dashRes = await apiClient.get('/api/teams/dashboard/');
+          setDashboardData(dashRes.data);
+        } catch {}
+      }
     } catch {
       setTeam(null);
     } finally {
@@ -42,7 +50,11 @@ export const Team: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchTeam(); }, []);
+  useEffect(() => { 
+    fetchTeam(); 
+    const interval = setInterval(fetchTeam, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +110,6 @@ export const Team: React.FC = () => {
     if (!user) return;
     setSubmitting(true);
     try {
-      // Rename team to user's name to mark as solo
       await apiClient.post('/api/teams/go-solo/');
       await fetchTeam();
       toast.success('You are now a solo participant');
@@ -106,6 +117,24 @@ export const Team: React.FC = () => {
       toast.error(err.response?.data?.error || 'Failed to proceed solo');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleClaim = async (challengeId: number) => {
+    try {
+      await apiClient.post('/api/teams/claim/', { challenge_id: challengeId });
+      fetchTeam();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to claim');
+    }
+  };
+
+  const handleUnclaim = async (challengeId: number) => {
+    try {
+      await apiClient.post('/api/teams/unclaim/', { challenge_id: challengeId });
+      fetchTeam();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to unclaim');
     }
   };
 
@@ -124,91 +153,213 @@ export const Team: React.FC = () => {
     );
   }
 
-  // User already has a team — show team view
+  // User already has a team — show team dashboard
   if (team) {
     const isLeader = user?.htp_id === team.leader_htp_id;
+    const stats = dashboardData?.stats;
+    const challenges = dashboardData?.challenges || [];
+    const members = dashboardData?.members || [];
+    const contributions = dashboardData?.contributions || [];
+
     return (
       <div className="min-h-screen bg-dark-bg">
         <header className="bg-dark-surface/50 backdrop-blur-sm border-b border-purple-primary/20">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold font-orbitron">
-              <span className="text-purple-primary">TEAM</span>
+              <span className="text-purple-primary">TEAM</span> DASHBOARD
             </h1>
             <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 rounded transition-all font-rajdhani font-semibold">
-              Dashboard
+              Challenges
             </button>
           </div>
         </header>
 
-        <div className="container mx-auto px-4 py-8 max-w-lg">
-          <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-8">
-            <h2 className="text-3xl font-bold text-text-primary mb-1 font-orbitron text-center">{team.name}</h2>
-            <p className="text-text-secondary text-center mb-8 font-rajdhani">
-              {team.is_full ? 'Team is ready' : 'Waiting for teammate...'}
-            </p>
+        <div className="container mx-auto px-4 py-6 max-w-6xl space-y-6">
 
-            {/* Invite Code */}
-            {!team.is_full && (
-              <div className="bg-dark-bg rounded-lg p-4 border border-purple-primary/20 mb-6 text-center">
-                <p className="text-xs text-text-secondary uppercase tracking-wider mb-2 font-rajdhani">Invite Code</p>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl font-mono font-bold text-purple-primary tracking-widest">{team.invite_code}</span>
-                  <button onClick={copyInviteCode} className="p-2 hover:bg-purple-primary/10 rounded transition-colors" title="Copy">
-                    <svg className="w-5 h-5 text-purple-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </button>
+          {/* Team Overview */}
+          <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-text-primary font-orbitron">{team.name}</h2>
+                <div className="flex items-center gap-4 mt-1 text-sm text-text-secondary font-rajdhani">
+                  <span>Code: <span className="font-mono text-purple-primary">{team.invite_code}</span></span>
+                  <span>{team.is_full ? '2/2 Members' : '1/2 Members'}</span>
+                  {stats?.rank && <span>Rank: <span className="text-purple-primary font-bold">#{stats.rank}</span></span>}
                 </div>
-                <p className="text-xs text-text-secondary mt-2 font-rajdhani">Share this code with your teammate</p>
               </div>
-            )}
-
-            {/* Members */}
-            <div className="space-y-3 mb-6">
-              <div className="bg-dark-bg rounded-lg p-4 border border-purple-primary/10 flex items-center justify-between">
-                <div>
-                  <p className="text-text-primary font-rajdhani font-semibold">{team.leader_name}</p>
-                  <p className="text-xs text-text-secondary font-mono">{team.leader_htp_id}</p>
-                </div>
-                <span className="text-xs bg-purple-primary/20 text-purple-primary px-2 py-1 rounded font-rajdhani">Leader</span>
-              </div>
-
-              {team.member_name ? (
-                <div className="bg-dark-bg rounded-lg p-4 border border-purple-primary/10 flex items-center justify-between">
-                  <div>
-                    <p className="text-text-primary font-rajdhani font-semibold">{team.member_name}</p>
-                    <p className="text-xs text-text-secondary font-mono">{team.member_htp_id}</p>
-                  </div>
-                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded font-rajdhani">Member</span>
-                </div>
-              ) : (
-                <div className="bg-dark-bg rounded-lg p-4 border border-dashed border-purple-primary/20 text-center">
-                  <p className="text-text-secondary font-rajdhani">Waiting for teammate to join...</p>
-                </div>
+              {!team.is_full && (
+                <button onClick={handleGoSolo} disabled={submitting} className="px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 rounded font-rajdhani font-semibold text-sm">
+                  Proceed Solo
+                </button>
               )}
             </div>
+          </div>
 
-            {/* Solo Participant Option */}
-            {!team.is_full && (
-              <div className="bg-dark-bg border border-yellow-500/20 rounded-lg p-4 mb-6">
-                <p className="text-text-secondary text-sm font-rajdhani mb-3 text-center">Are you a solo participant?</p>
-                <button
-                  onClick={handleGoSolo}
-                  disabled={submitting}
-                  className="w-full px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg font-rajdhani font-semibold transition-all text-sm"
-                >
-                  {submitting ? 'Processing...' : 'Proceed Alone'}
-                </button>
+          {/* Stats Row */}
+          {stats && (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+                <p className="text-xl font-bold font-orbitron text-purple-primary">{stats.total_score}</p>
+                <p className="text-xs text-text-secondary font-rajdhani">Score</p>
               </div>
-            )}
+              <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+                <p className="text-xl font-bold font-orbitron text-green-400">{stats.completed}/{stats.total_challenges}</p>
+                <p className="text-xs text-text-secondary font-rajdhani">Solved</p>
+              </div>
+              <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+                <p className="text-xl font-bold font-orbitron text-text-primary">{stats.rank ? `#${stats.rank}` : '—'}</p>
+                <p className="text-xs text-text-secondary font-rajdhani">Rank</p>
+              </div>
+              <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+                <p className="text-xl font-bold font-orbitron text-text-primary">{(stats.avg_similarity * 100).toFixed(1)}%</p>
+                <p className="text-xs text-text-secondary font-rajdhani">Avg Match</p>
+              </div>
+              <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+                <p className="text-xl font-bold font-orbitron text-text-primary">{stats.total_code_length}</p>
+                <p className="text-xs text-text-secondary font-rajdhani">Total Code</p>
+              </div>
+            </div>
+          )}
 
-            {/* Leave/Delete */}
-            <button
-              onClick={handleLeave}
-              disabled={submitting}
-              className="w-full px-4 py-3 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-600/30 rounded-lg font-rajdhani font-semibold transition-all"
-            >
-              {isLeader ? 'Delete Team' : 'Leave Team'}
+          {/* Progress Bar */}
+          {stats && (
+            <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4">
+              <div className="flex justify-between text-xs text-text-secondary font-rajdhani mb-2">
+                <span>Progress</span>
+                <span>{stats.completed}/{stats.total_challenges} challenges</span>
+              </div>
+              <div className="w-full h-3 bg-dark-bg rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-purple-primary to-purple-tertiary rounded-full transition-all duration-500" style={{ width: `${(stats.completed / Math.max(stats.total_challenges, 1)) * 100}%` }}></div>
+              </div>
+            </div>
+          )}
+
+          {/* Members & Contributions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {members.map((m: any, i: number) => {
+              const contrib = contributions[i];
+              return (
+                <div key={m.htp_id} className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${m.is_online ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></span>
+                      <span className="text-text-primary font-rajdhani font-semibold">{m.name}</span>
+                    </div>
+                    <span className="text-xs bg-purple-primary/10 text-purple-primary px-2 py-0.5 rounded font-rajdhani">
+                      {m.is_leader ? 'Leader' : 'Member'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-secondary font-mono mb-3">{m.htp_id}</p>
+                  {contrib && (
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-sm font-bold text-text-primary font-mono">{contrib.challenges_submitted}</p>
+                        <p className="text-xs text-text-secondary font-rajdhani">Solved</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-text-primary font-mono">{contrib.total_points}</p>
+                        <p className="text-xs text-text-secondary font-rajdhani">Points</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-text-primary font-mono">{(contrib.avg_similarity * 100).toFixed(1)}%</p>
+                        <p className="text-xs text-text-secondary font-rajdhani">Avg</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Challenge Progress Table */}
+          <div className="bg-dark-surface rounded-lg border border-purple-primary/10 overflow-hidden">
+            <div className="px-4 py-3 border-b border-purple-primary/10">
+              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani">Challenge Progress</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-purple-primary/10">
+                  <tr>
+                    <th className="text-left py-2 px-4 text-xs text-text-secondary font-rajdhani">Challenge</th>
+                    <th className="text-left py-2 px-4 text-xs text-text-secondary font-rajdhani">Status</th>
+                    <th className="text-left py-2 px-4 text-xs text-text-secondary font-rajdhani">By</th>
+                    <th className="text-left py-2 px-4 text-xs text-text-secondary font-rajdhani">Time</th>
+                    <th className="text-right py-2 px-4 text-xs text-text-secondary font-rajdhani">Match</th>
+                    <th className="text-right py-2 px-4 text-xs text-text-secondary font-rajdhani">Score</th>
+                    <th className="text-right py-2 px-4 text-xs text-text-secondary font-rajdhani">Code</th>
+                    <th className="text-center py-2 px-4 text-xs text-text-secondary font-rajdhani">Claim</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {challenges.map((c: any) => {
+                    const claim = dashboardData?.claims?.[c.id];
+                    const isMyClaim = claim?.claimed_by_htp_id === user?.htp_id;
+                    return (
+                    <tr key={c.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5">
+                      <td className="py-2 px-4 font-rajdhani">
+                        {c.title}
+                        <span className={`ml-2 text-xs px-1.5 py-0.5 rounded ${c.difficulty === 'easy' ? 'bg-green-500/10 text-green-400' : c.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'}`}>{c.difficulty}</span>
+                      </td>
+                      <td className="py-2 px-4">
+                        <span className={`text-xs px-2 py-0.5 rounded font-rajdhani ${
+                          c.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                          c.status === 'processing' ? 'bg-blue-500/10 text-blue-400' :
+                          c.status === 'pending' ? 'bg-blue-500/10 text-blue-400' :
+                          c.status === 'locked' ? 'bg-red-500/10 text-red-400' :
+                          'bg-gray-500/10 text-gray-400'
+                        }`}>
+                          {c.status === 'not_started' ? 'Not Started' : c.status}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4 text-text-secondary font-rajdhani text-xs">{c.submitted_by || (claim ? <span className="text-yellow-400">{claim.claimed_by}</span> : '—')}</td>
+                      <td className="py-2 px-4 text-text-secondary font-mono text-xs">{c.submitted_at ? new Date(c.submitted_at).toLocaleTimeString() : '—'}</td>
+                      <td className="py-2 px-4 text-right font-mono text-purple-primary">{c.similarity_score ? (c.similarity_score * 100).toFixed(1) + '%' : '—'}</td>
+                      <td className="py-2 px-4 text-right font-mono font-bold text-text-primary">{c.score ?? '—'}</td>
+                      <td className="py-2 px-4 text-right font-mono text-text-secondary">{c.code_length ?? '—'}</td>
+                      <td className="py-2 px-4 text-center">
+                        {c.status === 'not_started' && !c.is_locked && (
+                          claim ? (
+                            isMyClaim ? (
+                              <button onClick={() => handleUnclaim(c.id)} className="text-xs text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded hover:bg-yellow-500/10 font-rajdhani">Drop</button>
+                            ) : (
+                              <span className="text-xs text-yellow-400 font-rajdhani">{claim.claimed_by}</span>
+                            )
+                          ) : (
+                            <button onClick={() => handleClaim(c.id)} className="text-xs text-purple-primary border border-purple-primary/30 px-2 py-0.5 rounded hover:bg-purple-primary/10 font-rajdhani">Claim</button>
+                          )
+                        )}
+                        {c.submitted_by && <span className="text-xs text-green-400">✓</span>}
+                      </td>
+                    </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Activity Timeline */}
+          {dashboardData?.activities && dashboardData.activities.length > 0 && (
+            <div className="bg-dark-surface rounded-lg border border-purple-primary/10 p-4">
+              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Recent Activity</h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {dashboardData.activities.map((a: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 text-xs">
+                    <span className="text-text-secondary font-mono w-16 flex-shrink-0">{new Date(a.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
+                    <span className="text-text-primary font-rajdhani">{a.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button onClick={() => navigate('/leaderboard')} className="px-4 py-3 bg-dark-surface border border-purple-primary/10 rounded-lg text-text-primary font-rajdhani font-semibold text-sm hover:border-purple-primary/30 transition-all">Leaderboard</button>
+            <button onClick={() => navigate('/dashboard')} className="px-4 py-3 bg-dark-surface border border-purple-primary/10 rounded-lg text-text-primary font-rajdhani font-semibold text-sm hover:border-purple-primary/30 transition-all">Challenges</button>
+            <button onClick={copyInviteCode} className="px-4 py-3 bg-dark-surface border border-purple-primary/10 rounded-lg text-text-primary font-rajdhani font-semibold text-sm hover:border-purple-primary/30 transition-all">Copy Invite</button>
+            <button onClick={handleLeave} disabled={submitting} className="px-4 py-3 bg-red-600/5 border border-red-600/20 rounded-lg text-red-400 font-rajdhani font-semibold text-sm hover:border-red-600/40 transition-all">
+              {isLeader ? 'Delete Team' : 'Leave'}
             </button>
           </div>
         </div>

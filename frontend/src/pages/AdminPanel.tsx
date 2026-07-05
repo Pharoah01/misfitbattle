@@ -166,8 +166,25 @@ const Badge: React.FC<{ children: React.ReactNode; color: 'green' | 'yellow' | '
 
 /* --- Tab Components --- */
 
-const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => (
+const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const handlePause = async () => {
+    try { await apiClient.post('/api/submissions/pause/'); } catch {}
+  };
+  const handleResume = async () => {
+    try { await apiClient.post('/api/submissions/resume/'); } catch {}
+  };
+
+  return (
   <div className="space-y-6">
+    {/* Competition Controls */}
+    <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+      <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Competition Controls</h3>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={handlePause} className="px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded font-rajdhani font-semibold text-sm hover:bg-yellow-500/20 transition-colors">Pause</button>
+        <button onClick={handleResume} className="px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/20 rounded font-rajdhani font-semibold text-sm hover:bg-green-500/20 transition-colors">Resume</button>
+      </div>
+    </div>
+
     {/* Competition Status */}
     <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
       <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Competition Status</h3>
@@ -206,7 +223,8 @@ const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => (
       <StatCard label="Failed Logins Today" value={data.stats.failed_logins_today} accent="text-red-400" />
     </div>
   </div>
-);
+  );
+};
 
 const UsersTab: React.FC<{ users: any[] }> = ({ users }) => (
   <TableWrapper>
