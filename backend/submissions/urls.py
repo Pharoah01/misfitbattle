@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import SubmissionViewSet, competition_status, pause_competition, resume_competition, extend_competition, retry_submission, submission_comparison
+from .views import SubmissionViewSet, competition_status, pause_competition, resume_competition, extend_competition, retry_submission, submission_comparison, submission_detail
 from .health import system_health
 
 router = DefaultRouter()
@@ -14,5 +14,6 @@ urlpatterns = [
     path('health/', system_health, name='system-health'),
     path('<int:submission_id>/retry/', retry_submission, name='retry-submission'),
     path('<int:submission_id>/comparison/', submission_comparison, name='submission-comparison'),
+    path('<int:submission_id>/detail/', submission_detail, name='submission-detail'),
     path('', include(router.urls)),
 ]

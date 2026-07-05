@@ -396,7 +396,7 @@ const SubmissionsTab: React.FC<{ submissions: any[] }> = ({ submissions }) => {
     <TableWrapper>
     <table className="w-full text-sm">
       <thead className="border-b border-purple-primary/10">
-        <tr><Th>User</Th><Th>Challenge</Th><Th>Difficulty</Th><Th>Length</Th><Th>Score</Th><Th>Status</Th><Th>Type</Th><Th>Time</Th></tr>
+        <tr><Th>User</Th><Th>Challenge</Th><Th>Difficulty</Th><Th>Length</Th><Th>Score</Th><Th>Status</Th><Th>Type</Th><Th>Time</Th><Th>Action</Th></tr>
       </thead>
       <tbody>
         {filtered.map(s => (
@@ -413,11 +413,15 @@ const SubmissionsTab: React.FC<{ submissions: any[] }> = ({ submissions }) => {
             <Td>
               {s.status === 'completed' && <Badge color="green">Done</Badge>}
               {s.status === 'failed' && <Badge color="red">Failed</Badge>}
-              {s.status === 'pending' && <Badge color="blue">Pending</Badge>}
-              {s.status === 'processing' && <Badge color="blue">Processing</Badge>}
+              {(s.status === 'queued' || s.status === 'rendering' || s.status === 'scoring') && <Badge color="blue">{s.status}</Badge>}
             </Td>
             <Td>{s.is_auto_save ? <span className="text-text-secondary">auto</span> : <Badge color="purple">manual</Badge>}</Td>
             <Td muted>{new Date(s.submitted_at).toLocaleTimeString()}</Td>
+            <td className="py-2 px-3">
+              {s.status === 'failed' && (
+                <button onClick={() => apiClient.post(`/api/submissions/${s.id}/retry/`)} className="text-xs text-green-400 border border-green-500/30 px-2 py-0.5 rounded hover:bg-green-500/10 font-rajdhani">Retry</button>
+              )}
+            </td>
           </tr>
         ))}
       </tbody>

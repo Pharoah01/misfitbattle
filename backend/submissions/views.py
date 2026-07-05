@@ -525,3 +525,48 @@ def submission_comparison(request, submission_id):
             data['diff_image'] = f"{settings.MEDIA_URL}submission_renders/diff_{rendered_path.name}"
     
     return Response(data)
+
+
+@api_view(['GET'])
+@perm_classes([IsAuthenticated])
+def submission_detail(request, submission_id):
+    """Get full submission details including code snapshot."""
+    try:
+        sub = Submission.objects.select_related('user', 'challenge').get(id=submission_id)
+    except Submission.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Access: own team or admin
+    if not request.user.is_admin:
+        team = get_user_team(request.user)
+        if not team:
+            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        member_ids = [team.leader_id]
+        if team.member_id:
+            member_ids.append(team.member_id)
+        if sub.user_id not in member_ids:
+            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    score = round(float(sub.similarity_score) * sub.challenge.points, 2) if sub.similarity_score else None
+
+    return Response({
+        'id': sub.id,
+        'challenge': {
+            'id': sub.challenge.id,
+            'title': sub.challenge.title,
+            'difficulty': sub.challenge.difficulty,
+            'points': sub.challenge.points,
+        },
+        'submitted_by': sub.user.name,
+        'submitted_by_htp_id': sub.user.htp_id,
+        'submitted_at': sub.submitted_at.isoformat(),
+        'status': sub.status,
+        'similarity_score': float(sub.similarity_score) if sub.similarity_score else None,
+        'score': score,
+        'code_length': sub.code_length,
+        'html_code': sub.html_code,
+        'css_code': sub.css_code,
+        'rendered_image': sub.rendered_image.url if sub.rendered_image else None,
+        'error_message': sub.error_message,
+        'is_auto_save': sub.is_auto_save,
+    })
