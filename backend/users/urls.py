@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import SignUpView, SignInView, SignOutView, CurrentUserView, CompleteProfileView, UpdateProfileView, heartbeat
+from .views import SignUpView, SignInView, SignOutView, CurrentUserView, CompleteProfileView, UpdateProfileView, heartbeat, personal_stats
 from . import admin_views
 from .dashboard_views import admin_dashboard
 
@@ -15,6 +15,7 @@ urlpatterns = [
     path('login/', SignInView.as_view(), name='login'),
     path('logout/', SignOutView.as_view(), name='logout'),
     path('heartbeat/', heartbeat, name='heartbeat'),
+    path('stats/', personal_stats, name='personal-stats'),
     
     path('admin/dashboard/', admin_dashboard, name='admin-dashboard-data'),
     path('admin/sessions/', admin_views.SessionManagementView.as_view(), name='admin-sessions'),

@@ -130,10 +130,36 @@ def system_health(request):
         'failed_today': today_subs.filter(status='failed').count(),
     }
 
+    # --- Generate alerts ---
+    alerts = []
+    
+    if health['database'].get('status') == 'offline':
+        alerts.append({'service': 'Database', 'severity': 'critical', 'description': 'Database connection failed'})
+    
+    if health['redis'].get('status') == 'offline':
+        alerts.append({'service': 'Redis', 'severity': 'critical', 'description': 'Redis connection failed'})
+    
+    if health['celery'].get('status') == 'offline':
+        alerts.append({'service': 'Celery', 'severity': 'critical', 'description': 'No Celery workers available'})
+    
+    if health['playwright'].get('status') == 'offline':
+        alerts.append({'service': 'Playwright', 'severity': 'warning', 'description': 'Playwright binary not found'})
+    
+    if health['storage'].get('status') == 'offline':
+        alerts.append({'service': 'Storage', 'severity': 'critical', 'description': 'File storage write failed'})
+    
+    if queue['queued'] > 20:
+        alerts.append({'service': 'Queue', 'severity': 'warning', 'description': f'High queue length: {queue["queued"]} pending'})
+    
+    if queue['failed'] > 5:
+        alerts.append({'service': 'Submissions', 'severity': 'warning', 'description': f'{queue["failed"]} failed submissions'})
+
     return Response({
         'health': health,
         'queue': queue,
         'failed_jobs': failed_jobs,
         'stats': stats,
+        'alerts': alerts,
+        'alert_count': len(alerts),
         'timestamp': now.isoformat(),
     })

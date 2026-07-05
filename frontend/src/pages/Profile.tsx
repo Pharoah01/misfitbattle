@@ -52,6 +52,63 @@ const TeamSection: React.FC = () => {
   );
 };
 
+const StatsSection: React.FC = () => {
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    apiClient.get('/api/auth/stats/').then(res => setStats(res.data)).catch(() => {});
+  }, []);
+
+  if (!stats) return null;
+
+  return (
+    <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-6 mb-6">
+      <h3 className="text-xl font-bold text-text-primary mb-4 font-orbitron flex items-center gap-2">
+        <span className="w-1 h-6 bg-gradient-to-b from-purple-primary to-purple-tertiary rounded"></span>
+        Statistics
+      </h3>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="bg-dark-bg rounded-lg p-3 text-center border border-purple-primary/10">
+          <p className="text-xl font-bold font-orbitron text-purple-primary">{stats.rank ? `#${stats.rank}` : '—'}</p>
+          <p className="text-xs text-text-secondary font-rajdhani">Rank</p>
+        </div>
+        <div className="bg-dark-bg rounded-lg p-3 text-center border border-purple-primary/10">
+          <p className="text-xl font-bold font-orbitron text-text-primary">{stats.total_score}</p>
+          <p className="text-xs text-text-secondary font-rajdhani">Score</p>
+        </div>
+        <div className="bg-dark-bg rounded-lg p-3 text-center border border-purple-primary/10">
+          <p className="text-xl font-bold font-orbitron text-green-400">{stats.challenges_completed}/{stats.total_challenges}</p>
+          <p className="text-xs text-text-secondary font-rajdhani">Completed</p>
+        </div>
+        <div className="bg-dark-bg rounded-lg p-3 text-center border border-purple-primary/10">
+          <p className="text-xl font-bold font-orbitron text-text-primary">{stats.avg_similarity ? (stats.avg_similarity * 100).toFixed(1) + '%' : '—'}</p>
+          <p className="text-xs text-text-secondary font-rajdhani">Avg Match</p>
+        </div>
+      </div>
+
+      {/* Progress */}
+      <div className="mb-4">
+        <div className="flex justify-between text-xs text-text-secondary font-rajdhani mb-1">
+          <span>Progress</span>
+          <span>{stats.challenges_completed}/{stats.total_challenges}</span>
+        </div>
+        <div className="w-full h-2 bg-dark-bg rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-purple-primary to-purple-tertiary rounded-full" style={{ width: `${(stats.challenges_completed / Math.max(stats.total_challenges, 1)) * 100}%` }}></div>
+        </div>
+      </div>
+
+      {/* Best Challenge */}
+      {stats.best_challenge && (
+        <p className="text-xs text-text-secondary font-rajdhani">
+          Best: <span className="text-purple-primary font-semibold">{stats.best_challenge.title}</span> — {stats.best_challenge.score} pts ({(stats.best_challenge.similarity * 100).toFixed(1)}%)
+        </p>
+      )}
+    </div>
+  );
+};
+
 export const Profile: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -235,6 +292,9 @@ export const Profile: React.FC = () => {
 
           {/* Team Section */}
           <TeamSection />
+
+          {/* Personal Stats */}
+          <StatsSection />
 
           {/* Submission History */}
           <div className="bg-dark-surface rounded-lg border border-purple-primary/20 p-6 mb-6">

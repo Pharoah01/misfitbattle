@@ -7,6 +7,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useChallenge, useSubmitSolution, useSubmissions } from '@/hooks';
 import { CodeEditor, RulesPopup, SubmissionSuccess } from '@/components';
+import { EditorSettings } from '@/components/editor/EditorSettings';
+import { getPreferences, type EditorPreferences } from '@/config/editorPreferences';
 import { VALIDATION } from '@/config/constants';
 import { toast } from '@/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,10 +26,15 @@ export const ChallengePage: React.FC = () => {
   const { data: existingSubmissions } = useSubmissions(challenge?.id);
 
   const [code, setCode] = useState('');
-  const [scaleToFit, setScaleToFit] = useState(true); // Default to true
+  const [scaleToFit, setScaleToFit] = useState(true);
+  const [previewZoom, setPreviewZoom] = useState(100);
+  const [previewBg, setPreviewBg] = useState<'white' | 'black' | 'checker'>('white');
   const [showRulesPopup, setShowRulesPopup] = useState(false);
   const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
   const [isViewingSolution, setIsViewingSolution] = useState(false);
+  const [showEditorSettings, setShowEditorSettings] = useState(false);
+  const [editorPrefs, setEditorPrefs] = useState<EditorPreferences>(getPreferences());
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -313,9 +320,43 @@ export const ChallengePage: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      const mod = e.ctrlKey || e.metaKey;
+
+      // Ctrl/Cmd + Enter → Submit
+      if (mod && e.key === 'Enter') {
         e.preventDefault();
         handleSubmit();
+        return;
+      }
+
+      // Ctrl/Cmd + S → Save (prevent browser save, trigger auto-save via code change)
+      if (mod && e.key === 's') {
+        e.preventDefault();
+        toast.info('Code auto-saved');
+        return;
+      }
+
+      // Ctrl/Cmd + R → Refresh preview (re-trigger render)
+      if (mod && e.key === 'r') {
+        e.preventDefault();
+        // Force preview re-render by toggling code
+        setCode(prev => prev + ' ');
+        setTimeout(() => setCode(prev => prev.trimEnd()), 50);
+        return;
+      }
+
+      // ? → Show shortcuts help
+      if (e.key === '?' && !mod) {
+        setShowShortcuts(true);
+        return;
+      }
+
+      // Esc → Close modals
+      if (e.key === 'Escape') {
+        setShowRulesPopup(false);
+        setShowEditorSettings(false);
+        setShowShortcuts(false);
+        return;
       }
     };
 
@@ -428,6 +469,14 @@ export const ChallengePage: React.FC = () => {
             >
               Rules
             </button>
+
+            <button
+              onClick={() => setShowEditorSettings(true)}
+              className="px-3 py-1 bg-dark-bg hover:bg-dark-surface text-text-primary border border-purple-primary/30 hover:border-purple-primary rounded transition-all text-xs font-semibold font-rajdhani flex-shrink-0"
+              title="Editor Settings"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
             
             <button
               onClick={handleSubmit}
@@ -462,15 +511,17 @@ export const ChallengePage: React.FC = () => {
                 height="100%"
                 options={{ 
                   automaticLayout: true,
-                  fontSize: 14,
+                  fontSize: editorPrefs.fontSize,
                   lineHeight: 1.5,
-                  minimap: { enabled: false },
+                  minimap: { enabled: editorPrefs.minimap },
                   scrollBeyondLastLine: false,
-                  wordWrap: 'on',
+                  wordWrap: editorPrefs.wordWrap,
                   wordWrapColumn: 80,
                   wrappingIndent: 'indent',
                   folding: true,
-                  lineNumbers: 'on',
+                  lineNumbers: editorPrefs.lineNumbers,
+                  tabSize: editorPrefs.tabSize,
+                  insertSpaces: editorPrefs.insertSpaces,
                   renderWhitespace: 'selection',
                   scrollbar: {
                     horizontal: 'hidden',
@@ -519,27 +570,39 @@ export const ChallengePage: React.FC = () => {
             <div className="flex-1 flex flex-col overflow-hidden min-h-0 w-full">
               <div className="px-4 py-2 bg-dark-surface/50 border-b border-purple-primary/20 flex-shrink-0 flex items-center justify-between w-full">
                 <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-rajdhani">Your Output</h3>
-                <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={scaleToFit}
-                    onChange={(e) => setScaleToFit(e.target.checked)}
-                    className="w-3 h-3 rounded border-purple-primary/30 bg-dark-bg text-purple-primary focus:ring-purple-primary focus:ring-offset-0"
-                  />
-                  <span className="text-xs text-text-secondary font-rajdhani">Scale to Fit</span>
-                </label>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Zoom Controls */}
+                  <button onClick={() => setPreviewZoom(Math.max(25, previewZoom - 25))} className="w-5 h-5 bg-dark-bg border border-purple-primary/20 rounded text-text-secondary text-xs hover:text-text-primary">-</button>
+                  <span className="text-xs text-text-secondary font-mono w-8 text-center">{previewZoom}%</span>
+                  <button onClick={() => setPreviewZoom(Math.min(400, previewZoom + 25))} className="w-5 h-5 bg-dark-bg border border-purple-primary/20 rounded text-text-secondary text-xs hover:text-text-primary">+</button>
+                  <button onClick={() => setPreviewZoom(100)} className="text-xs text-text-secondary hover:text-purple-primary font-rajdhani px-1">1:1</button>
+                  {/* Background Toggle */}
+                  <div className="flex border border-purple-primary/20 rounded overflow-hidden ml-1">
+                    <button onClick={() => setPreviewBg('white')} className={`w-4 h-4 bg-white ${previewBg === 'white' ? 'ring-1 ring-purple-primary' : ''}`} title="White" />
+                    <button onClick={() => setPreviewBg('black')} className={`w-4 h-4 bg-black ${previewBg === 'black' ? 'ring-1 ring-purple-primary' : ''}`} title="Black" />
+                    <button onClick={() => setPreviewBg('checker')} className={`w-4 h-4 ${previewBg === 'checker' ? 'ring-1 ring-purple-primary' : ''}`} title="Transparent" style={{backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '8px 8px', backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0'}} />
+                  </div>
+                  {/* Scale to Fit */}
+                  <label className="flex items-center gap-1 cursor-pointer ml-1">
+                    <input type="checkbox" checked={scaleToFit} onChange={(e) => { setScaleToFit(e.target.checked); if (e.target.checked) setPreviewZoom(100); }} className="w-3 h-3 rounded border-purple-primary/30 bg-dark-bg text-purple-primary focus:ring-purple-primary focus:ring-offset-0" />
+                    <span className="text-xs text-text-secondary font-rajdhani">Fit</span>
+                  </label>
+                </div>
               </div>
-              <div ref={previewContainerRef} className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-dark-bg min-h-0 w-full">
+              <div ref={previewContainerRef} className={`flex-1 flex items-center justify-center p-4 overflow-auto min-h-0 w-full ${
+                previewBg === 'black' ? 'bg-black' : previewBg === 'checker' ? 'bg-dark-bg' : 'bg-dark-bg'
+              }`} style={previewBg === 'checker' ? {backgroundImage: 'linear-gradient(45deg, #333 25%, transparent 25%), linear-gradient(-45deg, #333 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #333 75%), linear-gradient(-45deg, transparent 75%, #333 75%)', backgroundSize: '16px 16px', backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0'} : {}}>
                 <iframe
                   ref={iframeRef}
                   sandbox="allow-same-origin allow-scripts"
-                  className="bg-white border border-purple-primary/20 rounded shadow-lg flex-shrink-0"
+                  className={`border border-purple-primary/20 rounded shadow-lg flex-shrink-0 ${previewBg === 'white' ? 'bg-white' : previewBg === 'black' ? 'bg-black' : 'bg-white'}`}
                   style={{
-                    width: `${canvasSize.width}px`,
-                    height: `${canvasSize.height}px`,
+                    width: scaleToFit ? `${canvasSize.width}px` : `${canvasSize.width * (previewZoom / 100)}px`,
+                    height: scaleToFit ? `${canvasSize.height}px` : `${canvasSize.height * (previewZoom / 100)}px`,
                     display: 'block',
-                    maxWidth: '100%',
-                    maxHeight: '100%'
+                    maxWidth: scaleToFit ? '100%' : 'none',
+                    maxHeight: scaleToFit ? '100%' : 'none',
+                    transform: scaleToFit ? undefined : `scale(1)`,
                   }}
                   title="Code Preview"
                 />
@@ -556,6 +619,35 @@ export const ChallengePage: React.FC = () => {
           onClose={() => setShowRulesPopup(false)}
           difficulty={challenge.difficulty}
         />
+      )}
+
+      {/* Editor Settings */}
+      {showEditorSettings && (
+        <EditorSettings onClose={() => setShowEditorSettings(false)} onChange={setEditorPrefs} />
+      )}
+
+      {/* Keyboard Shortcuts Help */}
+      {showShortcuts && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-dark-bg/80" onClick={() => setShowShortcuts(false)}>
+          <div className="bg-dark-surface border border-purple-primary/20 rounded-lg p-6 w-80 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-text-primary font-orbitron mb-4">Keyboard Shortcuts</h3>
+            <div className="space-y-2 text-sm">
+              {[
+                ['Ctrl + Enter', 'Submit Solution'],
+                ['Ctrl + S', 'Save Draft'],
+                ['Ctrl + R', 'Refresh Preview'],
+                ['?', 'Show Shortcuts'],
+                ['Esc', 'Close Modal'],
+              ].map(([key, desc]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="text-text-secondary font-rajdhani">{desc}</span>
+                  <kbd className="px-2 py-0.5 bg-dark-bg border border-purple-primary/20 rounded text-xs font-mono text-purple-primary">{key}</kbd>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowShortcuts(false)} className="w-full mt-4 px-4 py-2 bg-dark-bg border border-purple-primary/20 text-text-secondary rounded text-sm font-rajdhani hover:text-text-primary">Close</button>
+          </div>
+        </div>
       )}
 
       {/* Submission Success Modal */}

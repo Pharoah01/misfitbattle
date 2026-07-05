@@ -350,3 +350,83 @@ def heartbeat(request):
         pass
     
     return Response({'ok': True})
+
+
+@api_view(['GET'])
+@perm_dec([IsAuthenticated])
+def personal_stats(request):
+    """Get personal competition statistics."""
+    from submissions.models import Submission
+    from challenges.models import Challenge
+    from teams.models import Team
+    from leaderboard.services import calculate_leaderboard
+
+    user = request.user
+    team = Team.objects.filter(leader=user).first() or Team.objects.filter(member=user).first()
+
+    # Get team member IDs
+    member_ids = [user.id]
+    if team:
+        member_ids = [team.leader_id]
+        if team.member_id:
+            member_ids.append(team.member_id)
+
+    # All manual submissions by team
+    subs = Submission.objects.filter(
+        user_id__in=member_ids, is_auto_save=False
+    ).select_related('challenge')
+
+    # Released challenges
+    total_challenges = Challenge.objects.filter(is_released=True).count()
+
+    # Per-challenge data
+    challenge_data = []
+    scores = []
+    sims = []
+    for sub in subs:
+        sim = float(sub.similarity_score) if sub.similarity_score else None
+        score = round(sim * sub.challenge.points, 2) if sim else None
+        if sim:
+            sims.append(sim)
+        if score:
+            scores.append({'title': sub.challenge.title, 'score': score, 'similarity': sim})
+        challenge_data.append({
+            'title': sub.challenge.title,
+            'difficulty': sub.challenge.difficulty,
+            'points': sub.challenge.points,
+            'similarity': sim,
+            'score': score,
+            'status': sub.status,
+            'submitted_at': sub.submitted_at.isoformat(),
+        })
+
+    # Rank
+    leaderboard = calculate_leaderboard()
+    rank = None
+    if team:
+        for entry in leaderboard:
+            if entry['team_name'].lower() == team.name.lower():
+                rank = entry['rank']
+                break
+
+    total_score = round(sum(s['score'] for s in scores), 2)
+    completed = len([s for s in subs if s.status == 'completed'])
+    best = max(scores, key=lambda x: x['score']) if scores else None
+    lowest_sim = min(sims) if sims else None
+    last_sub = max((s.submitted_at for s in subs), default=None)
+
+    return Response({
+        'rank': rank,
+        'team_name': team.name if team else None,
+        'total_score': total_score,
+        'avg_similarity': round(sum(sims) / max(len(sims), 1), 4),
+        'highest_similarity': round(max(sims), 4) if sims else None,
+        'lowest_similarity': round(lowest_sim, 4) if lowest_sim else None,
+        'challenges_completed': completed,
+        'challenges_pending': total_challenges - completed,
+        'total_challenges': total_challenges,
+        'total_submissions': subs.count(),
+        'last_submission': last_sub.isoformat() if last_sub else None,
+        'best_challenge': best,
+        'challenges': challenge_data,
+    })
