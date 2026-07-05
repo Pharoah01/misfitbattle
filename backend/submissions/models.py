@@ -39,12 +39,13 @@ class Submission(models.Model):
     status = models.CharField(
         max_length=20,
         choices=[
-            ('pending', 'Pending'),
-            ('processing', 'Processing'),
+            ('queued', 'Queued'),
+            ('rendering', 'Rendering'),
+            ('scoring', 'Scoring'),
             ('completed', 'Completed'),
             ('failed', 'Failed'),
         ],
-        default='pending',
+        default='queued',
         help_text="Current processing status of the submission"
     )
     error_message = models.TextField(

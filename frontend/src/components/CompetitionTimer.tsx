@@ -27,6 +27,7 @@ export const CompetitionTimer: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const offsetRef = useRef(0);
   const totalPausedRef = useRef(0);
+  const totalExtendedRef = useRef(0);
   const warningsShown = useRef<Set<number>>(new Set());
 
   const WARNING_THRESHOLDS = [1800, 600, 300, 60]; // 30m, 10m, 5m, 1m
@@ -45,6 +46,7 @@ export const CompetitionTimer: React.FC = () => {
       offsetRef.current = serverNow - Date.now();
       setEndTime(new Date(data.end_time).getTime());
       totalPausedRef.current = (data as any).total_paused_seconds || 0;
+      totalExtendedRef.current = (data as any).total_extended_seconds || 0;
       setPaused((data as any).is_paused || false);
       setVisible(true);
 
@@ -80,8 +82,8 @@ export const CompetitionTimer: React.FC = () => {
       if (paused) return; // Don't tick when paused
       
       const now = Date.now() + offsetRef.current;
-      // Add paused duration to end time (extends it)
-      const adjustedEnd = endTime + (totalPausedRef.current * 1000);
+      // Add paused + extended duration to end time
+      const adjustedEnd = endTime + ((totalPausedRef.current + totalExtendedRef.current) * 1000);
       const diff = Math.max(0, Math.floor((adjustedEnd - now) / 1000));
       setSecondsLeft(diff);
 

@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
                 ('paused_at', models.DateTimeField(blank=True, null=True)),
                 ('resumed_at', models.DateTimeField(blank=True, null=True)),
                 ('total_paused_seconds', models.IntegerField(default=0, help_text='Cumulative paused duration in seconds')),
+                ('total_extended_seconds', models.IntegerField(default=0, help_text='Cumulative extension in seconds')),
             ],
             options={
                 'db_table': 'competition_state',

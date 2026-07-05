@@ -167,11 +167,31 @@ const Badge: React.FC<{ children: React.ReactNode; color: 'green' | 'yellow' | '
 /* --- Tab Components --- */
 
 const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const [customMinutes, setCustomMinutes] = useState('');
+  const [annTitle, setAnnTitle] = useState('');
+  const [annMessage, setAnnMessage] = useState('');
+  const [annType, setAnnType] = useState('info');
+  const [annPinned, setAnnPinned] = useState(false);
+
   const handlePause = async () => {
     try { await apiClient.post('/api/submissions/pause/'); } catch {}
   };
   const handleResume = async () => {
     try { await apiClient.post('/api/submissions/resume/'); } catch {}
+  };
+  const handleExtend = async (minutes: number) => {
+    try {
+      await apiClient.post('/api/submissions/extend/', { minutes });
+    } catch {}
+  };
+  const handleAnnounce = async () => {
+    if (!annTitle.trim() || !annMessage.trim()) return;
+    try {
+      await apiClient.post('/api/announcements/create/', {
+        title: annTitle, message: annMessage, type: annType, is_pinned: annPinned
+      });
+      setAnnTitle(''); setAnnMessage(''); setAnnPinned(false);
+    } catch {}
   };
 
   return (
@@ -182,6 +202,47 @@ const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => {
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={handlePause} className="px-4 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded font-rajdhani font-semibold text-sm hover:bg-yellow-500/20 transition-colors">Pause</button>
         <button onClick={handleResume} className="px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/20 rounded font-rajdhani font-semibold text-sm hover:bg-green-500/20 transition-colors">Resume</button>
+      </div>
+    </div>
+
+    {/* Extend Time */}
+    <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+      <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Extend Time</h3>
+      <div className="flex flex-wrap items-center gap-2">
+        <button onClick={() => handleExtend(5)} className="px-3 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded font-rajdhani font-semibold text-sm hover:bg-blue-500/20">+5 min</button>
+        <button onClick={() => handleExtend(10)} className="px-3 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded font-rajdhani font-semibold text-sm hover:bg-blue-500/20">+10 min</button>
+        <button onClick={() => handleExtend(15)} className="px-3 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded font-rajdhani font-semibold text-sm hover:bg-blue-500/20">+15 min</button>
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            value={customMinutes}
+            onChange={(e) => setCustomMinutes(e.target.value)}
+            placeholder="min"
+            className="w-16 px-2 py-2 bg-dark-bg border border-purple-primary/20 rounded text-text-primary text-sm font-mono text-center"
+          />
+          <button onClick={() => { if (customMinutes) { handleExtend(parseInt(customMinutes)); setCustomMinutes(''); }}} className="px-3 py-2 bg-purple-primary/10 text-purple-primary border border-purple-primary/20 rounded font-rajdhani font-semibold text-sm hover:bg-purple-primary/20">Add</button>
+        </div>
+      </div>
+    </div>
+
+    {/* Competition Status */}
+    <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+      <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Broadcast Announcement</h3>
+      <div className="space-y-3">
+        <input value={annTitle} onChange={e => setAnnTitle(e.target.value)} placeholder="Title" className="w-full px-3 py-2 bg-dark-bg border border-purple-primary/20 rounded text-text-primary text-sm font-rajdhani" />
+        <textarea value={annMessage} onChange={e => setAnnMessage(e.target.value)} placeholder="Message" rows={2} className="w-full px-3 py-2 bg-dark-bg border border-purple-primary/20 rounded text-text-primary text-sm font-rajdhani resize-none" />
+        <div className="flex items-center gap-3">
+          <select value={annType} onChange={e => setAnnType(e.target.value)} className="px-3 py-2 bg-dark-bg border border-purple-primary/20 rounded text-text-primary text-sm font-rajdhani">
+            <option value="info">Info</option>
+            <option value="warning">Warning</option>
+            <option value="success">Success</option>
+            <option value="urgent">Urgent</option>
+          </select>
+          <label className="flex items-center gap-1 text-xs text-text-secondary font-rajdhani">
+            <input type="checkbox" checked={annPinned} onChange={e => setAnnPinned(e.target.checked)} /> Pin
+          </label>
+          <button onClick={handleAnnounce} className="px-4 py-2 bg-purple-primary/10 text-purple-primary border border-purple-primary/20 rounded font-rajdhani font-semibold text-sm hover:bg-purple-primary/20">Send</button>
+        </div>
       </div>
     </div>
 

@@ -21,6 +21,7 @@ class CompetitionState(models.Model):
     paused_at = models.DateTimeField(null=True, blank=True)
     resumed_at = models.DateTimeField(null=True, blank=True)
     total_paused_seconds = models.IntegerField(default=0, help_text="Cumulative paused duration in seconds")
+    total_extended_seconds = models.IntegerField(default=0, help_text="Cumulative extension in seconds")
 
     class Meta:
         db_table = 'competition_state'
@@ -76,3 +77,14 @@ class CompetitionState(models.Model):
         if obj.state == 'paused' and obj.paused_at:
             total += int((timezone.now() - obj.paused_at).total_seconds())
         return total
+
+    def extend(self, minutes):
+        """Extend competition by N minutes."""
+        self.total_extended_seconds += minutes * 60
+        self.save(update_fields=['total_extended_seconds'])
+        cache.delete('competition_state')
+
+    @classmethod
+    def get_total_extended_seconds(cls):
+        """Get total extended duration."""
+        return cls.get().total_extended_seconds

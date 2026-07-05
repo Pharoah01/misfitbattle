@@ -30,7 +30,7 @@ def process_submission_task(self, submission_id: int):
     try:
         submission = Submission.objects.select_related('user', 'challenge').get(id=submission_id)
         
-        submission.status = 'processing'
+        submission.status = 'rendering'
         submission.save(update_fields=['status'])
         
         logger.info(
@@ -63,6 +63,9 @@ def process_submission_task(self, submission_id: int):
             raise Exception(f"Rendering failed: {str(e)}")
         
         if submission.challenge.ground_truth_image:
+            submission.status = 'scoring'
+            submission.save(update_fields=['status'])
+            
             heatmap_client = HeatmapComparisonClient()
             
             try:

@@ -38,6 +38,7 @@ def get_competition_window():
 
 def is_competition_active():
     """Check if the competition is currently active. Returns (active, message)."""
+    from .competition_state import CompetitionState
     start, end = get_competition_window()
     if not start and not end:
         return True, None  # No time lock configured
@@ -45,8 +46,14 @@ def is_competition_active():
     now = timezone.now()
     if start and now < start:
         return False, f'Competition has not started yet. Starts at {start.strftime("%b %d, %I:%M %p")}'
-    if end and now > end:
-        return False, 'Competition has ended. No more submissions allowed.'
+    
+    if end:
+        # Adjust end time by paused + extended duration
+        total_adjustment = CompetitionState.get_total_paused_seconds() + CompetitionState.get_total_extended_seconds()
+        adjusted_end = end + timezone.timedelta(seconds=total_adjustment)
+        if now > adjusted_end:
+            return False, 'Competition has ended. No more submissions allowed.'
+    
     return True, None
 
 
@@ -157,7 +164,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             else:
                 submission = serializer.save(
                     user=request.user,
-                    status='pending',
+                    status='queued',
                     is_auto_save=True,
                     submission_count=0
                 )
@@ -216,7 +223,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         # Create submission
         submission = serializer.save(
             user=request.user,
-            status='pending',
+            status='queued',
             is_auto_save=False,
             submission_count=1
         )
@@ -362,6 +369,7 @@ def competition_status(request):
         'registration_open': getattr(settings, 'REGISTRATION_OPEN', True),
         'leaderboard_frozen': getattr(settings, 'LEADERBOARD_FROZEN', False),
         'total_paused_seconds': total_paused,
+        'total_extended_seconds': CompetitionState.get_total_extended_seconds(),
     }
 
     if start:
@@ -411,3 +419,53 @@ def resume_competition(request):
     state = CompetitionState.get()
     state.resume()
     return Response({'message': 'Competition resumed', 'state': 'active', 'total_paused_seconds': state.total_paused_seconds})
+
+
+@api_view(['POST'])
+@perm_classes([IsAuthenticated])
+def extend_competition(request):
+    """Admin: Extend competition time by N minutes."""
+    if not request.user.is_admin:
+        return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    minutes = request.data.get('minutes')
+    if not minutes or int(minutes) <= 0:
+        return Response({'error': 'Provide positive minutes value'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    minutes = int(minutes)
+    
+    from .competition_state import CompetitionState
+    state = CompetitionState.get()
+    
+    if state.state == 'ended':
+        return Response({'error': 'Cannot extend an ended competition'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    state.extend(minutes)
+    
+    return Response({
+        'message': f'Competition extended by {minutes} minutes',
+        'total_extended_seconds': state.total_extended_seconds,
+        'total_extended_minutes': state.total_extended_seconds // 60,
+    })
+
+
+@api_view(['POST'])
+@perm_classes([IsAuthenticated])
+def retry_submission(request, submission_id):
+    """Admin: Retry a failed submission."""
+    if not request.user.is_admin:
+        return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        sub = Submission.objects.get(id=submission_id)
+    except Submission.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    sub.status = 'queued'
+    sub.error_message = None
+    sub.save(update_fields=['status', 'error_message'])
+    
+    if getattr(settings, 'USE_CELERY', True):
+        process_submission_task.delay(sub.id)
+    
+    return Response({'message': f'Submission {submission_id} requeued'})

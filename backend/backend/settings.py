@@ -109,6 +109,7 @@ INSTALLED_APPS = [
     'challenges',
     'submissions',
     'teams',
+    'announcements',
 ]
 
 MIDDLEWARE = [

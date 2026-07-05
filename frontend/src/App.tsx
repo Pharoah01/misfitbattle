@@ -11,6 +11,7 @@ import { queryClient } from '@/config/queryClient';
 import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby, Leaderboard } from '@/pages';
 import { AdminPanel } from '@/pages/AdminPanel';
 import { CompetitionTimer } from '@/components/CompetitionTimer';
+import { Announcements } from '@/components/Announcements';
 import { initializeSecurity } from '@/utils/security';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -21,7 +22,12 @@ function TimerWrapper() {
   const { pathname } = useLocation();
   const hidden = ['/', '/login', '/register', '/complete-profile', '/lobby', '/jaswanth', '/leaderboard'].includes(pathname);
   if (hidden) return null;
-  return <CompetitionTimer />;
+  return (
+    <>
+      <Announcements />
+      <CompetitionTimer />
+    </>
+  );
 }
 
 function App() {

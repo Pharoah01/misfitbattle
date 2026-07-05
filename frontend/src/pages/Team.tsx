@@ -303,12 +303,14 @@ export const Team: React.FC = () => {
                       <td className="py-2 px-4">
                         <span className={`text-xs px-2 py-0.5 rounded font-rajdhani ${
                           c.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                          c.status === 'processing' ? 'bg-blue-500/10 text-blue-400' :
-                          c.status === 'pending' ? 'bg-blue-500/10 text-blue-400' :
+                          c.status === 'scoring' ? 'bg-purple-primary/10 text-purple-primary' :
+                          c.status === 'rendering' ? 'bg-blue-500/10 text-blue-400' :
+                          c.status === 'queued' ? 'bg-gray-500/10 text-gray-400' :
+                          c.status === 'failed' ? 'bg-red-500/10 text-red-400' :
                           c.status === 'locked' ? 'bg-red-500/10 text-red-400' :
                           'bg-gray-500/10 text-gray-400'
                         }`}>
-                          {c.status === 'not_started' ? 'Not Started' : c.status}
+                          {c.status === 'not_started' ? 'Not Started' : c.status === 'rendering' ? 'Rendering...' : c.status === 'scoring' ? 'Scoring...' : c.status === 'queued' ? 'Queued' : c.status}
                         </span>
                       </td>
                       <td className="py-2 px-4 text-text-secondary font-rajdhani text-xs">{c.submitted_by || (claim ? <span className="text-yellow-400">{claim.claimed_by}</span> : '—')}</td>
