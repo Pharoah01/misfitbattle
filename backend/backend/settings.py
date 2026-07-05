@@ -110,6 +110,7 @@ INSTALLED_APPS = [
     'submissions',
     'teams',
     'announcements',
+    'auditlog',
 ]
 
 MIDDLEWARE = [

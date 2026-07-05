@@ -122,24 +122,6 @@ export const Team: React.FC = () => {
     }
   };
 
-  const handleClaim = async (challengeId: number) => {
-    try {
-      await apiClient.post('/api/teams/claim/', { challenge_id: challengeId });
-      fetchTeam();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to claim');
-    }
-  };
-
-  const handleUnclaim = async (challengeId: number) => {
-    try {
-      await apiClient.post('/api/teams/unclaim/', { challenge_id: challengeId });
-      fetchTeam();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to unclaim');
-    }
-  };
-
   const copyInviteCode = () => {
     if (team?.invite_code) {
       navigator.clipboard.writeText(team.invite_code);
@@ -292,13 +274,11 @@ export const Team: React.FC = () => {
                     <th className="text-right py-2 px-4 text-xs text-text-secondary font-rajdhani">Match</th>
                     <th className="text-right py-2 px-4 text-xs text-text-secondary font-rajdhani">Score</th>
                     <th className="text-right py-2 px-4 text-xs text-text-secondary font-rajdhani">Code</th>
-                    <th className="text-center py-2 px-4 text-xs text-text-secondary font-rajdhani">Claim</th>
+                    <th className="text-center py-2 px-4 text-xs text-text-secondary font-rajdhani"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {challenges.map((c: any) => {
-                    const claim = dashboardData?.claims?.[c.id];
-                    const isMyClaim = claim?.claimed_by_htp_id === user?.htp_id;
                     return (
                     <tr key={c.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5">
                       <td className="py-2 px-4 font-rajdhani">
@@ -318,27 +298,15 @@ export const Team: React.FC = () => {
                           {c.status === 'not_started' ? 'Not Started' : c.status === 'rendering' ? 'Rendering...' : c.status === 'scoring' ? 'Scoring...' : c.status === 'queued' ? 'Queued' : c.status}
                         </span>
                       </td>
-                      <td className="py-2 px-4 text-text-secondary font-rajdhani text-xs">{c.submitted_by || (claim ? <span className="text-yellow-400">{claim.claimed_by}</span> : '—')}</td>
+                      <td className="py-2 px-4 text-text-secondary font-rajdhani text-xs">{c.submitted_by || '—'}</td>
                       <td className="py-2 px-4 text-text-secondary font-mono text-xs">{c.submitted_at ? new Date(c.submitted_at).toLocaleTimeString() : '—'}</td>
                       <td className="py-2 px-4 text-right font-mono text-purple-primary">{c.similarity_score ? (c.similarity_score * 100).toFixed(1) + '%' : '—'}</td>
                       <td className="py-2 px-4 text-right font-mono font-bold text-text-primary">{c.score ?? '—'}</td>
                       <td className="py-2 px-4 text-right font-mono text-text-secondary">{c.code_length ?? '—'}</td>
                       <td className="py-2 px-4 text-center">
-                        {c.status === 'not_started' && !c.is_locked && (
-                          claim ? (
-                            isMyClaim ? (
-                              <button onClick={() => handleUnclaim(c.id)} className="text-xs text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded hover:bg-yellow-500/10 font-rajdhani">Drop</button>
-                            ) : (
-                              <span className="text-xs text-yellow-400 font-rajdhani">{claim.claimed_by}</span>
-                            )
-                          ) : (
-                            <button onClick={() => handleClaim(c.id)} className="text-xs text-purple-primary border border-purple-primary/30 px-2 py-0.5 rounded hover:bg-purple-primary/10 font-rajdhani">Claim</button>
-                          )
-                        )}
                         {c.status === 'completed' && c.submission_id && (
                           <button onClick={() => setViewingSubmission(c.submission_id)} className="text-xs text-green-400 border border-green-500/30 px-2 py-0.5 rounded hover:bg-green-500/10 font-rajdhani">View</button>
                         )}
-                        {c.submitted_by && c.status !== 'completed' && <span className="text-xs text-blue-400">...</span>}
                       </td>
                     </tr>
                     );

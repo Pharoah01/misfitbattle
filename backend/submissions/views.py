@@ -403,8 +403,10 @@ def pause_competition(request):
         return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
     
     from .competition_state import CompetitionState
+    from auditlog.services import log_event
     state = CompetitionState.get()
     state.pause()
+    log_event('competition.pause', user=request.user, request=request, description='Competition paused')
     return Response({'message': 'Competition paused', 'state': 'paused', 'paused_at': state.paused_at})
 
 
@@ -416,8 +418,10 @@ def resume_competition(request):
         return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
     
     from .competition_state import CompetitionState
+    from auditlog.services import log_event
     state = CompetitionState.get()
     state.resume()
+    log_event('competition.resume', user=request.user, request=request, description='Competition resumed')
     return Response({'message': 'Competition resumed', 'state': 'active', 'total_paused_seconds': state.total_paused_seconds})
 
 
@@ -441,6 +445,11 @@ def extend_competition(request):
         return Response({'error': 'Cannot extend an ended competition'}, status=status.HTTP_400_BAD_REQUEST)
     
     state.extend(minutes)
+    
+    from auditlog.services import log_event
+    log_event('competition.extend', user=request.user, request=request,
+              description=f'Competition extended by {minutes} minutes',
+              after_value=f'+{minutes}min (total: {state.total_extended_seconds//60}min)')
     
     return Response({
         'message': f'Competition extended by {minutes} minutes',

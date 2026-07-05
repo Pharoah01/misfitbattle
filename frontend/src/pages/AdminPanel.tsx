@@ -30,7 +30,7 @@ interface DashboardData {
   timestamp: string;
 }
 
-type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges';
+type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges' | 'audit';
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -81,6 +81,7 @@ export const AdminPanel: React.FC = () => {
     { key: 'sessions', label: 'Sessions' },
     { key: 'security', label: 'Security' },
     { key: 'challenges', label: 'Challenges' },
+    { key: 'audit', label: 'Audit' },
   ];
 
   return (
@@ -125,6 +126,7 @@ export const AdminPanel: React.FC = () => {
         {tab === 'sessions' && <SessionsTab sessions={data.sessions} />}
         {tab === 'security' && <SecurityTab security={data.security} />}
         {tab === 'challenges' && <ChallengesTab challenges={data.challenge_stats} />}
+        {tab === 'audit' && <AuditTab />}
       </main>
     </div>
   );
@@ -503,5 +505,55 @@ const ChallengesTab: React.FC<{ challenges: any[] }> = ({ challenges }) => {
         </tbody>
       </table>
     </TableWrapper>
+  );
+};
+
+
+const AuditTab: React.FC = () => {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const params = new URLSearchParams({ page: String(page), per_page: '30' });
+    if (search) params.set('search', search);
+    apiClient.get(`/api/audit/?${params}`)
+      .then(res => { setLogs(res.data.logs); setTotalPages(res.data.total_pages); })
+      .catch(() => {});
+  }, [page, search]);
+
+  return (
+    <div className="space-y-4">
+      <input
+        value={search}
+        onChange={e => { setSearch(e.target.value); setPage(1); }}
+        placeholder="Search logs..."
+        className="w-full px-4 py-2 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary text-sm font-rajdhani"
+      />
+      <TableWrapper>
+        <table className="w-full text-sm">
+          <thead className="border-b border-purple-primary/10">
+            <tr><Th>Time</Th><Th>Event</Th><Th>User</Th><Th>Description</Th><Th>IP</Th></tr>
+          </thead>
+          <tbody>
+            {logs.map(log => (
+              <tr key={log.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5">
+                <Td muted>{new Date(log.timestamp).toLocaleTimeString()}</Td>
+                <Td><Badge color="purple">{log.event_type}</Badge></Td>
+                <Td>{log.user_name || log.user || '—'}</Td>
+                <Td>{log.description}</Td>
+                <Td mono>{log.ip_address || '—'}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TableWrapper>
+      <div className="flex justify-between text-xs text-text-secondary font-rajdhani">
+        <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1} className="px-3 py-1 border border-purple-primary/20 rounded disabled:opacity-30">Prev</button>
+        <span>Page {page} / {totalPages}</span>
+        <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages} className="px-3 py-1 border border-purple-primary/20 rounded disabled:opacity-30">Next</button>
+      </div>
+    </div>
   );
 };

@@ -211,6 +211,9 @@ class SignInView(generics.GenericAPIView):
         token, created = Token.objects.get_or_create(user=user)
         session = SessionSecurityService.create_session(user, request)
         
+        from auditlog.services import log_event
+        log_event('auth.login', user=user, request=request, description=f'{user.name} signed in')
+        
         return Response({
             'token': token.key,
             'session_id': str(session.session_id),
