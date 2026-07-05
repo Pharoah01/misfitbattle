@@ -30,7 +30,7 @@ interface DashboardData {
   timestamp: string;
 }
 
-type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges' | 'audit';
+type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges' | 'audit' | 'system';
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -82,6 +82,7 @@ export const AdminPanel: React.FC = () => {
     { key: 'security', label: 'Security' },
     { key: 'challenges', label: 'Challenges' },
     { key: 'audit', label: 'Audit' },
+    { key: 'system', label: 'System' },
   ];
 
   return (
@@ -127,6 +128,7 @@ export const AdminPanel: React.FC = () => {
         {tab === 'security' && <SecurityTab security={data.security} />}
         {tab === 'challenges' && <ChallengesTab challenges={data.challenge_stats} />}
         {tab === 'audit' && <AuditTab />}
+        {tab === 'system' && <SystemTab />}
       </main>
     </div>
   );
@@ -554,6 +556,110 @@ const AuditTab: React.FC = () => {
         <span>Page {page} / {totalPages}</span>
         <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages} className="px-3 py-1 border border-purple-primary/20 rounded disabled:opacity-30">Next</button>
       </div>
+    </div>
+  );
+};
+
+
+const SystemTab: React.FC = () => {
+  const [health, setHealth] = useState<any>(null);
+
+  useEffect(() => {
+    const fetch = () => {
+      apiClient.get('/api/submissions/health/').then(res => setHealth(res.data)).catch(() => {});
+    };
+    fetch();
+    const interval = setInterval(fetch, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!health) return <div className="text-text-secondary font-rajdhani">Loading...</div>;
+
+  const ServiceStatus: React.FC<{ name: string; data: any }> = ({ name, data }) => (
+    <div className="bg-dark-bg border border-purple-primary/10 rounded-lg p-4 flex items-center justify-between">
+      <div>
+        <p className="text-text-primary font-rajdhani font-semibold">{name}</p>
+        {data.response_ms && <p className="text-xs text-text-secondary font-mono">{data.response_ms}ms</p>}
+        {data.workers !== undefined && <p className="text-xs text-text-secondary font-rajdhani">{data.workers} worker(s)</p>}
+      </div>
+      <span className={`w-3 h-3 rounded-full ${data.status === 'online' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+    </div>
+  );
+
+  const handleRetry = async (id: number) => {
+    try { await apiClient.post(`/api/submissions/${id}/retry/`); } catch {}
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Services */}
+      <div>
+        <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Services</h3>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <ServiceStatus name="Database" data={health.health.database} />
+          <ServiceStatus name="Redis" data={health.health.redis} />
+          <ServiceStatus name="Celery" data={health.health.celery} />
+          <ServiceStatus name="Playwright" data={health.health.playwright} />
+          <ServiceStatus name="Storage" data={health.health.storage} />
+        </div>
+      </div>
+
+      {/* Queue */}
+      <div>
+        <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Submission Queue</h3>
+        <div className="grid grid-cols-5 gap-3">
+          {Object.entries(health.queue).map(([key, val]) => (
+            <div key={key} className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+              <p className={`text-2xl font-bold font-orbitron ${key === 'failed' ? 'text-red-400' : key === 'completed' ? 'text-green-400' : 'text-purple-primary'}`}>{val as number}</p>
+              <p className="text-xs text-text-secondary font-rajdhani capitalize">{key}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+          <p className="text-xl font-bold font-orbitron text-text-primary">{health.stats.total_today}</p>
+          <p className="text-xs text-text-secondary font-rajdhani">Submissions Today</p>
+        </div>
+        <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+          <p className="text-xl font-bold font-orbitron text-green-400">{health.stats.completed_today}</p>
+          <p className="text-xs text-text-secondary font-rajdhani">Completed</p>
+        </div>
+        <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-4 text-center">
+          <p className="text-xl font-bold font-orbitron text-red-400">{health.stats.failed_today}</p>
+          <p className="text-xs text-text-secondary font-rajdhani">Failed</p>
+        </div>
+      </div>
+
+      {/* Failed Jobs */}
+      {health.failed_jobs.length > 0 && (
+        <div>
+          <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider font-rajdhani mb-3">Failed Jobs</h3>
+          <TableWrapper>
+            <table className="w-full text-sm">
+              <thead className="border-b border-purple-primary/10">
+                <tr><Th>ID</Th><Th>User</Th><Th>Challenge</Th><Th>Error</Th><Th>Time</Th><Th>Action</Th></tr>
+              </thead>
+              <tbody>
+                {health.failed_jobs.map((j: any) => (
+                  <tr key={j.id} className="border-b border-dark-border/30">
+                    <Td mono>{j.id}</Td>
+                    <Td>{j.user__name}</Td>
+                    <Td>{j.challenge__title}</Td>
+                    <Td muted>{(j.error_message || '').substring(0, 60)}</Td>
+                    <Td muted>{new Date(j.submitted_at).toLocaleTimeString()}</Td>
+                    <td className="py-2 px-3">
+                      <button onClick={() => handleRetry(j.id)} className="text-xs text-green-400 border border-green-500/30 px-2 py-0.5 rounded hover:bg-green-500/10 font-rajdhani">Retry</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableWrapper>
+        </div>
+      )}
     </div>
   );
 };
