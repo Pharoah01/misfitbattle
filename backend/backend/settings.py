@@ -113,6 +113,7 @@ INSTALLED_APPS = [
     'auditlog',
     'practice',
     'exports',
+    'notifications',
 ]
 
 MIDDLEWARE = [

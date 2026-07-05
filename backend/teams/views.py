@@ -242,13 +242,33 @@ def team_dashboard(request):
     contributions = []
     for m in members_data:
         m_subs = [s for s in team_submissions if s.user.htp_id == m['htp_id']]
+        m_sims = [float(s.similarity_score) for s in m_subs if s.similarity_score]
         m_scores = [float(s.similarity_score) * s.challenge.points for s in m_subs if s.similarity_score]
+        
+        # Best scoring challenge
+        best_challenge = None
+        if m_scores:
+            best_idx = m_scores.index(max(m_scores))
+            scored_subs = [s for s in m_subs if s.similarity_score]
+            if scored_subs:
+                best_sub = scored_subs[best_idx] if best_idx < len(scored_subs) else scored_subs[0]
+                best_challenge = {
+                    'title': best_sub.challenge.title,
+                    'score': round(max(m_scores), 2),
+                    'similarity': round(max(m_sims), 4) if m_sims else 0,
+                }
+        
+        last_sub_time = max((s.submitted_at for s in m_subs), default=None)
+        
         contributions.append({
             'name': m['name'],
             'htp_id': m['htp_id'],
             'challenges_submitted': len(m_subs),
             'total_points': round(sum(m_scores), 2),
-            'avg_similarity': round(sum(float(s.similarity_score) for s in m_subs if s.similarity_score) / max(len([s for s in m_subs if s.similarity_score]), 1), 4),
+            'avg_similarity': round(sum(m_sims) / max(len(m_sims), 1), 4),
+            'highest_similarity': round(max(m_sims), 4) if m_sims else 0,
+            'best_challenge': best_challenge,
+            'last_submission_time': last_sub_time.isoformat() if last_sub_time else None,
         })
 
     # --- Highest scoring challenge ---

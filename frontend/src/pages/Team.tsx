@@ -238,20 +238,44 @@ export const Team: React.FC = () => {
                   </div>
                   <p className="text-xs text-text-secondary font-mono mb-3">{m.htp_id}</p>
                   {contrib && (
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div>
-                        <p className="text-sm font-bold text-text-primary font-mono">{contrib.challenges_submitted}</p>
-                        <p className="text-xs text-text-secondary font-rajdhani">Solved</p>
+                    <>
+                      <div className="grid grid-cols-3 gap-2 text-center mb-3">
+                        <div>
+                          <p className="text-sm font-bold text-text-primary font-mono">{contrib.challenges_submitted}</p>
+                          <p className="text-xs text-text-secondary font-rajdhani">Solved</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text-primary font-mono">{contrib.total_points}</p>
+                          <p className="text-xs text-text-secondary font-rajdhani">Points</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text-primary font-mono">{(contrib.avg_similarity * 100).toFixed(1)}%</p>
+                          <p className="text-xs text-text-secondary font-rajdhani">Avg</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-text-primary font-mono">{contrib.total_points}</p>
-                        <p className="text-xs text-text-secondary font-rajdhani">Points</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-text-primary font-mono">{(contrib.avg_similarity * 100).toFixed(1)}%</p>
-                        <p className="text-xs text-text-secondary font-rajdhani">Avg</p>
-                      </div>
-                    </div>
+                      {/* Contribution bar */}
+                      {stats && stats.total_score > 0 && (
+                        <div className="mb-2">
+                          <div className="flex justify-between text-xs text-text-secondary font-rajdhani mb-1">
+                            <span>Contribution</span>
+                            <span>{Math.round((contrib.total_points / stats.total_score) * 100)}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-dark-bg rounded-full overflow-hidden">
+                            <div className="h-full bg-purple-primary rounded-full" style={{ width: `${(contrib.total_points / stats.total_score) * 100}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+                      {contrib.best_challenge && (
+                        <p className="text-xs text-text-secondary font-rajdhani">
+                          Best: <span className="text-purple-primary">{contrib.best_challenge.title}</span> ({contrib.best_challenge.score} pts)
+                        </p>
+                      )}
+                      {contrib.last_submission_time && (
+                        <p className="text-xs text-text-secondary font-rajdhani mt-1">
+                          Last: {new Date(contrib.last_submission_time).toLocaleTimeString()}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               );

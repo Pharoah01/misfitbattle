@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/audit/', include('auditlog.urls')),
     path('api/practice/', include('practice.urls')),
     path('api/export/', include('exports.urls')),
+    path('api/notifications/', include('notifications.urls')),
     path('robots.txt', robots_txt, name='robots_txt'),
 ]
 

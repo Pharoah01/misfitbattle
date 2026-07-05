@@ -9,6 +9,7 @@ import { SkeletonLoader, ErrorState } from '@/components';
 import { getDifficultyBadgeClasses } from '@/utils/difficulty';
 import { toast } from '@/utils';
 import apiClient from '@/api/client';
+import { NotificationBell } from '@/components/NotificationBell';
 import type { Challenge } from '@/types';
 
 export const Dashboard: React.FC = () => {
@@ -111,6 +112,7 @@ export const Dashboard: React.FC = () => {
               <span className="text-text-secondary hidden sm:inline font-rajdhani">
                 {user?.name}
               </span>
+              <NotificationBell />
               <button
                 onClick={() => navigate('/profile')}
                 className="px-4 py-2 bg-gradient-to-r from-purple-primary to-purple-secondary hover:from-purple-dark hover:to-purple-primary text-white border border-purple-primary/30 rounded transition-all font-rajdhani font-semibold shadow-lg shadow-purple-primary/20"
