@@ -76,7 +76,7 @@ def admin_dashboard(request):
         .values(
             'user__htp_id', 'user__name',
             'ip_address', 'country', 'city',
-            'created_at', 'last_activity'
+            'created_at', 'last_activity', 'current_page'
         )
     )
 

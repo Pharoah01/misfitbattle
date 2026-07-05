@@ -60,6 +60,7 @@ class UserSession(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_activity = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    current_page = models.CharField(max_length=100, blank=True, default='', help_text="Current page/activity")
     
     class Meta:
         db_table = 'user_sessions'

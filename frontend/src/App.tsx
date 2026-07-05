@@ -16,11 +16,13 @@ import { Announcements } from '@/components/Announcements';
 import { initializeSecurity } from '@/utils/security';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { usePresence } from '@/hooks/usePresence';
 import './App.css';
 
 /** Shows competition timer on all pages except public, lobby, and admin */
 function TimerWrapper() {
   const { pathname } = useLocation();
+  usePresence();
   const hidden = ['/', '/login', '/register', '/complete-profile', '/lobby', '/jaswanth', '/leaderboard'].includes(pathname);
   if (hidden) return null;
   return (

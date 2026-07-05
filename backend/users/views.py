@@ -330,3 +330,23 @@ class UpdateProfileView(generics.GenericAPIView):
 RegisterView = SignUpView
 LoginView = SignInView
 LogoutView = SignOutView
+
+
+from rest_framework.decorators import api_view, permission_classes as perm_dec
+
+
+@api_view(['POST'])
+@perm_dec([IsAuthenticated])
+def heartbeat(request):
+    """Update user's current page/activity. Called by frontend every 30s."""
+    from .session_models import UserSession
+    current_page = request.data.get('page', '')
+    
+    try:
+        session = UserSession.objects.get(user=request.user, is_active=True)
+        session.current_page = current_page[:100]
+        session.save(update_fields=['current_page', 'last_activity'])
+    except UserSession.DoesNotExist:
+        pass
+    
+    return Response({'ok': True})

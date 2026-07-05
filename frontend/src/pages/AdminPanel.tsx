@@ -30,7 +30,7 @@ interface DashboardData {
   timestamp: string;
 }
 
-type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges' | 'audit' | 'system';
+type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges' | 'audit' | 'system' | 'export';
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -83,6 +83,7 @@ export const AdminPanel: React.FC = () => {
     { key: 'challenges', label: 'Challenges' },
     { key: 'audit', label: 'Audit' },
     { key: 'system', label: 'System' },
+    { key: 'export', label: 'Export' },
   ];
 
   return (
@@ -129,6 +130,7 @@ export const AdminPanel: React.FC = () => {
         {tab === 'challenges' && <ChallengesTab challenges={data.challenge_stats} />}
         {tab === 'audit' && <AuditTab />}
         {tab === 'system' && <SystemTab />}
+        {tab === 'export' && <ExportTab />}
       </main>
     </div>
   );
@@ -291,14 +293,27 @@ const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => {
   );
 };
 
-const UsersTab: React.FC<{ users: any[] }> = ({ users }) => (
-  <TableWrapper>
+const UsersTab: React.FC<{ users: any[] }> = ({ users }) => {
+  const [search, setSearch] = useState('');
+  const filtered = users.filter(u => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (u.htp_id || '').toLowerCase().includes(s) ||
+           (u.name || '').toLowerCase().includes(s) ||
+           (u.email || '').toLowerCase().includes(s) ||
+           (u.college_name || '').toLowerCase().includes(s) ||
+           (u.department || '').toLowerCase().includes(s);
+  });
+  return (
+  <div className="space-y-3">
+    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, HTPID, email, college..." className="w-full px-4 py-2 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary text-sm font-rajdhani" />
+    <TableWrapper>
     <table className="w-full text-sm">
       <thead className="border-b border-purple-primary/10">
         <tr><Th>HTPID</Th><Th>Name</Th><Th>Email</Th><Th>College</Th><Th>Dept</Th><Th>Admin</Th><Th>Registered</Th></tr>
       </thead>
       <tbody>
-        {users.map(u => (
+        {filtered.map(u => (
           <tr key={u.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
             <Td mono>{u.htp_id}</Td>
             <Td>{u.name}</Td>
@@ -312,16 +327,32 @@ const UsersTab: React.FC<{ users: any[] }> = ({ users }) => (
       </tbody>
     </table>
   </TableWrapper>
-);
+  </div>
+  );
+};
 
-const TeamsTab: React.FC<{ teams: any[] }> = ({ teams }) => (
-  <TableWrapper>
+const TeamsTab: React.FC<{ teams: any[] }> = ({ teams }) => {
+  const [search, setSearch] = useState('');
+  const filtered = teams.filter(t => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (t.name || '').toLowerCase().includes(s) ||
+           (t.invite_code || '').toLowerCase().includes(s) ||
+           (t.leader__name || '').toLowerCase().includes(s) ||
+           (t.leader__htp_id || '').toLowerCase().includes(s) ||
+           (t.member__name || '').toLowerCase().includes(s) ||
+           (t.member__htp_id || '').toLowerCase().includes(s);
+  });
+  return (
+  <div className="space-y-3">
+    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search teams, members, invite codes..." className="w-full px-4 py-2 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary text-sm font-rajdhani" />
+    <TableWrapper>
     <table className="w-full text-sm">
       <thead className="border-b border-purple-primary/10">
         <tr><Th>Team</Th><Th>Code</Th><Th>Leader</Th><Th>Member</Th><Th>Status</Th><Th>Created</Th></tr>
       </thead>
       <tbody>
-        {teams.map(t => (
+        {filtered.map(t => (
           <tr key={t.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
             <Td>{t.name}</Td>
             <Td mono>{t.invite_code}</Td>
@@ -334,16 +365,41 @@ const TeamsTab: React.FC<{ teams: any[] }> = ({ teams }) => (
       </tbody>
     </table>
   </TableWrapper>
-);
+  </div>
+  );
+};
 
-const SubmissionsTab: React.FC<{ submissions: any[] }> = ({ submissions }) => (
-  <TableWrapper>
+const SubmissionsTab: React.FC<{ submissions: any[] }> = ({ submissions }) => {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const filtered = submissions.filter(s => {
+    if (statusFilter && s.status !== statusFilter) return false;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (s.user__name || '').toLowerCase().includes(q) ||
+           (s.user__htp_id || '').toLowerCase().includes(q) ||
+           (s.challenge__title || '').toLowerCase().includes(q);
+  });
+  return (
+  <div className="space-y-3">
+    <div className="flex gap-2">
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search user, challenge..." className="flex-1 px-4 py-2 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary text-sm font-rajdhani" />
+      <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary text-sm font-rajdhani">
+        <option value="">All Status</option>
+        <option value="queued">Queued</option>
+        <option value="rendering">Rendering</option>
+        <option value="scoring">Scoring</option>
+        <option value="completed">Completed</option>
+        <option value="failed">Failed</option>
+      </select>
+    </div>
+    <TableWrapper>
     <table className="w-full text-sm">
       <thead className="border-b border-purple-primary/10">
         <tr><Th>User</Th><Th>Challenge</Th><Th>Difficulty</Th><Th>Length</Th><Th>Score</Th><Th>Status</Th><Th>Type</Th><Th>Time</Th></tr>
       </thead>
       <tbody>
-        {submissions.map(s => (
+        {filtered.map(s => (
           <tr key={s.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
             <Td>{s.user__name} <span className="text-text-secondary text-xs font-mono">({s.user__htp_id})</span></Td>
             <Td>{s.challenge__title}</Td>
@@ -367,7 +423,9 @@ const SubmissionsTab: React.FC<{ submissions: any[] }> = ({ submissions }) => (
       </tbody>
     </table>
   </TableWrapper>
-);
+  </div>
+  );
+};
 
 const SessionsTab: React.FC<{ sessions: any[] }> = ({ sessions }) => (
   <TableWrapper>
@@ -660,6 +718,52 @@ const SystemTab: React.FC = () => {
           </TableWrapper>
         </div>
       )}
+    </div>
+  );
+};
+
+
+const ExportTab: React.FC = () => {
+  const apiBase = import.meta.env.VITE_API_URL || '';
+  const token = localStorage.getItem('access_token');
+  
+  const download = (endpoint: string, filename: string) => {
+    window.open(`${apiBase}/api/export/${endpoint}?format=csv`, '_blank');
+    // Use fetch for auth
+    fetch(`${apiBase}/api/export/${endpoint}`, {
+      headers: { 'Authorization': `Token ${token}` }
+    }).then(res => res.blob()).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  };
+
+  const exports = [
+    { label: 'Leaderboard', desc: 'Final rankings with scores', endpoint: 'leaderboard/', file: 'leaderboard.csv' },
+    { label: 'Teams', desc: 'All teams with members and status', endpoint: 'teams/', file: 'teams.csv' },
+    { label: 'Participants', desc: 'All registered users', endpoint: 'participants/', file: 'participants.csv' },
+    { label: 'Submissions', desc: 'All submissions with scores', endpoint: 'submissions/', file: 'submissions.csv' },
+    { label: 'Challenge Scores', desc: 'Score matrix (teams × challenges)', endpoint: 'challenge-scores/', file: 'challenge_scores.csv' },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {exports.map(e => (
+        <div key={e.endpoint} className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+          <h3 className="text-text-primary font-rajdhani font-semibold mb-1">{e.label}</h3>
+          <p className="text-text-secondary text-xs font-rajdhani mb-4">{e.desc}</p>
+          <button
+            onClick={() => download(e.endpoint, e.file)}
+            className="px-4 py-2 bg-purple-primary/10 text-purple-primary border border-purple-primary/20 rounded font-rajdhani font-semibold text-sm hover:bg-purple-primary/20 transition-colors"
+          >
+            Download CSV
+          </button>
+        </div>
+      ))}
     </div>
   );
 };
