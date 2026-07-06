@@ -31,10 +31,17 @@ export const NotificationBell: React.FC = () => {
       setNotifications(res.data.notifications);
       setUnread(res.data.unread_count);
 
-      // Toast for new unread
+      // Load seen from sessionStorage
+      try {
+        const stored = sessionStorage.getItem('notif_seen');
+        if (stored) seenIds.current = new Set(JSON.parse(stored));
+      } catch {}
+
+      // Toast for new unread (only once per session)
       for (const n of res.data.notifications) {
         if (!n.is_read && !seenIds.current.has(n.id)) {
           seenIds.current.add(n.id);
+          sessionStorage.setItem('notif_seen', JSON.stringify([...seenIds.current]));
           toast.info(`${n.title}${n.message ? ': ' + n.message : ''}`);
         }
       }
@@ -60,6 +67,12 @@ export const NotificationBell: React.FC = () => {
     await apiClient.post('/api/notifications/mark-read/', {});
     setUnread(0);
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+  };
+
+  const handleDelete = async (id: number) => {
+    await apiClient.post('/api/notifications/delete/', { id });
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    setUnread(prev => Math.max(0, prev - 1));
   };
 
   const handleClick = (n: NotifItem) => {
@@ -94,15 +107,21 @@ export const NotificationBell: React.FC = () => {
               <p className="p-4 text-center text-text-secondary text-sm font-rajdhani">No notifications</p>
             ) : (
               notifications.slice(0, 10).map(n => (
-                <button
+                <div
                   key={n.id}
-                  onClick={() => handleClick(n)}
                   className={`w-full text-left px-4 py-3 border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors ${!n.is_read ? 'bg-purple-primary/5' : ''}`}
                 >
-                  <p className={`text-sm font-rajdhani ${!n.is_read ? 'text-text-primary font-semibold' : 'text-text-secondary'}`}>{n.title}</p>
-                  {n.message && <p className="text-xs text-text-secondary font-rajdhani mt-0.5">{n.message}</p>}
-                  <p className="text-xs text-text-secondary font-mono mt-1">{new Date(n.created_at).toLocaleTimeString()}</p>
-                </button>
+                  <div className="flex justify-between items-start">
+                    <button onClick={() => handleClick(n)} className="flex-1 text-left">
+                      <p className={`text-sm font-rajdhani ${!n.is_read ? 'text-text-primary font-semibold' : 'text-text-secondary'}`}>{n.title}</p>
+                      {n.message && <p className="text-xs text-text-secondary font-rajdhani mt-0.5">{n.message}</p>}
+                      <p className="text-xs text-text-secondary font-mono mt-1">{new Date(n.created_at).toLocaleTimeString()}</p>
+                    </button>
+                    <button onClick={() => handleDelete(n.id)} className="text-text-secondary hover:text-red-400 p-1 ml-1 flex-shrink-0" title="Delete">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                </div>
               ))
             )}
           </div>
