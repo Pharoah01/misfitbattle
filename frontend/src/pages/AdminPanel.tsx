@@ -30,7 +30,7 @@ interface DashboardData {
   timestamp: string;
 }
 
-type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges' | 'audit' | 'system' | 'export';
+type Tab = 'overview' | 'users' | 'teams' | 'submissions' | 'sessions' | 'security' | 'challenges' | 'audit' | 'system' | 'export' | 'notifications';
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -84,6 +84,7 @@ export const AdminPanel: React.FC = () => {
     { key: 'audit', label: 'Audit' },
     { key: 'system', label: 'System' },
     { key: 'export', label: 'Export' },
+    { key: 'notifications', label: 'Notifs' },
   ];
 
   return (
@@ -131,6 +132,7 @@ export const AdminPanel: React.FC = () => {
         {tab === 'audit' && <AuditTab />}
         {tab === 'system' && <SystemTab />}
         {tab === 'export' && <ExportTab />}
+        {tab === 'notifications' && <NotificationsManager />}
       </main>
     </div>
   );
@@ -820,6 +822,100 @@ const ExportTab: React.FC = () => {
           </button>
         </div>
       ))}
+    </div>
+  );
+};
+
+
+const NotificationsManager: React.FC = () => {
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [type, setType] = useState('system');
+  const [link, setLink] = useState('');
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch recent notifications (reuse announcements list for now)
+    apiClient.get('/api/announcements/').then(res => {
+      setNotifications(res.data.announcements || []);
+    }).catch(() => {});
+  }, []);
+
+  const handleSend = async () => {
+    if (!title.trim()) return;
+    try {
+      await apiClient.post('/api/announcements/create/', {
+        title, message, type, is_pinned: false
+      });
+      setTitle(''); setMessage(''); setLink('');
+      // Refresh
+      const res = await apiClient.get('/api/announcements/');
+      setNotifications(res.data.announcements || []);
+    } catch {}
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await apiClient.post(`/api/announcements/${id}/delete/`);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch {}
+  };
+
+  const handlePin = async (id: number) => {
+    try {
+      await apiClient.post(`/api/announcements/${id}/pin/`);
+      const res = await apiClient.get('/api/announcements/');
+      setNotifications(res.data.announcements || []);
+    } catch {}
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Create */}
+      <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+        <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Send Notification</h3>
+        <div className="space-y-3">
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" className="w-full px-3 py-2 bg-dark-bg border border-purple-primary/20 rounded text-text-primary text-sm font-rajdhani" />
+          <input value={message} onChange={e => setMessage(e.target.value)} placeholder="Message (optional)" className="w-full px-3 py-2 bg-dark-bg border border-purple-primary/20 rounded text-text-primary text-sm font-rajdhani" />
+          <div className="flex gap-2">
+            <select value={type} onChange={e => setType(e.target.value)} className="px-3 py-2 bg-dark-bg border border-purple-primary/20 rounded text-text-primary text-sm font-rajdhani">
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="success">Success</option>
+              <option value="urgent">Urgent</option>
+            </select>
+            <button onClick={handleSend} className="px-4 py-2 bg-purple-primary/10 text-purple-primary border border-purple-primary/20 rounded font-rajdhani font-semibold text-sm hover:bg-purple-primary/20">Send</button>
+          </div>
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="bg-dark-surface border border-purple-primary/10 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-purple-primary/10">
+          <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani">Active Notifications ({notifications.length})</h3>
+        </div>
+        <div className="divide-y divide-dark-border/30">
+          {notifications.map(n => (
+            <div key={n.id} className="px-4 py-3 flex items-center justify-between hover:bg-purple-primary/5">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Badge color={n.type === 'urgent' ? 'red' : n.type === 'warning' ? 'yellow' : n.type === 'success' ? 'green' : 'purple'}>{n.type}</Badge>
+                  <span className="text-sm text-text-primary font-rajdhani font-semibold">{n.title}</span>
+                  {n.is_pinned && <span className="text-xs text-yellow-400">pinned</span>}
+                </div>
+                {n.message && <p className="text-xs text-text-secondary font-rajdhani mt-0.5">{n.message}</p>}
+              </div>
+              <div className="flex gap-1 flex-shrink-0 ml-2">
+                <button onClick={() => handlePin(n.id)} className="text-xs text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded hover:bg-yellow-500/10 font-rajdhani">{n.is_pinned ? 'Unpin' : 'Pin'}</button>
+                <button onClick={() => handleDelete(n.id)} className="text-xs text-red-400 border border-red-500/30 px-2 py-0.5 rounded hover:bg-red-500/10 font-rajdhani">Delete</button>
+              </div>
+            </div>
+          ))}
+          {notifications.length === 0 && (
+            <p className="px-4 py-6 text-center text-text-secondary text-sm font-rajdhani">No active notifications</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
