@@ -10,7 +10,6 @@ import { ProtectedRoute } from '@/components';
 import { queryClient } from '@/config/queryClient';
 import { Home, Login, Register, Dashboard, Profile, ChallengePage, CompleteProfile, EditProfile, Rules, Team, Lobby, Leaderboard, Practice, ResetPassword } from '@/pages';
 import { AdminPanel } from '@/pages/AdminPanel';
-import { Practice } from '@/pages/Practice';
 import { CompetitionTimer } from '@/components/CompetitionTimer';
 import { Announcements } from '@/components/Announcements';
 import { initializeSecurity } from '@/utils/security';

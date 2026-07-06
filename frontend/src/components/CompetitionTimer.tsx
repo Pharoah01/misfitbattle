@@ -48,11 +48,25 @@ export const CompetitionTimer: React.FC = () => {
       totalPausedRef.current = (data as any).total_paused_seconds || 0;
       totalExtendedRef.current = (data as any).total_extended_seconds || 0;
       setPaused((data as any).is_paused || false);
+      
+      // Check if competition hasn't started yet
+      if (data.start_time) {
+        const startTime = new Date(data.start_time).getTime();
+        if (serverNow < startTime) {
+          // Not started yet — don't show timer, lobby handles this
+          setVisible(false);
+          return;
+        }
+      }
+      
       setVisible(true);
 
       if (!data.is_active && !(data as any).is_paused) {
-        // Competition ended
-        setEnded(true);
+        // Check if it actually ended (not just "not started")
+        const adjustedEnd = new Date(data.end_time).getTime() + ((totalPausedRef.current + totalExtendedRef.current) * 1000);
+        if (serverNow > adjustedEnd) {
+          setEnded(true);
+        }
       }
     } catch {
       setVisible(false);
