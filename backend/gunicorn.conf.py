@@ -36,8 +36,17 @@ def on_reload(server):
     print("Reloading Gunicorn server...")
 
 def when_ready(server):
-    """Called just after the server is started."""
+    """Called just after the server is started. Run recovery."""
     print(f"Gunicorn server is ready. Listening on {bind}")
+    # Run recovery on startup
+    import subprocess
+    try:
+        subprocess.Popen(
+            ['python', 'manage.py', 'recover'],
+            cwd=os.path.dirname(os.path.abspath(__file__))
+        )
+    except Exception as e:
+        print(f"Recovery failed to start: {e}")
 
 def on_exit(server):
     """Called just before exiting Gunicorn."""
