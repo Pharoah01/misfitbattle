@@ -22,7 +22,7 @@ import './App.css';
 function TimerWrapper() {
   const { pathname } = useLocation();
   usePresence();
-  const hidden = ['/', '/login', '/register', '/reset-password', '/complete-profile', '/lobby', '/jaswanth', '/leaderboard'].includes(pathname);
+  const hidden = ['/', '/login', '/register', '/reset-password', '/complete-profile', '/lobby', '/jaswanth'].includes(pathname);
   if (hidden) return null;
   return (
     <>
