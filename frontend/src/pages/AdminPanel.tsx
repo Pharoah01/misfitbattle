@@ -369,6 +369,7 @@ const UsersTab: React.FC<{ users: any[] }> = ({ users }) => {
 
 const TeamsTab: React.FC<{ teams: any[] }> = ({ teams }) => {
   const [search, setSearch] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const filtered = teams.filter(t => {
     if (!search) return true;
     const s = search.toLowerCase();
@@ -379,9 +380,70 @@ const TeamsTab: React.FC<{ teams: any[] }> = ({ teams }) => {
            (t.member__name || '').toLowerCase().includes(s) ||
            (t.member__htp_id || '').toLowerCase().includes(s);
   });
+
+  const viewTeam = async (name: string) => {
+    try {
+      const res = await apiClient.get(`/api/teams/profile/${encodeURIComponent(name)}/`);
+      setSelectedTeam(res.data);
+    } catch {}
+  };
+
   return (
   <div className="space-y-3">
     <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search teams, members, invite codes..." className="w-full px-4 py-2 bg-dark-bg border border-purple-primary/20 rounded-lg text-text-primary text-sm font-rajdhani" />
+
+    {/* Team Detail Modal */}
+    {selectedTeam && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-dark-bg/90 backdrop-blur-sm" onClick={() => setSelectedTeam(null)}>
+        <div className="bg-dark-surface border border-purple-primary/20 rounded-lg p-6 max-w-lg w-full mx-4 shadow-2xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-text-primary font-orbitron">{selectedTeam.name}</h2>
+              <p className="text-text-secondary font-rajdhani">
+                {selectedTeam.rank ? `#${selectedTeam.rank}` : '—'} • {selectedTeam.total_score} pts • {selectedTeam.challenges_solved} solved
+              </p>
+            </div>
+            <button onClick={() => setSelectedTeam(null)} className="text-text-secondary hover:text-text-primary">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-2">Members</h3>
+            <div className="space-y-2">
+              {selectedTeam.members?.map((m: any) => (
+                <div key={m.htp_id} className="bg-dark-bg rounded p-2 border border-purple-primary/10 flex justify-between">
+                  <span className="text-text-primary font-rajdhani font-semibold text-sm">{m.name}</span>
+                  <span className="text-text-secondary font-mono text-xs">{m.htp_id} • {m.role}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-2">Solves</h3>
+            {selectedTeam.solves?.length > 0 ? (
+              <table className="w-full text-xs">
+                <thead className="border-b border-purple-primary/10">
+                  <tr><th className="text-left py-1 text-text-secondary font-rajdhani">Challenge</th><th className="text-right py-1 text-text-secondary font-rajdhani">Score</th><th className="text-right py-1 text-text-secondary font-rajdhani">Match</th><th className="text-right py-1 text-text-secondary font-rajdhani">By</th></tr>
+                </thead>
+                <tbody>
+                  {selectedTeam.solves.map((s: any, i: number) => (
+                    <tr key={i} className="border-b border-dark-border/30">
+                      <td className="py-1.5 text-text-primary font-rajdhani">{s.challenge}</td>
+                      <td className="py-1.5 text-right font-mono text-purple-primary">{s.score}</td>
+                      <td className="py-1.5 text-right font-mono text-text-secondary">{(s.similarity * 100).toFixed(1)}%</td>
+                      <td className="py-1.5 text-right text-text-secondary font-rajdhani">{s.submitted_by}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-text-secondary text-xs font-rajdhani">No solves yet</p>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
     <TableWrapper>
     <table className="w-full text-sm">
       <thead className="border-b border-purple-primary/10">
@@ -390,7 +452,7 @@ const TeamsTab: React.FC<{ teams: any[] }> = ({ teams }) => {
       <tbody>
         {filtered.map(t => (
           <tr key={t.id} className="border-b border-dark-border/30 hover:bg-purple-primary/5 transition-colors">
-            <Td>{t.name}</Td>
+            <Td><button onClick={() => viewTeam(t.name)} className="text-purple-primary hover:underline font-semibold">{t.name}</button></Td>
             <Td mono>{t.invite_code}</Td>
             <Td>{t.leader__name} <span className="text-text-secondary text-xs">({t.leader__htp_id})</span></Td>
             <Td>{t.member__name ? <>{t.member__name} <span className="text-text-secondary text-xs">({t.member__htp_id})</span></> : <span className="text-text-secondary">—</span>}</Td>

@@ -417,3 +417,54 @@ def team_public_profile(request, team_id):
         'solves': solves,
         'challenges_solved': len(solves),
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def team_public_profile(request, team_name):
+    """Public team profile — visible on leaderboard click."""
+    from submissions.models import Submission
+    from leaderboard.services import calculate_leaderboard
+
+    team = Team.objects.filter(name__iexact=team_name).select_related('leader', 'member').first()
+    if not team:
+        return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    member_ids = [team.leader_id]
+    if team.member_id:
+        member_ids.append(team.member_id)
+
+    subs = Submission.objects.filter(
+        user_id__in=member_ids, is_auto_save=False, status='completed', similarity_score__isnull=False
+    ).select_related('challenge', 'user').order_by('-submitted_at')
+
+    # Rank
+    leaderboard = calculate_leaderboard()
+    rank = None
+    total_score = 0
+    for entry in leaderboard:
+        if entry['team_name'].lower() == team.name.lower():
+            rank = entry['rank']
+            total_score = entry['total_score']
+            break
+
+    solves = [{
+        'challenge': s.challenge.title,
+        'difficulty': s.challenge.difficulty,
+        'points': s.challenge.points,
+        'similarity': round(float(s.similarity_score), 4),
+        'score': round(float(s.similarity_score) * s.challenge.points, 2),
+        'submitted_by': s.user.name,
+        'submitted_at': s.submitted_at.isoformat(),
+    } for s in subs]
+
+    return Response({
+        'name': team.name,
+        'rank': rank,
+        'total_score': total_score,
+        'members': [
+            {'name': team.leader.name, 'htp_id': team.leader.htp_id, 'role': 'Leader'},
+        ] + ([{'name': team.member.name, 'htp_id': team.member.htp_id, 'role': 'Member'}] if team.member else []),
+        'solves': solves,
+        'challenges_solved': len(solves),
+    })

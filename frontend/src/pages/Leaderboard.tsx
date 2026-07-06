@@ -67,9 +67,9 @@ export const Leaderboard: React.FC = () => {
 
   const maxScore = entries.length > 0 ? entries[0].total_score : 1;
 
-  const openTeamProfile = async (teamId: number) => {
+  const openTeamProfile = async (teamName: string) => {
     try {
-      const res = await apiClient.get(`/api/teams/profile/${teamId}/`);
+      const res = await apiClient.get(`/api/teams/profile/${encodeURIComponent(teamName)}/`);
       setTeamProfile(res.data);
     } catch {}
   };
@@ -197,7 +197,7 @@ export const Leaderboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <button onClick={() => openTeamProfile((entry as any).team_id)} className={`font-rajdhani font-semibold hover:underline ${isMe ? 'text-purple-primary' : 'text-text-primary hover:text-purple-primary'}`}>
+                        <button onClick={() => openTeamProfile(entry.team_name)} className={`font-rajdhani font-semibold hover:underline ${isMe ? 'text-purple-primary' : 'text-text-primary hover:text-purple-primary'}`}>
                           {entry.team_name}
                         </button>
                         {isMe && <span className="ml-1 text-xs text-purple-primary/60">(You)</span>}
