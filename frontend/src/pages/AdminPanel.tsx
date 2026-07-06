@@ -200,6 +200,11 @@ const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => {
     } catch {}
   };
 
+  const handleLockAll = async () => { try { await apiClient.post('/api/submissions/pause/'); } catch {} };
+  const handleUnlockAll = async () => { try { await apiClient.post('/api/submissions/resume/'); } catch {} };
+  const handleFreezeLeaderboard = async () => { /* Requires env change — show info */ };
+  const quickAction = async (url: string) => { try { await apiClient.post(url); } catch {} };
+
   return (
   <div className="space-y-6">
     {/* Competition Controls */}
@@ -289,6 +294,35 @@ const OverviewTab: React.FC<{ data: DashboardData }> = ({ data }) => {
       <StatCard label="Challenges" value={data.stats.total_challenges} />
       <StatCard label="Failed Logins Today" value={data.stats.failed_logins_today} accent="text-red-400" />
     </div>
+
+    {/* Quick Actions */}
+    <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+      <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Quick Actions</h3>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={handlePause} className="px-3 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded font-rajdhani text-xs font-semibold hover:bg-yellow-500/20">Pause</button>
+        <button onClick={handleResume} className="px-3 py-2 bg-green-500/10 text-green-400 border border-green-500/20 rounded font-rajdhani text-xs font-semibold hover:bg-green-500/20">Resume</button>
+        <button onClick={() => handleExtend(5)} className="px-3 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded font-rajdhani text-xs font-semibold hover:bg-blue-500/20">+5 min</button>
+        <button onClick={() => handleExtend(10)} className="px-3 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded font-rajdhani text-xs font-semibold hover:bg-blue-500/20">+10 min</button>
+        <button onClick={() => apiClient.post('/api/announcements/create/', {title:'Update',message:'Please stand by',type:'info',is_pinned:false})} className="px-3 py-2 bg-purple-primary/10 text-purple-primary border border-purple-primary/20 rounded font-rajdhani text-xs font-semibold hover:bg-purple-primary/20">Quick Announce</button>
+      </div>
+    </div>
+
+    {/* Recent Activity */}
+    {data.recent_submissions.length > 0 && (
+      <div className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+        <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Recent Activity</h3>
+        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+          {data.recent_submissions.slice(0, 8).map((s: any, i: number) => (
+            <div key={i} className="flex items-center gap-3 text-xs">
+              <span className="text-text-secondary font-mono w-14">{new Date(s.submitted_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${s.status === 'completed' ? 'bg-green-500' : s.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'}`}></span>
+              <span className="text-text-primary font-rajdhani">{s.user__name} → {s.challenge__title}</span>
+              <span className="text-text-secondary font-mono ml-auto">{s.similarity_score ? (s.similarity_score * 100).toFixed(0) + '%' : s.status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
   );
 };
