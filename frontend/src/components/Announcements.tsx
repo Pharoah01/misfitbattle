@@ -28,6 +28,14 @@ export const Announcements: React.FC<Props> = ({ onUnreadCount }) => {
   const [dismissed, setDismissed] = useState(false);
   const seenIds = useRef<Set<number>>(new Set());
 
+  // Load seen IDs from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('ann_seen');
+      if (stored) seenIds.current = new Set(JSON.parse(stored));
+    } catch {}
+  }, []);
+
   const fetchAnnouncements = useCallback(async () => {
     try {
       const res = await apiClient.get('/api/announcements/');
@@ -36,10 +44,11 @@ export const Announcements: React.FC<Props> = ({ onUnreadCount }) => {
       onUnreadCount?.(unread_count);
       setPinned(pinnedAnn && !dismissed ? pinnedAnn : null);
 
-      // Show toast for new unread announcements
+      // Show toast for new unread announcements (only once per session)
       for (const ann of announcements) {
         if (!ann.is_read && !seenIds.current.has(ann.id)) {
           seenIds.current.add(ann.id);
+          sessionStorage.setItem('ann_seen', JSON.stringify([...seenIds.current]));
           const method = ann.type === 'urgent' ? 'error' : 
                          ann.type === 'warning' ? 'warning' : 
                          ann.type === 'success' ? 'success' : 'info';
