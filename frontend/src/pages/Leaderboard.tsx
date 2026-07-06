@@ -29,6 +29,7 @@ export const Leaderboard: React.FC = () => {
   const [status, setStatus] = useState<'live' | 'frozen' | 'final'>('live');
   const [updatedAt, setUpdatedAt] = useState('');
   const [loading, setLoading] = useState(true);
+  const [teamProfile, setTeamProfile] = useState<any>(null);
   const prevRanks = useRef<Map<string, number>>(new Map());
 
   const fetchLeaderboard = useCallback(async () => {
@@ -65,6 +66,13 @@ export const Leaderboard: React.FC = () => {
   }
 
   const maxScore = entries.length > 0 ? entries[0].total_score : 1;
+
+  const openTeamProfile = async (teamId: number) => {
+    try {
+      const res = await apiClient.get(`/api/teams/profile/${teamId}/`);
+      setTeamProfile(res.data);
+    } catch {}
+  };
   const first = entries[0] || null;
   const second = entries[1] || null;
   const third = entries[2] || null;
@@ -189,9 +197,9 @@ export const Leaderboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`font-rajdhani font-semibold ${isMe ? 'text-purple-primary' : 'text-text-primary'}`}>
+                        <button onClick={() => openTeamProfile((entry as any).team_id)} className={`font-rajdhani font-semibold hover:underline ${isMe ? 'text-purple-primary' : 'text-text-primary hover:text-purple-primary'}`}>
                           {entry.team_name}
-                        </span>
+                        </button>
                         {isMe && <span className="ml-1 text-xs text-purple-primary/60">(You)</span>}
                       </td>
                       <td className="py-3 px-4 text-text-secondary text-xs font-rajdhani">
@@ -231,6 +239,67 @@ export const Leaderboard: React.FC = () => {
           </p>
         )}
       </div>
+
+      {/* Team Profile Modal */}
+      {teamProfile && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-dark-bg/90 backdrop-blur-sm" onClick={() => setTeamProfile(null)}>
+          <div className="bg-dark-surface border border-purple-primary/20 rounded-lg p-6 max-w-lg w-full mx-4 shadow-2xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-text-primary font-orbitron">{teamProfile.name}</h2>
+                <p className="text-text-secondary font-rajdhani">
+                  {teamProfile.rank ? `#${teamProfile.rank}` : ''} • {teamProfile.total_score} pts • {teamProfile.challenges_solved} solved
+                </p>
+              </div>
+              <button onClick={() => setTeamProfile(null)} className="text-text-secondary hover:text-text-primary">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            {/* Members */}
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-2">Members</h3>
+              <div className="space-y-2">
+                {teamProfile.members.map((m: any) => (
+                  <div key={m.htp_id} className="bg-dark-bg rounded p-2 border border-purple-primary/10 flex justify-between">
+                    <span className="text-text-primary font-rajdhani font-semibold text-sm">{m.name}</span>
+                    <span className="text-text-secondary font-mono text-xs">{m.htp_id}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Solves */}
+            <div>
+              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-2">Solves</h3>
+              {teamProfile.solves.length > 0 ? (
+                <table className="w-full text-xs">
+                  <thead className="border-b border-purple-primary/10">
+                    <tr>
+                      <th className="text-left py-2 text-text-secondary font-rajdhani">Challenge</th>
+                      <th className="text-right py-2 text-text-secondary font-rajdhani">Score</th>
+                      <th className="text-right py-2 text-text-secondary font-rajdhani">Match</th>
+                      <th className="text-right py-2 text-text-secondary font-rajdhani">By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teamProfile.solves.map((s: any, i: number) => (
+                      <tr key={i} className="border-b border-dark-border/30">
+                        <td className="py-1.5 text-text-primary font-rajdhani">{s.challenge}</td>
+                        <td className="py-1.5 text-right font-mono text-purple-primary">{s.score}</td>
+                        <td className="py-1.5 text-right font-mono text-text-secondary">{(s.similarity * 100).toFixed(1)}%</td>
+                        <td className="py-1.5 text-right text-text-secondary font-rajdhani">{s.submitted_by}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-text-secondary text-sm font-rajdhani">No solves yet</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -10,4 +10,5 @@ urlpatterns = [
     path('dashboard/', views.team_dashboard, name='team-dashboard'),
     path('claim/', views.claim_challenge, name='claim-challenge'),
     path('unclaim/', views.unclaim_challenge, name='unclaim-challenge'),
+    path('profile/<int:team_id>/', views.team_public_profile, name='team-profile'),
 ]

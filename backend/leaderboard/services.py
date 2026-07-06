@@ -72,6 +72,7 @@ def calculate_leaderboard():
         avg_similarity = round(sum(sims) / max(len(sims), 1), 4)
         
         entry = {
+            'team_id': team.id,
             'team_name': team.name,
             'leader_name': team.leader.name,
             'leader_htp_id': team.leader.htp_id,
