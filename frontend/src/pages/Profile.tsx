@@ -315,22 +315,34 @@ export const Profile: React.FC = () => {
                     key={submission.id}
                     className="bg-dark-bg rounded-lg p-4 border border-purple-primary/10 hover:border-purple-primary/30 transition-all group"
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-2">
                       <h4 className="text-text-primary font-semibold font-rajdhani group-hover:text-purple-primary transition-colors">
                         {submission.challenge_title}
                       </h4>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-text-secondary font-mono">
-                          {new Date(submission.submitted_at).toLocaleDateString()}
-                        </span>
+                        {submission.similarity_score != null && (
+                          <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-xs font-mono border border-green-500/20">
+                            {(submission.similarity_score * 100).toFixed(1)}%
+                          </span>
+                        )}
+                        <span className={`px-2 py-0.5 rounded text-xs font-rajdhani ${
+                          submission.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                          submission.status === 'failed' ? 'bg-red-500/10 text-red-400' :
+                          'bg-blue-500/10 text-blue-400'
+                        }`}>{submission.status}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="px-3 py-1 bg-purple-primary/10 text-purple-primary rounded-full font-mono text-xs border border-purple-primary/20">
+                      <span className="px-2 py-0.5 bg-purple-primary/10 text-purple-primary rounded font-mono text-xs border border-purple-primary/20">
                         {submission.code_length} chars
                       </span>
-                      <span className="text-text-secondary font-rajdhani">
-                        {new Date(submission.submitted_at).toLocaleTimeString()}
+                      {submission.similarity_score != null && (
+                        <span className="text-purple-primary font-mono text-xs font-bold">
+                          {(submission.similarity_score * (submission as any).challenge_points || 0).toFixed(1)} pts
+                        </span>
+                      )}
+                      <span className="text-text-secondary font-rajdhani text-xs ml-auto">
+                        {new Date(submission.submitted_at).toLocaleString()}
                       </span>
                     </div>
                   </div>
