@@ -654,6 +654,24 @@ const SystemTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Health Alerts */}
+      {health.alerts && health.alerts.length > 0 && (
+        <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4">
+          <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider font-rajdhani mb-3">Active Alerts ({health.alert_count})</h3>
+          <div className="space-y-2">
+            {health.alerts.map((a: any, i: number) => (
+              <div key={i} className="flex items-center justify-between bg-dark-bg rounded p-3 border border-red-500/10">
+                <div>
+                  <span className="text-text-primary font-rajdhani font-semibold text-sm">{a.service}</span>
+                  <span className="ml-2 text-text-secondary text-xs font-rajdhani">{a.description}</span>
+                </div>
+                <Badge color={a.severity === 'critical' ? 'red' : 'yellow'}>{a.severity}</Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Services */}
       <div>
         <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider font-rajdhani mb-3">Services</h3>

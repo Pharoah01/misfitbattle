@@ -13,20 +13,24 @@ from .services.heatmap_client import HeatmapComparisonClient, HeatmapAPIError, H
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3)
+@shared_task(bind=True, max_retries=3, default_retry_delay=5)
 def process_submission_task(self, submission_id: int):
     """
     Background task to render submission and calculate similarity score.
     
-    Args:
-        submission_id: ID of the submission to process
+    Retry policy:
+        - Max 3 attempts with exponential backoff (5s, 15s, 30s)
+        - Only retries on transient errors (rendering, I/O, connection)
+        - Does NOT retry on validation errors (missing data, permissions)
     
     Updates submission record with:
         - rendered_image path
         - similarity_score
-        - status (completed/failed)
+        - status (queued/rendering/scoring/completed/failed)
         - error_message (if failed)
     """
+    BACKOFF = [5, 15, 30]
+
     try:
         submission = Submission.objects.select_related('user', 'challenge').get(id=submission_id)
         
@@ -121,21 +125,46 @@ def process_submission_task(self, submission_id: int):
     
     except Submission.DoesNotExist:
         logger.error(f"Submission {submission_id} not found")
+        # Don't retry — permanent error
         raise
     
     except Exception as e:
-        logger.error(f"Error processing submission {submission_id}: {str(e)}", exc_info=True)
+        attempt = self.request.retries + 1
+        logger.error(f"Error processing submission {submission_id} (attempt {attempt}/3): {str(e)}")
+        
+        # Determine if this is a retryable error
+        non_retryable = ['not found', 'DoesNotExist', 'permission', 'Competition ended', 'COMPETITION']
+        is_permanent = any(keyword.lower() in str(e).lower() for keyword in non_retryable)
         
         try:
             submission = Submission.objects.get(id=submission_id)
-            submission.status = 'failed'
-            submission.error_message = str(e)
-            submission.save(update_fields=['status', 'error_message'])
+            
+            if is_permanent or attempt >= 3:
+                submission.status = 'failed'
+                submission.error_message = f"[Attempt {attempt}/3] {str(e)}"
+                submission.save(update_fields=['status', 'error_message'])
+                logger.error(f"Submission {submission_id} permanently failed after {attempt} attempt(s)")
+            else:
+                # Mark as retrying
+                submission.status = 'queued'
+                submission.error_message = f"Retrying (attempt {attempt + 1}/3): {str(e)}"
+                submission.save(update_fields=['status', 'error_message'])
         except Submission.DoesNotExist:
             pass
         
+        if is_permanent:
+            return  # Don't retry permanent errors
+        
+        # Retry with exponential backoff
         try:
-            raise self.retry(exc=e, countdown=60 * (2 ** self.request.retries))
+            delay = BACKOFF[min(self.request.retries, len(BACKOFF) - 1)]
+            raise self.retry(exc=e, countdown=delay)
         except self.MaxRetriesExceededError:
             logger.error(f"Max retries exceeded for submission {submission_id}")
-            raise
+            try:
+                sub = Submission.objects.get(id=submission_id)
+                sub.status = 'failed'
+                sub.error_message = f"Failed after 3 attempts: {str(e)}"
+                sub.save(update_fields=['status', 'error_message'])
+            except Submission.DoesNotExist:
+                pass
