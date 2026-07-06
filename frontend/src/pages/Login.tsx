@@ -159,7 +159,12 @@ export const Login: React.FC = () => {
           </form>
 
           {/* Register Link */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
+            <p className="text-text-secondary text-sm font-rajdhani">
+              <Link to="/reset-password" className="text-purple-primary hover:text-purple-secondary font-semibold">
+                Forgot Password?
+              </Link>
+            </p>
             <p className="text-text-secondary text-sm font-rajdhani">
               Don't have an account?{' '}
               <Link 

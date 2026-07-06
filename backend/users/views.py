@@ -430,3 +430,45 @@ def personal_stats(request):
         'best_challenge': best,
         'challenges': challenge_data,
     })
+
+
+@api_view(['POST'])
+@perm_dec([AllowAny])
+def reset_password(request):
+    """
+    Password reset via HTPID verification.
+    User provides HTPID + new password. Backend verifies HTPID against HTP API.
+    """
+    from .htp_service import verify_htpid, HTPParticipantNotFound, HTPServiceError
+    from utils.throttling import AuthRateThrottle
+
+    htp_id = request.data.get('htp_id', '').strip().upper()
+    new_password = request.data.get('new_password', '')
+
+    if not htp_id or not new_password:
+        return Response({'error': 'HTPID and new password required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if len(new_password) < 8:
+        return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify ownership via HTP API
+    try:
+        participant = verify_htpid(htp_id)
+    except HTPParticipantNotFound:
+        return Response({'error': 'HTPID not found'}, status=status.HTTP_404_NOT_FOUND)
+    except HTPServiceError:
+        return Response({'error': 'Unable to verify. Try again later.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    # Find user
+    try:
+        user = User.objects.get(htp_id=htp_id)
+    except User.DoesNotExist:
+        return Response({'error': 'No account with this HTPID. Please register first.'}, status=status.HTTP_404_NOT_FOUND)
+
+    user.set_password(new_password)
+    user.save()
+
+    from auditlog.services import log_event
+    log_event('auth.login', user=user, request=request, description=f'{user.name} reset password')
+
+    return Response({'message': 'Password reset successful. You can now sign in.'})

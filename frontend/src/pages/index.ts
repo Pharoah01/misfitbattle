@@ -15,3 +15,4 @@ export { Team } from './Team';
 export { Lobby } from './Lobby';
 export { Leaderboard } from './Leaderboard';
 export { Practice } from './Practice';
+export { ResetPassword } from './ResetPassword';
