@@ -45,19 +45,25 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       timeoutRef.current = null;
     }
 
-    // Block paste from outside (Ctrl+V / Cmd+V with external clipboard)
-    editor.onDidPaste(() => {
-      // Can't prevent Monaco's built-in paste, so we intercept at DOM level
-    });
+    // Block external paste by overriding the paste action
+    // Monaco uses 'editor.action.clipboardPasteAction' internally
+    // We replace it with a no-op to block all paste (including external)
+    // But this also blocks internal copy-paste within the editor.
+    // 
+    // Alternative: Block Ctrl+V/Cmd+V keybinding but allow internal drag-select-type
+    editor.addCommand(
+      // Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.KeyV
+      2048 | 52, // CtrlCmd + V
+      () => {
+        // No-op — blocks paste
+      }
+    );
 
-    // Block external paste at DOM level
-    const editorDom = editor.getDomNode();
-    if (editorDom) {
-      editorDom.addEventListener('paste', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }, true);
-    }
+    // Also block Shift+Insert (alternative paste)
+    editor.addCommand(
+      1024 | 19, // Shift + Insert
+      () => {}
+    );
 
     editor.updateOptions({
       automaticLayout: true,
