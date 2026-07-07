@@ -846,10 +846,11 @@ const SystemTab: React.FC = () => {
 const ExportTab: React.FC = () => {
   const apiBase = import.meta.env.VITE_API_URL || '';
   const token = localStorage.getItem('access_token');
+  const [report, setReport] = useState<any>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState('');
   
   const download = (endpoint: string, filename: string) => {
-    window.open(`${apiBase}/api/export/${endpoint}?format=csv`, '_blank');
-    // Use fetch for auth
     fetch(`${apiBase}/api/export/${endpoint}`, {
       headers: { 'Authorization': `Token ${token}` }
     }).then(res => res.blob()).then(blob => {
@@ -862,28 +863,192 @@ const ExportTab: React.FC = () => {
     });
   };
 
+  const generateReport = async () => {
+    setReportLoading(true);
+    setReportError('');
+    try {
+      const res = await fetch(`${apiBase}/api/export/final-report/`, {
+        headers: { 'Authorization': `Token ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to generate report');
+      const data = await res.json();
+      setReport(data);
+    } catch (err: any) {
+      setReportError(err.message || 'Error generating report');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const downloadReportJSON = () => {
+    if (!report) return;
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'final_competition_report.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exports = [
     { label: 'Leaderboard', desc: 'Final rankings with scores', endpoint: 'leaderboard/', file: 'leaderboard.csv' },
     { label: 'Teams', desc: 'All teams with members and status', endpoint: 'teams/', file: 'teams.csv' },
     { label: 'Participants', desc: 'All registered users', endpoint: 'participants/', file: 'participants.csv' },
     { label: 'Submissions', desc: 'All submissions with scores', endpoint: 'submissions/', file: 'submissions.csv' },
-    { label: 'Challenge Scores', desc: 'Score matrix (teams × challenges)', endpoint: 'challenge-scores/', file: 'challenge_scores.csv' },
+    { label: 'Challenge Scores', desc: 'Score matrix (teams x challenges)', endpoint: 'challenge-scores/', file: 'challenge_scores.csv' },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {exports.map(e => (
-        <div key={e.endpoint} className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
-          <h3 className="text-text-primary font-rajdhani font-semibold mb-1">{e.label}</h3>
-          <p className="text-text-secondary text-xs font-rajdhani mb-4">{e.desc}</p>
-          <button
-            onClick={() => download(e.endpoint, e.file)}
-            className="px-4 py-2 bg-purple-primary/10 text-purple-primary border border-purple-primary/20 rounded font-rajdhani font-semibold text-sm hover:bg-purple-primary/20 transition-colors"
-          >
-            Download CSV
-          </button>
+    <div className="space-y-6">
+      {/* CSV Exports */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {exports.map(e => (
+          <div key={e.endpoint} className="bg-dark-surface border border-purple-primary/10 rounded-lg p-5">
+            <h3 className="text-text-primary font-rajdhani font-semibold mb-1">{e.label}</h3>
+            <p className="text-text-secondary text-xs font-rajdhani mb-4">{e.desc}</p>
+            <button
+              onClick={() => download(e.endpoint, e.file)}
+              className="px-4 py-2 bg-purple-primary/10 text-purple-primary border border-purple-primary/20 rounded font-rajdhani font-semibold text-sm hover:bg-purple-primary/20 transition-colors"
+            >
+              Download CSV
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Final Competition Report */}
+      <div className="bg-dark-surface border border-purple-primary/20 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-text-primary font-rajdhani font-semibold text-lg">Final Competition Report</h3>
+            <p className="text-text-secondary text-xs font-rajdhani">Comprehensive summary with standings, analytics, and stats</p>
+          </div>
+          <div className="flex gap-2">
+            {report && (
+              <button
+                onClick={downloadReportJSON}
+                className="px-4 py-2 bg-green-600/10 text-green-400 border border-green-600/20 rounded font-rajdhani font-semibold text-sm hover:bg-green-600/20 transition-colors"
+              >
+                Download JSON
+              </button>
+            )}
+            <button
+              onClick={generateReport}
+              disabled={reportLoading}
+              className="px-4 py-2 bg-purple-primary text-white rounded font-rajdhani font-semibold text-sm hover:bg-purple-primary/80 transition-colors disabled:opacity-50"
+            >
+              {reportLoading ? 'Generating...' : report ? 'Regenerate' : 'Generate Report'}
+            </button>
+          </div>
         </div>
-      ))}
+
+        {reportError && (
+          <div className="bg-red-600/10 border border-red-600/30 text-red-400 p-3 rounded text-sm font-rajdhani mb-4">{reportError}</div>
+        )}
+
+        {report && (
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {/* Summary */}
+            <div className="bg-dark-bg/50 rounded-lg p-4 border border-purple-primary/10">
+              <h4 className="text-purple-primary font-rajdhani font-semibold text-sm mb-2 uppercase tracking-wider">Competition Summary</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm font-rajdhani">
+                <div><span className="text-text-secondary">State:</span> <span className="text-text-primary">{report.summary.state}</span></div>
+                <div><span className="text-text-secondary">Start:</span> <span className="text-text-primary">{report.summary.start_time ? new Date(report.summary.start_time).toLocaleString() : 'N/A'}</span></div>
+                <div><span className="text-text-secondary">End:</span> <span className="text-text-primary">{report.summary.end_time ? new Date(report.summary.end_time).toLocaleString() : 'N/A'}</span></div>
+                <div><span className="text-text-secondary">Generated:</span> <span className="text-text-primary">{new Date(report.summary.generated_at).toLocaleString()}</span></div>
+              </div>
+            </div>
+
+            {/* Participation */}
+            <div className="bg-dark-bg/50 rounded-lg p-4 border border-purple-primary/10">
+              <h4 className="text-purple-primary font-rajdhani font-semibold text-sm mb-2 uppercase tracking-wider">Participation</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm font-rajdhani">
+                <div><span className="text-text-secondary">Registered:</span> <span className="text-text-primary">{report.participation.total_registered}</span></div>
+                <div><span className="text-text-secondary">Teams:</span> <span className="text-text-primary">{report.participation.total_teams}</span></div>
+                <div><span className="text-text-secondary">Teams Submitted:</span> <span className="text-text-primary">{report.participation.teams_submitted}</span></div>
+                <div><span className="text-text-secondary">Submissions:</span> <span className="text-text-primary">{report.participation.total_submissions}</span></div>
+                <div><span className="text-text-secondary">Completed:</span> <span className="text-green-400">{report.participation.completed_submissions}</span></div>
+                <div><span className="text-text-secondary">Failed:</span> <span className="text-red-400">{report.participation.failed_submissions}</span></div>
+              </div>
+            </div>
+
+            {/* Podium */}
+            {report.standings.winner && (
+              <div className="bg-dark-bg/50 rounded-lg p-4 border border-purple-primary/10">
+                <h4 className="text-purple-primary font-rajdhani font-semibold text-sm mb-2 uppercase tracking-wider">Final Standings</h4>
+                <div className="space-y-2 font-rajdhani text-sm">
+                  {report.standings.winner && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-yellow-400 font-bold w-6">1st</span>
+                      <span className="text-text-primary font-semibold">{report.standings.winner.team_name}</span>
+                      <span className="text-text-secondary ml-auto">{report.standings.winner.total_score} pts</span>
+                    </div>
+                  )}
+                  {report.standings.runner_up && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-300 font-bold w-6">2nd</span>
+                      <span className="text-text-primary font-semibold">{report.standings.runner_up.team_name}</span>
+                      <span className="text-text-secondary ml-auto">{report.standings.runner_up.total_score} pts</span>
+                    </div>
+                  )}
+                  {report.standings.second_runner_up && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-orange-400 font-bold w-6">3rd</span>
+                      <span className="text-text-primary font-semibold">{report.standings.second_runner_up.team_name}</span>
+                      <span className="text-text-secondary ml-auto">{report.standings.second_runner_up.total_score} pts</span>
+                    </div>
+                  )}
+                  <div className="text-text-secondary text-xs mt-2">{report.standings.total_ranked_teams} total ranked teams</div>
+                </div>
+              </div>
+            )}
+
+            {/* Challenge Analytics */}
+            {report.challenge_analytics && report.challenge_analytics.length > 0 && (
+              <div className="bg-dark-bg/50 rounded-lg p-4 border border-purple-primary/10">
+                <h4 className="text-purple-primary font-rajdhani font-semibold text-sm mb-2 uppercase tracking-wider">Challenge Analytics</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm font-rajdhani">
+                    <thead>
+                      <tr className="text-text-secondary text-left border-b border-purple-primary/10">
+                        <th className="pb-2 pr-4">Challenge</th>
+                        <th className="pb-2 pr-4">Difficulty</th>
+                        <th className="pb-2 pr-4">Attempts</th>
+                        <th className="pb-2 pr-4">Completed</th>
+                        <th className="pb-2 pr-4">Best Sim</th>
+                        <th className="pb-2">Avg Sim</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.challenge_analytics.map((c: any) => (
+                        <tr key={c.title} className="border-b border-purple-primary/5">
+                          <td className="py-2 pr-4 text-text-primary">{c.title}</td>
+                          <td className="py-2 pr-4"><span className={`text-xs px-2 py-0.5 rounded ${c.difficulty === 'easy' ? 'bg-green-500/10 text-green-400' : c.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'}`}>{c.difficulty}</span></td>
+                          <td className="py-2 pr-4 text-text-secondary">{c.total_attempts}</td>
+                          <td className="py-2 pr-4 text-text-secondary">{c.teams_completed}</td>
+                          <td className="py-2 pr-4 text-text-primary">{c.highest_similarity ? `${(c.highest_similarity * 100).toFixed(1)}%` : '-'}</td>
+                          <td className="py-2 text-text-secondary">{c.average_similarity ? `${(c.average_similarity * 100).toFixed(1)}%` : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Event Summary */}
+            <div className="bg-dark-bg/50 rounded-lg p-4 border border-purple-primary/10">
+              <h4 className="text-purple-primary font-rajdhani font-semibold text-sm mb-2 uppercase tracking-wider">Event Summary</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm font-rajdhani">
+                <div><span className="text-text-secondary">Announcements:</span> <span className="text-text-primary">{report.event_summary.total_announcements}</span></div>
+                <div><span className="text-text-secondary">Total Paused:</span> <span className="text-text-primary">{report.event_summary.total_pauses}s</span></div>
+                <div><span className="text-text-secondary">Extensions:</span> <span className="text-text-primary">{report.event_summary.total_extensions_minutes} min</span></div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

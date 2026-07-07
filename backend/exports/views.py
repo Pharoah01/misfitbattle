@@ -160,3 +160,111 @@ def export_challenge_scores(request):
 
     log_event('admin.action', user=request.user, request=request, description='Exported challenge scores matrix')
     return csv_response('challenge_scores.csv', headers, team_scores)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def final_report(request):
+    """Generate comprehensive competition final report as JSON."""
+    if not request.user.is_admin:
+        return Response({'error': 'Admin only'}, status=403)
+
+    from django.utils import timezone
+    from django.conf import settings
+    from django.db.models import Count, Avg, Max, Min
+    from submissions.competition_state import CompetitionState
+    from announcements.models import Announcement
+    from users.session_models import UserSession
+
+    now = timezone.now()
+    comp_state = CompetitionState.get()
+
+    # 1. Competition Summary
+    start = settings.COMPETITION_START
+    end = settings.COMPETITION_END
+
+    summary = {
+        'name': 'Misfits Battle CSS Competition',
+        'start_time': start or 'Not configured',
+        'end_time': end or 'Not configured',
+        'total_paused_seconds': comp_state.total_paused_seconds,
+        'total_extended_seconds': comp_state.total_extended_seconds,
+        'state': comp_state.state,
+        'generated_at': now.isoformat(),
+    }
+
+    # 2. Participation
+    total_users = User.objects.count()
+    total_teams = Team.objects.count()
+    teams_submitted = Team.objects.filter(
+        leader__submissions__is_auto_save=False
+    ).distinct().count()
+    total_submissions = Submission.objects.filter(is_auto_save=False).count()
+    completed_subs = Submission.objects.filter(is_auto_save=False, status='completed').count()
+    failed_subs = Submission.objects.filter(is_auto_save=False, status='failed').count()
+    active_sessions = UserSession.objects.filter(is_active=True).count()
+
+    participation = {
+        'total_registered': total_users,
+        'total_teams': total_teams,
+        'teams_submitted': teams_submitted,
+        'active_sessions': active_sessions,
+        'total_submissions': total_submissions,
+        'completed_submissions': completed_subs,
+        'failed_submissions': failed_subs,
+    }
+
+    # 3. Final Standings
+    leaderboard = calculate_leaderboard()
+    winner = leaderboard[0] if len(leaderboard) > 0 else None
+    runner_up = leaderboard[1] if len(leaderboard) > 1 else None
+    second_runner = leaderboard[2] if len(leaderboard) > 2 else None
+
+    standings = {
+        'winner': winner,
+        'runner_up': runner_up,
+        'second_runner_up': second_runner,
+        'total_ranked_teams': len(leaderboard),
+        'full_leaderboard': leaderboard,
+    }
+
+    # 4. Challenge Analytics
+    challenges = Challenge.objects.filter(is_released=True).order_by('difficulty', 'created_at')
+    challenge_analytics = []
+    for c in challenges:
+        subs = Submission.objects.filter(challenge=c, is_auto_save=False)
+        completed = subs.filter(status='completed', similarity_score__isnull=False)
+        stats = completed.aggregate(
+            avg_sim=Avg('similarity_score'),
+            max_sim=Max('similarity_score'),
+            fastest=Min('submitted_at'),
+        )
+        challenge_analytics.append({
+            'title': c.title,
+            'difficulty': c.difficulty,
+            'points': c.points,
+            'total_attempts': subs.count(),
+            'teams_completed': completed.count(),
+            'highest_similarity': float(stats['max_sim']) if stats['max_sim'] else None,
+            'average_similarity': float(stats['avg_sim']) if stats['avg_sim'] else None,
+            'fastest_submission': stats['fastest'].isoformat() if stats['fastest'] else None,
+        })
+
+    # 5. Event Summary
+    total_announcements = Announcement.objects.filter(is_active=True).count()
+
+    event_summary = {
+        'total_announcements': total_announcements,
+        'total_pauses': comp_state.total_paused_seconds,
+        'total_extensions_minutes': comp_state.total_extended_seconds // 60,
+    }
+
+    log_event('admin.action', user=request.user, request=request, description='Generated final competition report')
+
+    return Response({
+        'summary': summary,
+        'participation': participation,
+        'standings': standings,
+        'challenge_analytics': challenge_analytics,
+        'event_summary': event_summary,
+    })

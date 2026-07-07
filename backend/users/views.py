@@ -380,26 +380,28 @@ def personal_stats(request):
     # Released challenges
     total_challenges = Challenge.objects.filter(is_released=True).count()
 
-    # Per-challenge data
-    challenge_data = []
-    scores = []
-    sims = []
+    # Per-challenge data — deduplicate (keep best per challenge)
+    challenge_best = {}
     for sub in subs:
+        cid = sub.challenge_id
         sim = float(sub.similarity_score) if sub.similarity_score else None
         score = round(sim * sub.challenge.points, 2) if sim else None
-        if sim:
-            sims.append(sim)
-        if score:
-            scores.append({'title': sub.challenge.title, 'score': score, 'similarity': sim})
-        challenge_data.append({
-            'title': sub.challenge.title,
-            'difficulty': sub.challenge.difficulty,
-            'points': sub.challenge.points,
-            'similarity': sim,
-            'score': score,
-            'status': sub.status,
-            'submitted_at': sub.submitted_at.isoformat(),
-        })
+        
+        # Keep best score per challenge
+        if cid not in challenge_best or (score and (not challenge_best[cid]['score'] or score > challenge_best[cid]['score'])):
+            challenge_best[cid] = {
+                'title': sub.challenge.title,
+                'difficulty': sub.challenge.difficulty,
+                'points': sub.challenge.points,
+                'similarity': sim,
+                'score': score,
+                'status': sub.status,
+                'submitted_at': sub.submitted_at.isoformat(),
+            }
+
+    challenge_data = list(challenge_best.values())
+    scores = [c for c in challenge_data if c['score']]
+    sims = [c['similarity'] for c in challenge_data if c['similarity']]
 
     # Rank
     leaderboard = calculate_leaderboard()

@@ -149,13 +149,13 @@ export const CompetitionTimer: React.FC = () => {
   }
 
   // Color based on urgency
-  let barColor = 'border-purple-primary/30 bg-dark-surface';
+  let barColor = 'bg-dark-surface/70 border border-purple-primary/30';
   let textColor = 'text-purple-primary';
   if (secondsLeft <= 60) {
-    barColor = 'border-red-500/50 bg-red-500/5';
+    barColor = 'bg-red-500/10 border border-red-500/40';
     textColor = 'text-red-400';
   } else if (secondsLeft <= 300) {
-    barColor = 'border-yellow-500/50 bg-yellow-500/5';
+    barColor = 'bg-yellow-500/10 border border-yellow-500/40';
     textColor = 'text-yellow-400';
   }
 
@@ -198,14 +198,13 @@ export const CompetitionTimer: React.FC = () => {
 
   return (
     <>
-      <div className={`fixed top-0 left-0 right-0 z-[9990] border-b ${barColor} px-4 py-2 flex items-center justify-center gap-4`}>
-        <span className="text-text-secondary text-xs font-rajdhani uppercase tracking-wider">Time Remaining</span>
-        <span className={`text-xl font-bold font-orbitron tracking-widest ${textColor}`}>
+      <div className={`fixed top-3 left-1/2 -translate-x-1/2 z-[9990] ${barColor} backdrop-blur-md rounded-full px-5 py-2 flex items-center gap-3 shadow-lg`}>
+        <span className="text-text-secondary text-xs font-rajdhani uppercase tracking-wider hidden sm:inline">Time</span>
+        <span className={`text-lg font-bold font-orbitron tracking-widest ${textColor}`}>
           {timeStr}
         </span>
       </div>
-      {/* Spacer so page content isn't hidden behind fixed bar */}
-      <div className="h-10"></div>
+      <div className="h-14"></div>
     </>
   );
 };

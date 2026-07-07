@@ -7,4 +7,5 @@ urlpatterns = [
     path('participants/', views.export_participants, name='export-participants'),
     path('submissions/', views.export_submissions, name='export-submissions'),
     path('challenge-scores/', views.export_challenge_scores, name='export-challenge-scores'),
+    path('final-report/', views.final_report, name='final-report'),
 ]
